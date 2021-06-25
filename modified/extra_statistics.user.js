@@ -16,7 +16,7 @@
 // @name			Extra Statistics
 // @namespace		fenghou
 // @version			2.25.1.3
-// @description		Generate additional statistical data in the dungeon and duel report pages (modified by everbird, 修复 jQuery 和 jQuery.form 依赖，可以导出战报)
+// @description		(修复战报导出) Generate additional statistical data in the dungeon and duel report pages
 // @include			http*://*.world-of-dungeons.*/wod/spiel/*dungeon/report.php*
 // @include			http*://*.world-of-dungeons.*/wod/spiel/tournament/*duell.php*
 // @include			http*://*.wannaexpresso.*/wod/spiel/*dungeon/report.php*
