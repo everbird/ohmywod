@@ -16,7 +16,7 @@
 // @name			Extra Statistics
 // @namespace		fenghou
 // @version			2.25.1.3
-// @description		Generate additional statistical data in the dungeon and duel report pages (modfied by everbird, 修复 jQuery 和 jQuery.form 依赖，可以导出战报)
+// @description		Generate additional statistical data in the dungeon and duel report pages (modified by everbird, 修复 jQuery 和 jQuery.form 依赖，可以导出战报)
 // @include			http*://*.world-of-dungeons.*/wod/spiel/*dungeon/report.php*
 // @include			http*://*.world-of-dungeons.*/wod/spiel/tournament/*duell.php*
 // @include			http*://*.wannaexpresso.*/wod/spiel/*dungeon/report.php*
@@ -24,8 +24,8 @@
 // @require			https://raw.githubusercontent.com/eligrey/Blob.js/master/Blob.js
 // @require			https://raw.githubusercontent.com/eligrey/FileSaver.js/1.2.0/FileSaver.js
 // @require			https://raw.githubusercontent.com/Stuk/jszip/master/dist/jszip.js
-// @require     https://code.jquery.com/jquery-3.6.0.min.js
-// @require     https://raw.githubusercontent.com/jquery-form/form/master/dist/jquery.form.min.js
+// @require			https://code.jquery.com/jquery-3.6.0.min.js
+// @require			https://raw.githubusercontent.com/jquery-form/form/master/dist/jquery.form.min.js
 // @updateURL		https://bitbucket.org/DotIN13/extra_statistics_fix_filesaver/raw/with_report_export/scripts/extra_statistics.user.js
 // @downloadURL		https://bitbucket.org/DotIN13/extra_statistics_fix_filesaver/raw/with_report_export/scripts/extra_statistics.user.js
 
