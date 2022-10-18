@@ -4143,7 +4143,8 @@
     }
 	function replaceLevelPage(page,nLevel)
 	{
-		var IndexPatt = /=([\d]+)=/;
+    // When there's multiple pages in a level, the number is surrounded by blank spaces rather than = in the paginator link textContent
+    var IndexPatt = /\s*([\d]+)\s*/;
         allURL = page.getElementsByTagName("a");
         for (var i = 0; i < allURL.length; ++i) {
             var theURL = allURL[i];

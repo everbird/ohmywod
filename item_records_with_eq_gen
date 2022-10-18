@@ -1,0 +1,6 @@
+#!/bin/bash
+
+cat $1 | column -s';' -t | awk 'NR>1 { printf $1"\n"}' | awk -F'"' '{ print $2}' > /tmp/item_names.txt
+cat $2 | column -s';' -t | awk 'NR>1 { printf $1"\n"}' | awk -F'"' '{ print $2}' >> /tmp/item_names.txt
+cat $3 >> /tmp/item_names.txt
+sed -f <(awk '{ printf "s/item:[[:blank:]]*%s/item:\"%s\" color=turquoise/g\n", $1, $1 }' /tmp/item_names.txt) <(cat $4)
