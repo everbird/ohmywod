@@ -1,104 +1,33 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+#
 
-from datetime import datetime
 import os
 from pathlib import Path
 from zipfile import ZipFile
 
 from flask import (
-    Flask, abort, redirect, render_template, request, url_for, render_template_string,
-    redirect
+    Blueprint,
+    render_template as rt,
+    render_template_string as rt_string,
+    redirect,
+    abort,
+    url_for,
+    current_app
 )
-from flask_ldap3_login import LDAP3LoginManager
-from flask_login import LoginManager, login_user, UserMixin, current_user
 from flask_ldap3_login.forms import LDAPLoginForm
+from flask_login import login_user, current_user
 from flask_wtf import FlaskForm
-
-
-from ldap3 import (
-    HASHED_SALTED_SHA, MODIFY_ADD
-)
+from ldap3 import HASHED_SALTED_SHA, MODIFY_ADD
 from ldap3.utils.hashed import hashed
 from lxml import etree, html
-
 from wtforms import StringField,PasswordField,SubmitField,BooleanField
 from wtforms.validators import DataRequired,Email,EqualTo
 
-from werkzeug.security import generate_password_hash, check_password_hash
-from werkzeug.utils import secure_filename
 
+frontend = Blueprint("frontend", __name__)
 
-app = Flask(__name__)
-
-
-DATA_DIR = "/Users/everbird/playground/wod/ohmywod/.data/report"
-UPLOAD_DIR = "/Users/everbird/playground/wod/ohmywod/.data/upload"
 ALLOWED_EXTENSIONS = {'zip'}
-
-app.config["UPLOAD_DIR"] = UPLOAD_DIR
-app.config["SECRET_KEY"] = "6e848025ab466c03faa992f11cfb132be8b6935dbb0bb358898163ca2bc9e3f8"
-
-# Hostname of your LDAP Server
-app.config['LDAP_HOST'] = 'everbird.me'
-
-# Base DN of your directory
-app.config['LDAP_BASE_DN'] = 'dc=everbird,dc=me'
-
-# Users DN to be prepended to the Base DN
-app.config['LDAP_USER_DN'] = 'ou=users'
-
-# Groups DN to be prepended to the Base DN
-app.config['LDAP_GROUP_DN'] = 'ou=groups'
-
-# The RDN attribute for your user schema on LDAP
-app.config['LDAP_USER_RDN_ATTR'] = 'cn'
-
-# The Attribute you want users to authenticate to LDAP with.
-app.config['LDAP_USER_LOGIN_ATTR'] = 'cn'
-
-# The Username to bind to LDAP with
-app.config['LDAP_BIND_USER_DN'] = "cn=admin,dc=everbird,dc=me"
-
-# The Password to bind to LDAP with
-app.config['LDAP_BIND_USER_PASSWORD'] = "2Bornot2Bldap"
-
-app.config['LDAP_GROUP_OBJECT_FILTER'] = "(objectclass=groupOfNames)"
-app.config['LDAP_USER_OBJECT_FILTER'] = "(objectclass=inetOrgPerson)"
-app.config['LDAP_READONLY'] = False
-
-
-login_manager = LoginManager(app)
-ldap_manager = LDAP3LoginManager(app)
-
-users = {}
-
-
-class User(UserMixin):
-    def __init__(self, dn, username, data):
-        self.dn = dn
-        self.username = username
-        self.data = data
-
-    def __repr__(self):
-        return self.dn
-
-    def get_id(self):
-        return self.dn
-
-
-
-@login_manager.user_loader
-def load_user(id):
-    if id in users:
-        return users[id]
-    return None
-
-@ldap_manager.save_user
-def save_user(dn, username, data, memberships):
-    user = User(dn, username, data)
-    users[dn] = user
-    return user
-
 
 def allowed_file(filename):
     return '.' in filename and \
@@ -112,10 +41,11 @@ def listdir_only(path):
             yield x
 
 
-@app.route("/r/<username>/<category>/<name>/")
-@app.route("/r/<username>/<category>/<name>/<path:subpath>")
+@frontend.route("/r/<username>/<category>/<name>/")
+@frontend.route("/r/<username>/<category>/<name>/<path:subpath>")
 def report_details(username, category, name, subpath="index.html"):
-    rpath = os.path.join(DATA_DIR, username, category, name)
+    data_dir = current_app.config["DATA_DIR"]
+    rpath = os.path.join(data_dir, username, category, name)
     fpath = os.path.join(rpath, subpath)
 
     if not subpath.endswith(".html"):
@@ -129,7 +59,7 @@ def report_details(username, category, name, subpath="index.html"):
         report_html = report_html.replace('<body>', '<div id="auto_extracted">')
         report_html = report_html.replace('</body>', '</div>')
 
-        return render_template(
+        return rt(
             "layout.html",
             report_html=report_html,
             username=username,
@@ -139,16 +69,18 @@ def report_details(username, category, name, subpath="index.html"):
         )
 
 
-@app.route("/r/<username>/<category>/")
+@frontend.route("/r/<username>/<category>/")
 def report_category(username, category):
-    cpath = os.path.join(DATA_DIR, username, category)
+    data_dir = current_app.config["DATA_DIR"]
+    cpath = os.path.join(data_dir, username, category)
     dirs = listdir_only(cpath)
-    return render_template("category.html", category=category, username=username, dirs=dirs)
+    return rt("category.html", category=category, username=username, dirs=dirs)
 
 
-@app.route("/r/")
+@frontend.route("/r/")
 def report():
-    rpath = Path(DATA_DIR)
+    data_dir = current_app.config["DATA_DIR"]
+    rpath = Path(data_dir)
     dirs = []
     for upath in rpath.iterdir():
         if not upath.is_dir():
@@ -162,18 +94,18 @@ def report():
             category = cpath.stem
             dirs.append((category, username))
 
-    return render_template("root.html", dirs=dirs)
+    return rt("root.html", dirs=dirs)
 
 
-@app.route("/")
+@frontend.route("/")
 def home():
     if not current_user or current_user.is_anonymous:
-        return redirect(url_for('login'))
+        return redirect(url_for('frontend.login'))
 
-    return render_template("home.html")
+    return rt("home.html")
 
 
-@app.route("/upload/process/<username>/<category>", methods=["POST",])
+@frontend.route("/upload/process/<username>/<category>", methods=["POST",])
 def process(username, category):
     if current_user.is_anonymous or current_user.username != username:
         abort(401)
@@ -200,7 +132,8 @@ def process(username, category):
 
         with ZipFile(fpath, 'r') as z:
             _filename = filename.replace(".zip", "")
-            tpath = Path(DATA_DIR) / username / category / _filename
+            data_dir = current_app.config["DATA_DIR"]
+            tpath = Path(data_dir) / username / category / _filename
             tpath.mkdir(parents=True, exist_ok=True)
             z.extractall(os.fspath(tpath))
 
@@ -209,7 +142,7 @@ def process(username, category):
     abort(400)
 
 
-@app.route('/login', methods=['GET', 'POST'])
+@frontend.route('/login', methods=['GET', 'POST'])
 def login():
     template = """
     {{ get_flashed_messages() }}
@@ -232,7 +165,7 @@ def login():
         login_user(form.user)  # Tell flask-login to log them in.
         return redirect('/')  # Send them home
 
-    return render_template_string(template, form=form)
+    return rt_string(template, form=form)
 
 
 class RegistrationForm(FlaskForm):
@@ -260,7 +193,7 @@ def save_ldap_user(username, email, passwd):
     return r
 
 
-@app.route('/register', methods = ['POST','GET'])
+@frontend.route('/register', methods = ['POST','GET'])
 def register():
     form = RegistrationForm()
     if form.validate_on_submit():
@@ -269,5 +202,5 @@ def register():
             email=form.email.data,
             passwd=form.password1.data
         )
-        return redirect(url_for('login'))
-    return render_template('registration.html', form=form)
+        return redirect(url_for('frontend.login'))
+    return rt('registration.html', form=form)
