@@ -1,0 +1,490 @@
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta http-equiv="Content-Language" content="cn">
+    <link rel="SHORTCUT ICON" href="http://info.world-of-dungeons.org/wod/css/WOD.gif" type="image/gif">
+    <script type="text/javascript" src="http://delta.world-of-dungeons.org/wod/javascript/wod_standard.js?1662631467"></script>
+    <script type="text/javascript" src="http://delta.world-of-dungeons.org/wod/javascript/wodtooltip.js?1662631467"></script>
+    <title>我的战报</title>
+    <link rel="stylesheet" type="text/css" href="http://delta.world-of-dungeons.org/wod/css/layout.css?1662631467">
+    <link rel="stylesheet" type="text/css" href="http://delta.world-of-dungeons.org/wod/css//skins/skin-1/skin-cn.css?1662631467">
+    <style type="text/css">
+      /*<![CDATA[*/
+      .tableMinWidthRespectingContent {
+          width:1px;
+      }
+      .tableMinHeightRespectingContent {
+          height:1px;
+      }
+      /*]]>*/
+    </style>
+    <script type="text/javascript">window.onload = function(e){wodToolTipInit();wodInitialize('delta.world-of-dungeons.org','','/wod/spiel/','/wod/ajax/','WOD','cn','/wod/css//skins/skin-4/','/wod/css/','1','1');}
+      function o(t,n){ 
+          var url="http://delta.world-of-dungeons.org/wod/spiel/";
+          if(t=="n"){url += "help/npc"}
+          if(t=="s"){url += "hero/skill"}
+          if(t=="i"){url += "hero/item"}
+          return wo(url + ".php?name=" + n + "&IS_POPUP=1");}
+      var CTable=function(){};
+      CTable.GetNumber = function(cell) {
+          var numberPatten = /^\s?([\d]+\.?[\d]*)\s?_?\s?([\d]*\.?[\d]*)\s?$/;
+          var pairTable = cell.firstChild;
+          var numberString = cell.textContent;
+          var numbers;
+          if(pairTable && pairTable.nodeName == "TABLE")
+          {
+              numberString = pairTable.id;
+          }
+          if(numberPatten.test(numberString))
+          {
+              numbers = [];
+              var numberres = numberPatten.exec(numberString);
+              if(numberres[1])
+                  numbers.push(numberres[1]);
+              if(numberres[2])
+                  numbers.push(numberres[2]);
+          }
+          return numbers;
+      }
+      CompareString = function CompareString(a, b) {
+          a = a || "";
+          b = b || "";
+          return a.toLowerCase().localeCompare(b.toLowerCase(),"zh-CN-u-co-pinyin");
+      }
+      ct = function(Id) {
+          try {
+              var Table = document.getElementById(Id);
+              if (Table.hasAttribute("hide")) {
+                  Table.removeAttribute("hide");
+              } else {
+                  Table.setAttribute("hide", "hide");
+              }
+          } catch (e) {
+              alert("CTable.OnClickTitle(): " + e);
+          }
+      }
+      cf = function(tableId,filterRowId) {
+          try {
+              debugger;
+              var Table = document.getElementById(tableId);
+              var filterRow = document.getElementById(filterRowId);
+              var stringfilters = [];
+              var orgstringfilters = [];
+              var numberfilters = [];
+              var filterString = "";
+              var showIds = [];
+              var refilter = 0;
+
+              var showHero_0 = document.getElementById(tableId + "_checkbox_0_0");
+              var showHero_1 = document.getElementById(tableId + "_checkbox_0_1");
+              var showHero = [showHero_0.checked,showHero_1.checked];
+
+              for(var i = 0; i< filterRow.cells.length; i++)
+              {
+                  var cell = filterRow.cells[i];
+                  var stringfilter = document.getElementById(filterRow.id + "_combobox_" + i);
+                  var orgstringfilter = document.getElementById('org_' + filterRow.id + "_combobox_" + i);
+                  var numberfilter = document.getElementById(filterRow.id + "_textbox_" + i);
+                  if(stringfilter){
+                      stringfilters.push(stringfilter.value);
+                      refilter += stringfilter.selectedIndex > 0?1:0;
+                  }
+                  else
+                      stringfilters.push(null);
+                  if(orgstringfilter){
+                      for(var ii = 0, ij = orgstringfilter.options.length; ii < ij; ++ii) {
+                          if(orgstringfilter.options[ii].value === stringfilter.value) {
+                              orgstringfilter.selectedIndex = ii;
+                              break;
+                          }
+                      }
+                      orgstringfilters.push([stringfilter,orgstringfilter]);
+                      showIds.push([]);
+                  }
+                  if(numberfilter)
+                      numberfilters.push(numberfilter.value);
+                  else
+                      numberfilters.push(null);
+              }
+              var index = 0;
+              var patten = /([\(|\[|>|<|=|]*)\s*([\d]*\.?[\d]*)\s*-?\s*([\d]*\.?[\d]*)\s*([\)|\]|\s]?)/;
+              for(var i = 2;i< Table.rows.length;i=i+2)
+              {
+                  var row = Table.rows[i];
+                  var rowInfo = Table.rows[i+1];
+                  var rowIds = row.id.split(",");
+                  var show = true;
+
+                  var hero = row.cells[0].getElementsByTagName('a')[0];
+                  var heroKind = hero.getAttribute("kind");
+                  show = showHero[heroKind];
+                  if(show)
+                  {
+                      for(var fi =0; fi<stringfilters.length;fi++)
+                      {
+                          var sfilter = stringfilters[fi];
+                          if(!sfilter)
+                              continue;
+                          if(sfilter != fi + "_all" && sfilter != rowIds[fi])
+                          {
+                              show = false;
+                              break;
+                          }
+                      }
+                  }
+                  if(show)
+                  {
+                      for(var fi=0;fi<numberfilters.length;fi++)
+                      {
+                          var nfilter = numberfilters[fi];
+
+                          if(!nfilter)
+                              continue;
+                          else
+                          {
+                              var numbers = CTable.GetNumber(row.cells[fi]);
+                              var nfilters = nfilter.split(/\s*[,|，]\s*/);
+                              for(ni = 0; ni < numbers.length; ni++)
+                              {
+                                  var theFilter = nfilters[ni];
+                                  var testString = "";
+                                  if(theFilter && patten.test(theFilter))
+                                  {
+                                      var	op = "==";
+                                      var res = patten.exec(theFilter);
+                                      if(res[1])
+                                      {
+                                          op = res[1];
+                                          if(res[3])
+                                          {
+                                              if( op == "[") op = ">=";
+                                              if( op == "(") op = ">";
+                                              if( op == "=") op = "==";
+                                          }
+                                      }
+                                      else
+                                      {
+                                          if(res[3])
+                                              op = ">=";
+                                      }
+                                      testString = numbers[ni] + op + res[2];
+                                      if(res[3])
+                                      {
+                                          op = "<=";
+                                          if(res[4])
+                                          {
+                                              op = res[4];
+                                              if( op == "]") op = "<=";
+                                              if( op == ")") op = "<";
+                                          }
+                                          testString += " && " + numbers[ni] + op + res[3];
+                                      }
+                                      show = eval(testString);
+                                      if(!show)
+                                          break;
+                                  }
+                              }
+                          }
+                          if(!show)
+                              break;
+                      }
+                  }
+                  row.style.display = show? '':'none';
+                  rowInfo.style.display = show? rowInfo.style.display:'none';
+                  if(show)
+                  {
+                      row.className = "row" + index % 2;
+                      rowInfo.className = row.className;
+                      index++;
+                      for(var fi =0; fi<orgstringfilters.length;fi++)
+                      {
+                          var id = rowIds[fi];
+                          if(showIds[fi].indexOf(id) <= -1)
+                              showIds[fi].push(id);
+                      }
+                  }
+              }
+
+              if(orgstringfilters.length - refilter > 1)
+              {
+                  for(var fi =0; fi<orgstringfilters.length;fi++)
+                  {
+                      var sfilter = orgstringfilters[fi][0];
+                      var sfilterorg = orgstringfilters[fi][1];
+                      if(!sfilter)
+                          continue;
+                      if(refilter == 1 && sfilter.selectedIndex > 0)
+                          continue;
+                      for(var i = sfilter.options.length -1; i>0;i--)
+                          sfilter.remove(i);
+                      for(var i = 0; i< sfilterorg.options.length; i++){
+                          var opt = sfilterorg.options[i];
+                          if(showIds[fi].indexOf(opt.value) > -1){
+                              var newopt = new Option(opt.text,opt.value);
+                              newopt.selected = opt.selected;
+                              sfilter.add(newopt);
+                          }
+                      }
+                  }
+              }
+          } catch (e) {
+              alert("CTable.OnChangeFilter(): " + e);
+          }
+      }
+      co = function(tableId,columnIndex,numberIndex) {
+          var Table = document.getElementById(tableId);
+          var index = numberIndex;
+          var ths = Table.getElementsByTagName("th");
+          if(index === null)
+              index = 0;
+          var th = ths[columnIndex];
+          var order = th.getAttribute("order");
+          for(var i=0; i< ths.length - 1; i++)
+          {
+
+              var span = document.getElementById(tableId + '_orderInfo_' + i);
+              var spans = span.getElementsByTagName('span');
+              if(spans && spans.length ==2)
+              {
+                  spans[0].innerHTML = '';
+                  spans[1].innerHTML = '';
+                  if(i == columnIndex)
+                      spans[numberIndex].innerHTML = order>0?'&#9650;':'&#9660;';
+              }
+          }
+          for(var i = 2;i< Table.rows.length-2;i=i+2)
+          {
+              for(var j = i+2;j< Table.rows.length;j=j+2)
+              {
+                  var row_1 = Table.rows[i];
+                  var row_1_info = Table.rows[i+1];
+                  var row_2 = Table.rows[j];
+                  var row_2_info = Table.rows[j+1];
+                  var cell_1 = row_1.cells[columnIndex];
+                  var cell_2 = row_2.cells[columnIndex];
+
+                  n1 = CTable.GetNumber(cell_1);
+                  n2 = CTable.GetNumber(cell_2);
+                  var change = false;
+
+                  if(columnIndex == ths.length -1)
+                  {
+                      var n11 = Number(row_1.getAttribute("oriorder"));
+                      var n12 = Number(row_2.getAttribute("oriorder"));
+                      change = n11>n12;
+                  }
+                  else
+                  {
+                      var c1 = row_1.cells[0].firstChild.className.replace("my","");
+                      var c2 = row_2.cells[0].firstChild.className.replace("my","");
+                      var s1 = cell_1.textContent;
+                      var s2 = cell_2.textContent;
+                      var cc = CompareString(c1,c2);
+                      if(cc < 0)
+                          change = false;
+                      else if(cc > 0)
+                          change = true;
+                      else
+                      {
+                          if(n1 && n2 && n1.length > 0 && n2.length > 0)
+                          {
+                              var number_1 = n1[index] * order;
+                              var number_2 = n2[index] * order;
+                              change = number_1 > number_2;
+                          }
+                          else
+                              change = (CompareString(s1,s2) == order);
+                      }
+                  }
+
+                  if(change)
+                  {
+                      row_2.parentNode.insertBefore(row_2,row_1);
+                      row_2_info.parentNode.insertBefore(row_2_info,row_1);
+                  }
+              }
+              Table.rows[i].className = "row" + (i/2) % 2;
+              Table.rows[i+1].className = Table.rows[i].className;
+          }
+          th.setAttribute("order",-1*order);
+      }
+      sd = function(rowid,activeRows)
+      {
+          var row = document.getElementById(rowid);
+          var cell = row.cells[0];
+          var button = row.previousSibling.getElementsByTagName('input')[0];
+          activeRows = activeRows||[];
+          if(cell)
+          {
+              if(row.style.display == '')
+              {
+                  button.value = '显示';
+                  row.style.display = 'none';
+              }
+              else
+              {
+                  button.value = '隐藏';
+                  row.style.display = '';
+              }
+              var table = cell.getElementsByTagName('table')[0];
+              if(table.rows.length <= 1)
+              {
+                  if(activeRows.length > 0)
+                  {
+                      //debugger;
+                      var ids = activeRows[0].split('_');
+                      var level = Number(ids[1]);
+                      var ac = table.insertRow(-1).insertCell(-1);
+                      ac.colSpan = '3';
+                      ac.innerHTML = '<hr/><br />层 ' + level + '<br /><hr/>';
+                      for(var i = 0;i<activeRows.length;i++)
+                      {
+                          ids = activeRows[i].split('_');
+                          var newlevel = Number(ids[1]);
+                          if(newlevel != level)
+                          {
+                              ac = table.insertRow(-1).insertCell(-1);
+                              ac.colSpan = '3';
+                              ac.innerHTML = '<hr/><br />层 ' + newlevel + '<br /><hr/>';
+                              level = newlevel;
+                          }
+                          var theRow = document.getElementById(activeRows[i]).cloneNode(true);
+                          if(theRow)
+                          {
+                              table.appendChild(theRow);
+                              var c = table.insertRow(-1).insertCell(-1);
+                              c.colSpan = '3';
+                              c.innerHTML = '<hr/>';
+                          }
+                      }
+                  }
+              }
+
+          }
+
+      }
+      st = function(id){
+          var statdiv = document.getElementById('stat_all');
+          var tabs = statdiv.getAttribute('tabs').split(',');
+          var showall = false;
+          var lishowall = document.getElementById('tab_showall');
+          var lihideall = document.getElementById('tab_hideall');
+          lishowall.className = 'not_selected';
+          lihideall.className = 'not_selected';
+          for(var i = 0; i< tabs.length;i++)
+          {
+              var tabid = tabs[i];
+              var tab = document.getElementById(tabid);
+              var li = document.getElementById('tab_' + tabid);
+              li.className = 'not_selected';
+              if(id == 'showall')
+              {
+                  lishowall.className = 'selected';
+                  tab.style.display = '';
+              }
+              else if (id == 'hideall')
+              {
+                  lihideall.className = 'selected';
+                  tab.style.display = 'none';
+              }
+              else
+              {
+                  if(tabid == id)
+                  {
+                      tab.style.display = '';
+                      li.className = 'selected';
+                  }
+                  else
+                  {
+                      tab.style.display = 'none';
+                      li.className = 'not_selected';
+                  }
+              }
+
+          }
+      }
+      </script><style type="text/css">div.stat_all {font-size:14px;} div.stat_header {margin:1em auto 0.5em auto;} span.stat_title {margin: auto 1em auto 0em; font-size:20px; font-weight:bold; color:#FFF;} span.clickable {cursor:pointer;} span.pair_value {width:100%; font-size:12px;} span.pair_value span {width:50%; min-width:3em; text-align:right; color:#F8A400;} span.pair_value span + span {color:#00CC00;} table.pair_hero {width:100%; font-size:12px;} table.pair_hero td {width:50%; min-width:3em; text-align:right; color:#00CC00;} table.pair_hero td + td {color:#F8A400;} table[hide] {display:none;} table.pair_value {width:100%;} table.pair_value td {width:50%; min-width:3em; text-align:right; color:#F8A400;} table.pair_value td + td {color:#00CC00;} #myProgress {position: relative; width: 100%;  height: 3px; background-color: #ddd;} #myBar { position: absolute;  width: 1%;  height: 100%;  background-color: #4CAF50;}</style>
+    <style type="text/css">
+      /* NOTE(szhuang 2022-10-18):
+      Override the height:0px, which caused stat divs floating onto the report content
+      */
+      div#stat_all.stat_all.tab > .bar {
+          height:auto;
+      }
+      div#gadgettable-top {
+          height:25px;
+      }
+      div#gadgettable > td.tableMinHeightRespectingContent {
+          height:25px;
+      }
+      </style>
+  </head>
+  <body>
+    <div id="page-border">
+      <table id="gadgettable" style="width:100%;" cellspacing="0" cellpadding="0">
+          <tr>
+            <td class="tableMinHeightRespectingContent" style="vertical-align:top;" colspan="3">
+              <div id="gadgettable-top">
+                <div class="background"></div>
+                <div class="border-left"></div>
+                <div class="border-top"></div>
+                <div class="border-right"></div>
+                <div class="border-bottom"></div>
+                <div class="border-top-left"></div>
+                <div class="border-top-right"></div>
+                <div class="border-bottom-left"></div>
+                <div class="border-bottom-right"></div>
+                <div id="gadgettable-top-gadgets">
+                  <table width="100%" cellspacing="0" cellpadding="0">
+                    <tbody>
+                      <tr>
+                        <td class="gadget_table_cell tableMinWidthRespectingContent" style="vertical-align:middle; white-space: nowrap; overflow: hidden;">
+                          quick menu
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td id="gadgettable-left-td" class="tableMinWidthRespectingContent gadgettable-column" style="vertical-align:top;">
+              <div id="gadgettable-left">
+                <div id="gadgettable-left-gadgets">
+                  <div class="gadget menu lang-cn">
+                    nav menu
+                  </div>
+                </div>
+              </div>
+            </td>
+            <td id="gadgettable-center-td" class="tableMinWidthRespectingContent gadgettable-column" style="vertical-align:top;">
+              <div id="gadgettable-center">
+                <table width="100%" cellspacing="0" cellpadding="0">
+                  <tbody>
+                    <tr>
+                      <td class="gadget_table_cell" style="vertical-align:middle; white-space: nowrap; overflow: hidden;" align="center">
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+                <div class="gadget horizontal_seperator lang-cn">
+                  <div class="gadget_inner" style="height:70px;">
+                    <div class="gadget_scroll" style="height:70px;">
+                      <div class="gadget_body">
+                        <a href="/r/">战报</a> > <a href="/r/{{ username }}/{{ category }}">{{ category }}</a> > <a href="/r/{{ username }}/{{ category }}/{{ name }}">{{ name }}</a> > {{ subpath }}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="gadget main_content lang-cn">
+                {{ report_html|safe }}
+              </div>
+            </td>
+            <td id="gadgettable-right-td" class="tableMinWidthRespectingContent gadgettable-column" style="vertical-align:top;">User profile</td>
+          </tr>
+      </table>
+    </div>
+  </body>
+</html>

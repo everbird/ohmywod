@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}战报{% endblock %}
+{% block head %}
+    {{ super() }}
+    <style type="text/css">
+        .important { color: #336699; }
+    </style>
+{% endblock %}
+{% block content %}
+    <h1>战报</h1>
+    <ul>
+    {% for (category, username) in dirs %}
+      <li><a href="/r/{{ username }}/{{ category }}">{{ category }}</a> - by {{ username }}</li>
+    {% endfor %}
+    </ul>
+{% endblock %}
