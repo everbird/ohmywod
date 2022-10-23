@@ -11,6 +11,7 @@ from flask import (
     render_template as rt,
     render_template_string as rt_string,
     redirect,
+    request,
     abort,
     url_for,
     current_app
@@ -124,7 +125,13 @@ def process(username, category):
         #filename = secure_filename(fobj.filename)
         filename = fobj.filename
         uid = os.path.join(category, filename)
-        dpath = Path(os.path.join(app.config['UPLOAD_DIR'], username, category))
+        dpath = Path(
+            os.path.join(
+                current_app.config['UPLOAD_DIR'],
+                username,
+                category
+            )
+        )
         dpath.mkdir(parents=True, exist_ok=True)
         fpath = dpath / filename
 
