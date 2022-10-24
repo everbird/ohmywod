@@ -5,7 +5,7 @@ class DefaultConfig(object):
     SECRET_KEY = "6e848025ab466c03faa992f11cfb132be8b6935dbb0bb358898163ca2bc9e3f8"
 
     # --- SQLAlchemy ---
-    SQLALCHEMY_DATABASE_URI = "sqlite:///ohmywod.db"
+    SQLALCHEMY_DATABASE_URI = "sqlite:////data/ohmywod/ohmywod_d.sqlite"
     SQLALCHEMY_ECHO = False
 
     # --- FLASK-LDAP3-LOGIN ---
@@ -28,8 +28,8 @@ class DefaultConfig(object):
     LDAP_READONLY = False
 
     # --- Upload ---
-    DATA_DIR = "/Users/everbird/playground/wod/ohmywod/.data/report"
-    UPLOAD_DIR = "/Users/everbird/playground/wod/ohmywod/.data/upload"
+    DATA_DIR = "/data/ohmywod/report"
+    UPLOAD_DIR = "/data/ohmywod/upload"
 
 
     FLASK_ADMIN_SWATCH = "cerulean"
