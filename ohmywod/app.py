@@ -9,6 +9,7 @@ from flask_login import LoginManager
 
 from ohmywod import views
 from ohmywod.config import DefaultConfig
+from ohmywod.controllers.user import UserController
 
 try:
     from ohmywod.local_config import DefaultConfig
@@ -19,10 +20,9 @@ except ImportError as e:
         # the ImportError is raised inside local_config
         raise
 
-from ohmywod.ctx import users, LDAPUser
 from ohmywod.extensions import db, admin, login_manager, ldap_manager
 from ohmywod.models.report import Report
-from ohmywod.models.user import User
+from ohmywod.models.user import User, LDAPUser
 
 
 __all__ = ['create_app']
@@ -31,6 +31,8 @@ DEFAULT_APP_NAME = "ohmywod"
 
 DEFAULT_MODULES = (
     (views.frontend, ""),
+    (views.report, "/r"),
+    (views.upload, "/upload"),
 )
 
 
@@ -97,3 +99,14 @@ def configure_cli(app):
     @app.cli.command("drop_db")
     def drop_db():
         db.drop_all()
+
+
+@login_manager.user_loader
+def load_user(dn):
+    uc = UserController()
+    return uc.get_ldap_user(dn)
+
+
+@ldap_manager.save_user
+def save_user(dn, username, data, memberships):
+    return LDAPUser.from_ldap_entry(data)
