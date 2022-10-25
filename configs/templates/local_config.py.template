@@ -1,0 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+PORT = '8013'
+APP_NAME = "ohmywod"
+VAR_PATH = "/tmp/var"

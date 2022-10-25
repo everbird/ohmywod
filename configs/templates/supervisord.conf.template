@@ -1,0 +1,29 @@
+[unix_http_server]
+file=$VAR_PATH/$APP_NAME/run/supervisor.sock
+
+[supervisord]
+logfile=$VAR_PATH/$APP_NAME/log/supervisord.log
+logfile_maxbytes=50MB
+logfile_backups=10
+loglevel=info
+pidfile=$VAR_PATH/$APP_NAME/run/supervisord.pid
+nodaemon=false
+minfds=1024
+minprocs=200
+
+[rpcinterface:supervisor]
+supervisor.rpcinterface_factory = supervisor.rpcinterface:make_main_rpcinterface
+
+[supervisorctl]
+serverurl=unix://$VAR_PATH/$APP_NAME/run/supervisor.sock
+prompt=seer
+
+[program:web]
+command=gunicorn -c gunicorn_config.py deploy:application
+directory=%(here)s
+redirect_stderr=true
+stdout_logfile=$VAR_PATH/$APP_NAME/log/supervisord-web-out.log
+stderr_logfile=$VAR_PATH/$APP_NAME/log/supervisord-web-error.log
+
+[include]
+files = spvsr_generated.ini spvsr_local.ini
