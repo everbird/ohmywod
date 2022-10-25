@@ -17,6 +17,6 @@ class AuthAdminHome(AdminIndexView):
         return self.render('admin_index.html')
 
 db = SQLAlchemy()
-admin = Admin(name='Admin of Ohmywod', index_view=AuthAdminHome())
+admin = Admin(name='Admin of Ohmywod', index_view=AuthAdminHome(), template_mode='bootstrap3')
 login_manager = LoginManager()
 ldap_manager = LDAP3LoginManager()

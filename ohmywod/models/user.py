@@ -35,6 +35,6 @@ class LDAPUser(UserMixin):
     def from_ldap_entry(cls, d):
         return LDAPUser(
             dn=d["dn"],
-            username=d["cn"],
+            username=d["cn"][0],
             data=d,
         )

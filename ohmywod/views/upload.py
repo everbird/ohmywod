@@ -8,6 +8,8 @@ from zipfile import ZipFile
 from flask import Blueprint, redirect, request, abort, current_app
 from flask_login import current_user
 
+from ohmywod.controllers.report import ReportController
+
 
 upload = Blueprint("upload", __name__)
 
@@ -21,6 +23,7 @@ def allowed_file(filename):
 @upload.route("/process/<username>/<category>", methods=["POST",])
 def process(username, category):
     if current_user.is_anonymous or current_user.username != username:
+        print("before 401", current_user, username, current_user.username)
         abort(401)
 
     if 'filepond' not in request.files:
@@ -56,6 +59,8 @@ def process(username, category):
             tpath.mkdir(parents=True, exist_ok=True)
             z.extractall(os.fspath(tpath))
 
+        rc = ReportController()
+        rc.create_report(category, _filename, username)
         return uid
 
     abort(400)

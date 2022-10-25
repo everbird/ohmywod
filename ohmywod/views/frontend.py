@@ -13,11 +13,12 @@ from flask import (
     url_for, current_app, g
 )
 from flask_ldap3_login.forms import LDAPLoginForm
-from flask_login import login_user, current_user
+from flask_login import login_user, current_user, login_required, logout_user
 from flask_wtf import FlaskForm
 from wtforms import StringField,PasswordField,SubmitField,BooleanField
 from wtforms.validators import DataRequired,Email,EqualTo
 
+from ohmywod.controllers.report import ReportController
 from ohmywod.controllers.user import UserController
 
 
@@ -25,42 +26,23 @@ frontend = Blueprint("frontend", __name__)
 
 @frontend.route("/")
 def home():
-    print(current_user)
-    print(g._login_user)
     if not current_user or current_user.is_anonymous:
         return redirect(url_for('frontend.login'))
 
-    return rt("home.html")
-
-
+    rc = ReportController()
+    categories = rc.get_cateogories_by_user(current_user.username)
+    return rt("home.html", categories=categories)
 
 
 @frontend.route('/login', methods=['GET', 'POST'])
 def login():
-    template = """
-    {{ get_flashed_messages() }}
-    {{ form.errors }}
-    <form method="POST">
-        <label>Username{{ form.username() }}</label>
-        <label>Password{{ form.password() }}</label>
-        {{ form.submit() }}
-        {{ form.hidden_tag() }}
-    </form>
-    """
-
-    # Instantiate a LDAPLoginForm which has a validator to check if the user
-    # exists in LDAP.
     form = LDAPLoginForm()
 
     if form.validate_on_submit():
-        # Successfully logged in, We can now access the saved user object
-        # via form.user.
         login_user(form.user)  # Tell flask-login to log them in.
-        print("g:", g._login_user)
-        print("g:", form.user.is_anonymous)
         return redirect('/')  # Send them home
 
-    return rt_string(template, form=form)
+    return rt("login.html", form=form)
 
 
 class RegistrationForm(FlaskForm):
@@ -83,3 +65,10 @@ def register():
         )
         return redirect(url_for('frontend.login'))
     return rt('registration.html', form=form)
+
+
+@frontend.route("/logout")
+@login_required
+def logout():
+    logout_user()
+    return redirect("/")

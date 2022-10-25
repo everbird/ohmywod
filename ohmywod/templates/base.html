@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     {% block head %}
-    <link rel="stylesheet" href="{{ url_for('static', filename="style.css") }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css')}}">
     <title>{% block title %}{% endblock %} - WoD</title>
     {% endblock %}
 </head>
@@ -10,8 +10,10 @@
     <div id="content">{% block content %}{% endblock %}</div>
     <div id="footer">
         {% block footer %}
+        <br>
         &copy; Copyright 2022 by <a href="http://everbird.me/">everbird</a>.
         {% endblock %}
     </div>
+<script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
 </body>
 </html>

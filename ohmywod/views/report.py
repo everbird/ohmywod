@@ -9,10 +9,17 @@ from flask import (
     Blueprint,
     render_template as rt,
     abort,
-    current_app
+    current_app,
+    redirect,
+    url_for
 )
 from flask_login import current_user
+from flask_wtf import FlaskForm
 from lxml import etree, html
+from wtforms import StringField, SubmitField
+from wtforms.validators import DataRequired
+
+from ohmywod.controllers.report import ReportController
 
 
 report = Blueprint("wodreport", __name__)
@@ -56,6 +63,8 @@ def report_details(username, category, name, subpath="index.html"):
 def report_category(username, category):
     data_dir = current_app.config["DATA_DIR"]
     cpath = os.path.join(data_dir, username, category)
+    p = Path(cpath)
+    p.mkdir(parents=True, exist_ok=True)
     dirs = listdir_only(cpath)
     return rt("category.html", category=category, username=username, dirs=dirs)
 
@@ -78,3 +87,27 @@ def report_page():
             dirs.append((category, username))
 
     return rt("root.html", dirs=dirs)
+
+
+class NewCategoryForm(FlaskForm):
+    name = StringField('name', validators =[DataRequired()])
+    description = StringField("description")
+    submit = SubmitField("Create")
+
+
+@report.route("/new_category", methods=['GET', 'POST'])
+def new_category():
+    form = NewCategoryForm()
+    if form.validate_on_submit():
+        rc = ReportController()
+        name = form.name.data
+        description = form.description.data
+        rc.create_category(name, description, current_user.username)
+        return redirect(
+            url_for(
+                "wodreport.report_category",
+                username=current_user.username,
+                category=name
+            )
+        )
+    return rt("new_category.html", form=form)

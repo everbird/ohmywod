@@ -32,4 +32,4 @@ class DefaultConfig(object):
     UPLOAD_DIR = "/data/ohmywod/upload"
 
 
-    FLASK_ADMIN_SWATCH = "cerulean"
+    FLASK_ADMIN_SWATCH = "darkly"
