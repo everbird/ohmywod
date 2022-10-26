@@ -7,6 +7,13 @@
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/malihu-custom-scrollbar-plugin/3.1.5/jquery.mCustomScrollbar.min.css">
         <title>{% block title %}{% endblock %} - WoD</title>
         <style type="text/css">
+            .autohide{
+                position: fixed;
+                top: 0;
+                right: 0;
+                width: 100%;
+                z-index: 1030;
+            }
             #content {
                 min-width: 300px;
             }
@@ -106,7 +113,14 @@
                 #sidebarCollapse.active span:last-of-type {
                     transform: rotate(-45deg) translate(1px, -1px);
                 }
-                }
+            }
+
+             .scrolled-down{
+                 transform:translateY(-100%); transition: all 0.3s ease-in-out;
+             }
+             .scrolled-up{
+                 transform:translateY(0); transition: all 0.3s ease-in-out;
+             }
 
         </style>
         {% endblock %}
@@ -137,7 +151,7 @@
 
             <div id="content" class="w-100">
 
-                <nav class="navbar navbar-expand-lg navbar-light bg-light">
+                <nav class="autohide navbar navbar-expand-lg navbar-light bg-light">
                     <div class="container-fluid">
                         <button type="button" id="sidebarCollapse" class="navbar-btn">
                             <span></span>
@@ -164,13 +178,12 @@
                                 $(this).toggleClass('active');
                             });
 
-                            /*
-                            el_autohide = document.querySelector('.autohide');
-  
-                            // add padding-top to bady (if necessary)
-                            navbar_height = document.querySelector('.navbar').offsetHeight;
-                            document.body.style.paddingTop = navbar_height + 'px';
+                        });
 
+                        document.addEventListener("DOMContentLoaded", function(){
+
+                            el_autohide = document.querySelector('.autohide');
+                            
                             if(el_autohide){
                                 var last_scroll_top = 0;
                                 window.addEventListener('scroll', function() {
@@ -188,8 +201,9 @@
                                 // window.addEventListener
                             }
                             // if
-                            */
-                        });
+
+                        }); 
+                        // DOMContentLoaded  end
                     </script>
                     {% endblock %}
                 </div>
