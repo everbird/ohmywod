@@ -3,43 +3,48 @@
 {% block title %}战报 - 注册{% endblock %}
 
 {% block content %}
-<h1>Create an Account</h1>
-<br>
-<form action="" method="post">
+<section class="w-100 p-4 d-flex justify-content-center pb-4">
+<form action="" method="POST" style="width: 22em;">
    {{ form.hidden_tag() }}
-   <div>
-      {{ form.username(placeholder="username") }}
+   <div class="text-center mb-4">
+      <h2>Create an Account</h2>
+   </div>
+   <br>
+   <br>
+   <div class="mb-4">
+      {{ form.username(placeholder="Username", class="form-control") }}
       {% for error in form.username.errors %}
       <p>{{ error }}</p>
       {% endfor %}
    </div>
-   <br>
-   <div>
-      {{ form.email(placeholder="email") }}
+   <div class="mb-4">
+      {{ form.email(placeholder="Email", class="form-control") }}
       {% for error in form.email.errors %}
       <p>{{ error }}</p>
       {% endfor %}
    </div>
-   <br>
-   <div>
-      {{ form.password1(placeholder="password") }}
+   <div class="mb-4">
+      {{ form.password1(placeholder="Password", class="form-control") }}
       {% for error in form.password1.errors %}
       <p>{{ error }}</p>
       {% endfor %}
    </div>
-   <br>
-   <div>
-      {{ form.password2(placeholder="Confirm password") }}
+   <div class="mb-4">
+      {{ form.password2(placeholder="Confirm password", class="form-control") }}
       {% for error in form.password2.errors %}
       <p>{{ error }}</p>
       {% endfor %}
    </div>
    <br>
-   <div>{{ form.submit() }}
+   <div class="d-grid gap-2">{{ form.submit(class="btn btn-primary mb-4") }}
    </div>
+   <br>
+   <br>
+  <div class="d-flex align-items-center justify-content-center pb-4">
+    <p>Already have an account? <a href="{{ url_for('frontend.login') }}">Login</a></p>
+  </div>
 </form>
-<p></p>
-<h3><a href="{{ url_for('frontend.login') }}">Already have an account?</a></h3>
+</section>
 {% endblock %}
 
 {% block footer %}

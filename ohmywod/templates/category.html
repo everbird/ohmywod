@@ -8,7 +8,16 @@
 {% endblock %}
 
 {% block content %}
-    <h1><a href="/r/">战报</a> > <a href="/r/{{ username }}/{{ category }}/">{{ category }}</a></h1>
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb">
+      <li class="breadcrumb-item">
+         <a href="/r/">战报</a>
+      </li>
+      <li class="breadcrumb-item active" aria-current="page">
+          {{ category }}
+      </li>
+  </ol>
+</nav>
 {% if current_user.username == username %}
     <input id="mypond" type="file" />
 {% endif %}
@@ -20,11 +29,8 @@
 {% endblock %}
 
 {% block footer %}
-    {{ super() }}
-
     <script src="https://unpkg.com/filepond@^4/dist/filepond.js"></script>
-    
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.js"></script>
+    {{ super() }}
 
     <script src="https://unpkg.com/jquery-filepond/filepond.jquery.js"></script>
 
@@ -39,6 +45,5 @@ $("input").filepond({
     },
 })
 {% endif %}
-/* should be current_user */
 </script>
 {% endblock %}
