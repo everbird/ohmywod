@@ -3,16 +3,10 @@
     <head>
         {% block head %}
         <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css')}}">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/fontawesome.min.css" integrity="sha512-RvQxwf+3zJuNwl4e0sZjQeX7kUa3o82bDETpgVCH2RiwYSZVDdFJ7N/woNigN/ldyOOoKw8584jM4plQdt8bhA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
         <!-- Scrollbar Custom CSS -->
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/malihu-custom-scrollbar-plugin/3.1.5/jquery.mCustomScrollbar.min.css">
         <title>{% block title %}{% endblock %} - WoD</title>
         <style type="text/css">
-            .autohide{
-                top: 0;
-                right: 0;
-                width: 100%;
-                z-index: 1030;
-            }
             #content {
                 min-width: 300px;
             }
@@ -24,24 +18,24 @@
             }
 
             #sidebar {
-                min-width: 250px;
-                max-width: 250px;
+                min-width: 335px;
+                max-width: 335px;
                 min-height: 100vh;
-                background: #7386D5;
-                color: #fff;
                 transition: all 0.6s cubic-bezier(0.945, 0.020, 0.270, 0.665);
                 transform-origin: center left; /* Set the transformed position of sidebar to center left side. */
             }
 
             #sidebar.active {
-                margin-left: -250px;
+                margin-left: -335px;
                 transform: rotateY(100deg); /* Rotate sidebar vertically by 100 degrees. */
             }
 
             #sidebarCollapse {
                 width: 40px;
                 height: 40px;
-                background: #f5f5f5;
+                background: #444;
+                border-radius: 5px;
+                border-width: 0px;
             }
 
             #sidebarCollapse span {
@@ -49,7 +43,7 @@
                 height: 2px;
                 margin: 0 auto;
                 display: block;
-                background: #555;
+                background: #fff;
                 transition: all 0.8s cubic-bezier(0.810, -0.330, 0.345, 1.375);
             }
 
@@ -80,7 +74,7 @@
        collapsing in on toggle button click with removal of 
        the vertical rotation.   */
                 #sidebar {
-                    margin-left: -250px;
+                    margin-left: -335px;
                     transform: rotateY(100deg);
                 }
                 #sidebar.active {
@@ -128,36 +122,70 @@
     <body>
         <div class="wrapper">
             <!-- Sidebar -->
-            <nav id="sidebar">
+            <nav id="sidebar" class="d-flex flex-column flex-shrink-0 p-3 text-white bg-dark">
                 <div class="sidebar-header">
-                    <h3>Collapsible Sidebar</h3>
+                    <h3>Oh my Wod</h3>
                 </div>
-
-                <!-- Sidebar Links -->
-                <ul class="list-unstyled components">
-                    <li class="active"><a href="#">Home</a></li>
-                    <li><a href="#">About</a></li>
-                    <li><!-- Link with dropdown items -->
-                        <a href="#homeSubmenu" data-toggle="collapse" aria-expanded="false">Pages</a>
-                        <ul class="collapse list-unstyled" id="homeSubmenu">
-                            <li><a href="#">Page</a></li>
-                            <li><a href="#">Page</a></li>
-                            <li><a href="#">Page</a></li>
-                        </ul>
-                    <li><a href="#">Portfolio</a></li>
-                    <li><a href="#">Contact</a></li>
+                <hr>
+                <ul class="nav nav-pills flex-column mb-auto">
+                    <li class="nav-item">
+                        <a href="/" class="nav-link" aria-current="page">
+                            Home
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('wodreport.report_page') }}" class="nav-link text-white">
+                            All Reports
+                        </a>
+                    </li>
                 </ul>
+                <hr>
+                <div id="sidebar_content">
+                    {% block sidebar_content %}
+<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+                    {% endblock %}
+                </div>
+                <hr>
+                <div id="sidebar_ad" class="align-items-center">
+                    {% block sidebar_ad%}
+                    <div class="text-center">
+                        <img src="https://placehold.jp/300x250.png"></img>
+                    </div>
+                    {% endblock %}
+                </div>
+                <hr>
+                {% if not current_user or current_user.is_anonymous %}
+                <div class="mr-4">
+                    <i class="fa-solid fa-user me-2"></i>
+                    <a href="{{ url_for("frontend.login") }}">Log in</a>
+                </div>
+                {% else %}
+                <div class="dropdown mr-4">
+                    <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" id="dropdownUser1" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fa-solid fa-user me-2"></i>
+                        <strong>{{ current_user.username }}</strong>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-dark text-small shadow" aria-labelledby="dropdownUser1" style="">
+                        <li><a class="dropdown-item" href="{{ url_for("wodreport.new_category")  }}">New Category...</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="{{ url_for("frontend.logout") }}">Sign out</a></li>
+                    </ul>
+                </div>
+                {% endif %}
+
             </nav>
 
             <div id="content" class="w-100">
 
-                <nav class="autohide navbar navbar-expand-lg navbar-light bg-light">
+                <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+
                     <div class="container-fluid">
                         <button type="button" id="sidebarCollapse" class="navbar-btn">
                             <span></span>
                             <span></span>
                             <span></span>
                         </button>
+
                     </div>
                 </nav>
                 <div id="right-content">{% block content %}{% endblock %}</div>
@@ -165,11 +193,10 @@
                 <div id="footer">
                     {% block footer %}
                     <!-- Font Awesome JS -->
-                    <script defer src="https://use.fontawesome.com/releases/v5.0.13/js/solid.js" integrity="sha384-tzzSw1/Vo+0N5UhStP3bvwWPq+uvzCMfrN1fEFe+xBmv1C/AtVX5K0uZtmcHitFZ" crossorigin="anonymous"></script>
-                    <script defer src="https://use.fontawesome.com/releases/v5.0.13/js/fontawesome.js" integrity="sha384-6OIrr52G08NpOFSZdxxz1xdNSndlD4vdcf/q2myIUVO0VsqaGHJsB0RaBE01VTOY" crossorigin="anonymous"></script>
+                    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/js/solid.min.js" integrity="sha512-dcTe66qF6q/NW1X64tKXnDDcaVyRowrsVQ9wX6u7KSQpYuAl5COzdMIYDg+HqAXhPpIz1LO9ilUCL4qCbHN5Ng==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+                    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/js/fontawesome.min.js" integrity="sha512-j3gF1rYV2kvAKJ0Jo5CdgLgSYS7QYmBVVUjduXdoeBkc4NFV4aSRTi+Rodkiy9ht7ZYEwF+s09S43Z1Y+ujUkA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
                     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.js"></script>
                     <!-- jQuery Custom Scroller CDN -->
-                    <script src="https://cdnjs.cloudflare.com/ajax/libs/malihu-custom-scrollbar-plugin/3.1.5/jquery.mCustomScrollbar.concat.min.js"></script>
                     <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
                     <script>
                         $(document).ready(function () {
@@ -179,31 +206,6 @@
                             });
 
                         });
-
-                        document.addEventListener("DOMContentLoaded", function(){
-
-                            el_autohide = document.querySelector('.autohide');
-                            
-                            if(el_autohide){
-                                var last_scroll_top = 0;
-                                window.addEventListener('scroll', function() {
-                                    let scroll_top = window.scrollY;
-                                    if(scroll_top < last_scroll_top) {
-                                        el_autohide.classList.remove('scrolled-down');
-                                        el_autohide.classList.add('scrolled-up');
-                                    }
-                                    else {
-                                        el_autohide.classList.remove('scrolled-up');
-                                        el_autohide.classList.add('scrolled-down');
-                                    }
-                                    last_scroll_top = scroll_top;
-                                }); 
-                                // window.addEventListener
-                            }
-                            // if
-
-                        }); 
-                        // DOMContentLoaded  end
                     </script>
                     {% endblock %}
                 </div>

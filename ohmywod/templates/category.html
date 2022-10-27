@@ -5,10 +5,47 @@
 {% block head %}
     {{ super() }}
 <link href="https://unpkg.com/filepond@^4/dist/filepond.css" rel="stylesheet" />
+<style type="text/css">
+    #report-breadcrumb ol {
+        border-radius: 0px;
+    }
+
+    .pond {
+        width:100%;
+        padding-left: 15px;
+        padding-right: 15px;
+        height:9rem;
+        margin:0 auto;
+        opacity:0;
+        transition:opacity 1s .25s
+    }
+
+    .pond .filepond--drop-label {
+        color:#c7ccd8
+    }
+    .pond .filepond--panel-root {
+        background-color:transparent;
+        border:2px solid #2c3340
+    }
+    .pond .filepond--item-panel {
+        background-color:#767b8b
+    }
+    .pond .filepond--file-action-button {
+        background-color:rgba(31,37,49,.85)
+    }
+    .pond [data-filepond-item-state=processing-complete] .filepond--item-panel {
+        background-color:#22a061
+    }
+    .pond [data-filepond-item-state*=error] .filepond--item-panel,
+    .pond [data-filepond-item-state*=invalid] .filepond--item-panel {
+        background-color:#d04535
+    }
+    
+</style>
 {% endblock %}
 
 {% block content %}
-<nav aria-label="breadcrumb">
+<nav id="report-breadcrumb" aria-label="breadcrumb">
   <ol class="breadcrumb">
       <li class="breadcrumb-item">
          <a href="/r/">战报</a>
@@ -19,7 +56,9 @@
   </ol>
 </nav>
 {% if current_user.username == username %}
-    <input id="mypond" type="file" />
+<div class="pond" style="opacity: 1;">
+    <input id="mypond" type="file" style="opacity: 1;"/>
+</div>
 {% endif %}
     <ul>
     {% for d in dirs %}
