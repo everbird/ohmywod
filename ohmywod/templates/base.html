@@ -5,22 +5,39 @@
         <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css')}}">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/fontawesome.min.css" integrity="sha512-RvQxwf+3zJuNwl4e0sZjQeX7kUa3o82bDETpgVCH2RiwYSZVDdFJ7N/woNigN/ldyOOoKw8584jM4plQdt8bhA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
         <!-- Scrollbar Custom CSS -->
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/malihu-custom-scrollbar-plugin/3.1.5/jquery.mCustomScrollbar.min.css">
         <title>{% block title %}{% endblock %} - WoD</title>
         <style type="text/css">
             #content {
+                width: calc(100% - 335px);
                 min-width: 300px;
+                min-height: 100vh;
+                transition: all 0.3s;
+                position: absolute;
+                top: 0;
+                right: 0;
             }
 
             .wrapper {
                 display: flex;
+                width: 100%;
                 align-items: stretch;
-                perspective: 1500px; 
             }
 
             #sidebar {
+                width: 335px;
                 min-width: 335px;
                 max-width: 335px;
-                min-height: 100vh;
+                position: fixed;
+                position: -webkit-sticky;
+                position: -moz-sticky;
+                position: -ms-sticky;
+                position: -o-sticky;
+                position: sticky;
+                top: 0;
+                left: 0;
+                z-index: 999;
+                height: 100vh;
                 transition: all 0.6s cubic-bezier(0.945, 0.020, 0.270, 0.665);
                 transform-origin: center left; /* Set the transformed position of sidebar to center left side. */
             }
@@ -175,7 +192,7 @@
 
             </nav>
 
-            <div id="content" class="w-100">
+            <div id="content">
 
                 <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
 
@@ -197,9 +214,14 @@
                     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/js/fontawesome.min.js" integrity="sha512-j3gF1rYV2kvAKJ0Jo5CdgLgSYS7QYmBVVUjduXdoeBkc4NFV4aSRTi+Rodkiy9ht7ZYEwF+s09S43Z1Y+ujUkA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
                     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.js"></script>
                     <!-- jQuery Custom Scroller CDN -->
+                    <script src="https://cdnjs.cloudflare.com/ajax/libs/malihu-custom-scrollbar-plugin/3.1.5/jquery.mCustomScrollbar.concat.min.js"></script>
                     <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
                     <script>
                         $(document).ready(function () {
+                            $("#sidebar").mCustomScrollbar({
+                                theme: "minimal"
+                            });
+                            
                             $('#sidebarCollapse').on('click', function () {
                                 $('#sidebar').toggleClass('active');
                                 $(this).toggleClass('active');
