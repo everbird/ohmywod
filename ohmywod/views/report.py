@@ -8,6 +8,7 @@ from pathlib import Path
 from flask import (
     Blueprint,
     render_template as rt,
+    render_template_string as rt_string,
     abort,
     current_app,
     redirect,
@@ -31,8 +32,8 @@ def listdir_only(path):
             yield x
 
 
-@report.route("/<username>/<category>/<name>/")
-@report.route("/<username>/<category>/<name>/<path:subpath>")
+@report.route("/original/<username>/<category>/<name>/")
+@report.route("/original/<username>/<category>/<name>/<path:subpath>")
 def report_details(username, category, name, subpath="index.html"):
     data_dir = current_app.config["DATA_DIR"]
     rpath = os.path.join(data_dir, username, category, name)
@@ -57,6 +58,33 @@ def report_details(username, category, name, subpath="index.html"):
             name=name,
             subpath=subpath
         )
+
+
+@report.route("/raw/<username>/<category>/<name>/")
+@report.route("/raw/<username>/<category>/<name>/<path:subpath>")
+def report_raw(username, category, name, subpath="index.html"):
+    data_dir = current_app.config["DATA_DIR"]
+    rpath = os.path.join(data_dir, username, category, name)
+    fpath = os.path.join(rpath, subpath)
+
+    if not subpath.endswith(".html"):
+        abort(404)
+
+    with open(fpath) as f:
+        raw = f.read()
+
+        return rt_string(raw)
+
+@report.route("/details/<username>/<category>/<name>/")
+@report.route("/details/<username>/<category>/<name>/<path:subpath>")
+def report_read(username, category, name, subpath="index.html"):
+    return rt(
+        "report_details.html",
+        username=username,
+        category=category,
+        name=name,
+        subpath=subpath
+    )
 
 
 @report.route("/<username>/<category>/")

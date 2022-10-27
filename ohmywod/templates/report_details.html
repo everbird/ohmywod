@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}战报 - details{% endblock %}
+
+{% block head %}
+  {{ super() }}
+<style type="text/css">
+  .breadcrumb {
+      margin-bottom: 0px;
+  }
+
+  .iframe-loading {
+      height: 100vh;
+  }
+
+  .iframe-loading iframe {
+      width: 100%;
+      height: 100vh;
+      display: none;
+  }
+
+  #spinner {
+      width: 100%;
+      height: 100vh;
+  }
+
+  #spinner .spinner-border {
+      width: 100px;
+      height: 100px;
+  }
+
+</style>
+{% endblock %}
+
+{% block content %}
+<nav id="report-breadcrumb" aria-label="breadcrumb">
+  <ol class="breadcrumb">
+      <li class="breadcrumb-item">
+         <a href="/r/">战报</a>
+      </li>
+      <li class="breadcrumb-item" aria-current="page">
+          <a href="{{ url_for('wodreport.report_category', username=username, category=category) }}">{{ category }}</a>
+      </li>
+      <li class="breadcrumb-item active" aria-current="page">
+          {{ name }}
+      </li>
+  </ol>
+</nav>
+<div class="embed-responsive iframe-loading">
+  <div id="spinner" class="row text-center align-items-center">
+    <div class="row spinner-border align-items-center mx-auto" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+</div>
+  <iframe id="report_iframe" class="embed-responsive-item" onload="$('.iframe-loading').css('background-image', 'none'); $('#spinner').hide(); $('.iframe-loading iframe').show();" src="{{ url_for("wodreport.report_raw", username=username, category=category, name=name, subpath=subpath) }}" title="Report details"></iframe>
+</div>
+{% endblock %}
+
+{% block sidebar_content %}
+TBD: meta for {{ name }}
+{% endblock %}

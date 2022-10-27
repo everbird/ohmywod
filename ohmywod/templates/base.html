@@ -8,6 +8,15 @@
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/malihu-custom-scrollbar-plugin/3.1.5/jquery.mCustomScrollbar.min.css">
         <title>{% block title %}{% endblock %} - WoD</title>
         <style type="text/css">
+            #dismiss {
+                width: 35px;
+                height: 35px;
+                position: absolute;
+                /* top right corner of the sidebar */
+                bottom: -15px;
+                right: 0;
+            }
+
             #content {
                 min-width: 300px;
                 width: calc(100% - 335px);
@@ -197,6 +206,11 @@
                     </ul>
                 </div>
                 {% endif %}
+                <div id="dismiss" class="mr-4 text-end">
+                    <a href="#" class="text-white text-decoration-none">
+                        <i class="fa-solid fa-chevron-left"></i>
+                    </a>
+                </div>
 
             </nav>
 
@@ -229,6 +243,10 @@
 
                             $("#sidebar").mCustomScrollbar({
                                 theme: "minimal"
+                            });
+
+                            $("#dismiss").on('click', function () {
+                                $('#sidebar, #content, #sidebarCollapse').toggleClass('active');
                             });
                             
                             $('#sidebarCollapse').on('click', function () {

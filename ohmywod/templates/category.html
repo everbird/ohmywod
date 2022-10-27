@@ -71,7 +71,7 @@
     {% for d in dirs %}
         <tr>
             <th scope="row">{{ loop.index }}</th>
-            <td><a href="{{ d }}">{{ d }}</a></td>
+            <td><a href="{{ url_for('wodreport.report_read', username=username, category=category, name=d) }}">{{ d }}</a></td>
         </tr>
     {% endfor %}
     </tbody>
