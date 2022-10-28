@@ -6,8 +6,6 @@
 
         <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css')}}">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/fontawesome.min.css" integrity="sha512-RvQxwf+3zJuNwl4e0sZjQeX7kUa3o82bDETpgVCH2RiwYSZVDdFJ7N/woNigN/ldyOOoKw8584jM4plQdt8bhA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-        <!-- Scrollbar Custom CSS -->
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/malihu-custom-scrollbar-plugin/3.1.5/jquery.mCustomScrollbar.min.css">
         <title>{% block title %}{% endblock %} - WoD</title>
         <style type="text/css">
             #nav_menu {
@@ -182,7 +180,7 @@
                 <hr>
                 <div id="sidebar_content" class="flex-column mb-auto">
                     {% block sidebar_content %}
-<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+<p>TBD</p>
                     {% endblock %}
                 </div>
                 <hr>
@@ -217,7 +215,6 @@
                         <i class="fa-solid fa-chevron-left"></i>
                     </a>
                 </div>
-
             </nav>
 
             <div id="content">
@@ -231,6 +228,8 @@
                             <span></span>
                         </button>
 
+                        {% block nav_content %}{% endblock %}
+
                     </div>
                 </nav>
                 <div id="right-content">{% block content %}{% endblock %}</div>
@@ -241,18 +240,9 @@
                     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/js/solid.min.js" integrity="sha512-dcTe66qF6q/NW1X64tKXnDDcaVyRowrsVQ9wX6u7KSQpYuAl5COzdMIYDg+HqAXhPpIz1LO9ilUCL4qCbHN5Ng==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
                     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/js/fontawesome.min.js" integrity="sha512-j3gF1rYV2kvAKJ0Jo5CdgLgSYS7QYmBVVUjduXdoeBkc4NFV4aSRTi+Rodkiy9ht7ZYEwF+s09S43Z1Y+ujUkA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
                     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.js"></script>
-                    <!-- jQuery Custom Scroller CDN -->
-                    <script src="https://cdnjs.cloudflare.com/ajax/libs/malihu-custom-scrollbar-plugin/3.1.5/jquery.mCustomScrollbar.concat.min.js"></script>
                     <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
                     <script>
                         $(document).ready(function () {
-
-                            /*
-                            $("#sidebar").mCustomScrollbar({
-                                theme: "dark"
-                            });
-                            */
-
                             $("#dismiss").on('click', function () {
                                 $('#sidebar, #content, #sidebarCollapse').toggleClass('active');
                             });
@@ -261,7 +251,6 @@
                                 $('#sidebar, #content').toggleClass('active');
                                 $(this).toggleClass('active');
                             });
-
                         });
                     </script>
                     {% endblock %}

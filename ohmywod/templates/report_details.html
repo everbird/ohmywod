@@ -57,10 +57,13 @@
     </div>
   </div>
   <iframe id="report_iframe" class="embed-responsive-item" onload="$('#spinner').hide(); $('.iframe-loading iframe').show();" src="{{ url_for("wodreport.report_raw", username=report.owner, category=report.category.name, name=report.name, subpath=subpath) }}" title="Report details"></iframe>
-  <a href="{{ url_for('wodreport.report_reader', report_id=report.id) }}">Reader</a>
 </div>
 {% endblock %}
 
 {% block sidebar_content %}
 TBD: meta for {{ report.name }}
+{% endblock %}
+
+{% block nav_content %}
+<a class="btn btn-secondary" href="{{ url_for('wodreport.report_reader', report_id=report.id) }}" role="button">全屏</a>
 {% endblock %}
