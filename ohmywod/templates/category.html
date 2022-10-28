@@ -88,14 +88,14 @@
 
     <script src="https://unpkg.com/jquery-filepond/filepond.jquery.js"></script>
 
-{% if current_user.username == username %}
+{% if current_user.username == category.owner %}
 <script>
 $("input").filepond({
     allowMultiple: true,
     allowRevert: false,
     allowRemove: false,
     server: {
-        process: '/upload/process/{{ username }}/{{ category }}',
+        process: '{{ url_for('upload.process', category_id=category.id) }}',
     },
 })
 {% endif %}
