@@ -25,13 +25,6 @@ from ohmywod.controllers.report import ReportController
 
 report = Blueprint("wodreport", __name__)
 
-def listdir_only(path):
-    for x in os.listdir(path):
-        dpath = os.path.join(path, x)
-        if os.path.isdir(dpath):
-            yield x
-
-
 @report.route("/original/<username>/<category>/<name>/")
 @report.route("/original/<username>/<category>/<name>/<path:subpath>")
 def report_details(username, category, name, subpath="index.html"):
@@ -60,6 +53,9 @@ def report_details(username, category, name, subpath="index.html"):
         )
 
 
+
+
+# Used in iframe, username+cateogry+name should be uniqe
 @report.route("/raw/<username>/<category>/<name>/")
 @report.route("/raw/<username>/<category>/<name>/<path:subpath>")
 def report_raw(username, category, name, subpath="index.html"):
@@ -87,6 +83,36 @@ def view_category(category_id):
 def view_report(report_id):
     rc = ReportController()
     report = rc.get_report(report_id)
+    return rt("report_details.html", report=report)
+
+
+@report.route("/report/<report_id>/reader/")
+@report.route("/report/<report_id>/reader/<path:subpath>")
+def report_reader(report_id, subpath="index.html"):
+    if not subpath.endswith(".html"):
+        abort(404)
+
+    rc = ReportController()
+    report = rc.get_report(report_id)
+
+    data_dir = current_app.config["DATA_DIR"]
+    rpath = os.path.join(data_dir, report.owner, report.category.name, report.name)
+    fpath = os.path.join(rpath, subpath)
+
+    with open(fpath) as f:
+        raw = f.read()
+        tree = html.fromstring(raw)
+        body = tree.xpath("body")[0]
+        report_html = etree.tostring(body, pretty_print=False, encoding='unicode')
+        report_html = report_html.replace('<body>', '<div id="auto_extracted">')
+        report_html = report_html.replace('</body>', '</div>')
+
+        return rt(
+            "report_reader.html",
+            report_html=report_html,
+            report=report,
+            subpath=subpath
+        )
     return rt("report_details.html", report=report)
 
 
