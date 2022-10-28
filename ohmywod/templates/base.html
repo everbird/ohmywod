@@ -10,13 +10,17 @@
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/malihu-custom-scrollbar-plugin/3.1.5/jquery.mCustomScrollbar.min.css">
         <title>{% block title %}{% endblock %} - WoD</title>
         <style type="text/css">
+            #nav_menu {
+                position: static;
+            }
+
             #dismiss {
                 width: 35px;
                 height: 35px;
                 position: absolute;
                 /* top right corner of the sidebar */
-                bottom: -15px;
-                right: 0;
+                bottom: 0;
+                right: 15px;
             }
 
             #content {
@@ -163,7 +167,7 @@
                     <h3>Oh my Wod</h3>
                 </div>
                 <hr>
-                <ul class="nav nav-pills flex-column mb-auto">
+                <ul id="nav_menu" class="nav nav-pills flex-column">
                     <li class="nav-item">
                         <a href="/" class="nav-link" aria-current="page">
                             Home
@@ -176,7 +180,7 @@
                     </li>
                 </ul>
                 <hr>
-                <div id="sidebar_content">
+                <div id="sidebar_content" class="flex-column mb-auto">
                     {% block sidebar_content %}
 <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
                     {% endblock %}
@@ -243,9 +247,11 @@
                     <script>
                         $(document).ready(function () {
 
+                            /*
                             $("#sidebar").mCustomScrollbar({
-                                theme: "minimal"
+                                theme: "dark"
                             });
+                            */
 
                             $("#dismiss").on('click', function () {
                                 $('#sidebar, #content, #sidebarCollapse').toggleClass('active');

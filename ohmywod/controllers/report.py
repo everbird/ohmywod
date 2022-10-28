@@ -12,7 +12,7 @@ class ReportController:
         return ReportCategory.query.filter_by(owner=username).all()
 
     def get_reports_by_user(self, username):
-        return Report.query.filer_by(owner=username).all()
+        return Report.query.filter_by(owner=username).all()
 
     def create_report(self, category, name, owner):
         c = ReportCategoryQuery.get_by_name(category)
@@ -31,3 +31,15 @@ class ReportController:
         category = ReportCategory(name=name, description=description, owner=owner)
         db.session.add(category)
         db.session.commit()
+
+    def get_all_categories(self):
+        return ReportCategory.query.all()
+
+    def get_all_reports(self):
+        return Report.query.all()
+
+    def get_category(sefl, cid):
+        return ReportCategory.query.get(cid)
+
+    def get_report(self, rid):
+        return Report.query.get(rid)

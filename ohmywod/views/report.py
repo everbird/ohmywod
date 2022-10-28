@@ -75,46 +75,26 @@ def report_raw(username, category, name, subpath="index.html"):
 
         return rt_string(raw)
 
-@report.route("/details/<username>/<category>/<name>/")
-@report.route("/details/<username>/<category>/<name>/<path:subpath>")
-def report_read(username, category, name, subpath="index.html"):
-    return rt(
-        "report_details.html",
-        username=username,
-        category=category,
-        name=name,
-        subpath=subpath
-    )
+
+@report.route("/category/<category_id>")
+def view_category(category_id):
+    rc = ReportController()
+    category = rc.get_category(category_id)
+    return rt("category.html", category=category)
 
 
-@report.route("/<username>/<category>/")
-def report_category(username, category):
-    data_dir = current_app.config["DATA_DIR"]
-    cpath = os.path.join(data_dir, username, category)
-    p = Path(cpath)
-    p.mkdir(parents=True, exist_ok=True)
-    dirs = listdir_only(cpath)
-    return rt("category.html", category=category, username=username, dirs=dirs)
+@report.route("/report/<report_id>")
+def view_report(report_id):
+    rc = ReportController()
+    report = rc.get_report(report_id)
+    return rt("report_details.html", report=report)
 
 
 @report.route("/")
 def report_page():
-    data_dir = current_app.config["DATA_DIR"]
-    rpath = Path(data_dir)
-    dirs = []
-    for upath in rpath.iterdir():
-        if not upath.is_dir():
-            continue
-
-        username = upath.stem
-        for cpath in upath.iterdir():
-            if not cpath.is_dir():
-                continue
-
-            category = cpath.stem
-            dirs.append((category, username))
-
-    return rt("root.html", dirs=dirs)
+    rc = ReportController()
+    categories = rc.get_all_categories()
+    return rt("root.html", categories=categories)
 
 
 class NewCategoryForm(FlaskForm):

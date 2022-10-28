@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}战报 - {{ category }}{% endblock %}
+{% block title %}战报 - {{ category.name }}{% endblock %}
 
 {% block head %}
     {{ super() }}
@@ -8,6 +8,10 @@
 <style type="text/css">
     #report-breadcrumb ol {
         border-radius: 0px;
+    }
+
+    .breadcrumb-item {
+        max-width: 40%;
     }
 
     .pond {
@@ -48,14 +52,14 @@
 <nav id="report-breadcrumb" aria-label="breadcrumb">
   <ol class="breadcrumb">
       <li class="breadcrumb-item">
-         <a href="/r/">战报</a>
+         <a href="/r/">目录</a>
       </li>
-      <li class="breadcrumb-item active" aria-current="page">
-          {{ category }}
+      <li class="breadcrumb-item active text-truncate" aria-current="page">
+          {{ category.name }}
       </li>
   </ol>
 </nav>
-{% if current_user.username == username %}
+{% if current_user.username == category.owner %}
 <div class="pond" style="opacity: 1;">
     <input id="mypond" type="file" style="opacity: 1;"/>
 </div>
@@ -63,15 +67,15 @@
 <table class="table table-striped table-dark">
     <thead>
         <tr>
-            <th scope="col">#</th>
+            <th scope="col">Id</th>
             <th scope="col">Name</th>
         </tr>
     </thead>
     <tbody>
-    {% for d in dirs %}
+    {% for r in category.reports %}
         <tr>
-            <th scope="row">{{ loop.index }}</th>
-            <td><a href="{{ url_for('wodreport.report_read', username=username, category=category, name=d) }}">{{ d }}</a></td>
+            <th scope="row">{{ r.id }}</th>
+            <td><a href="{{ url_for('wodreport.view_report', report_id=r.id) }}">{{ r.name }}</a></td>
         </tr>
     {% endfor %}
     </tbody>

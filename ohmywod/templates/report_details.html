@@ -9,6 +9,10 @@
       margin-bottom: 0px;
   }
 
+  .breadcrumb-item {
+      max-width: 40%;
+  }
+
   .iframe-loading {
       height: 100vh;
   }
@@ -36,13 +40,13 @@
 <nav id="report-breadcrumb" aria-label="breadcrumb">
   <ol class="breadcrumb">
       <li class="breadcrumb-item">
-         <a href="/r/">战报</a>
+         <a href="/r/">目录</a>
       </li>
-      <li class="breadcrumb-item" aria-current="page">
-          <a href="{{ url_for('wodreport.report_category', username=username, category=category) }}">{{ category }}</a>
+      <li class="breadcrumb-item text-truncate" aria-current="page">
+          <a href="{{ url_for('wodreport.view_category', category_id=report.category_id) }}">{{ report.category.name }}</a>
       </li>
-      <li class="breadcrumb-item active" aria-current="page">
-          {{ name }}
+      <li class="breadcrumb-item active text-truncate" aria-current="page">
+          {{ report.name }}
       </li>
   </ol>
 </nav>
@@ -52,10 +56,10 @@
       <span class="visually-hidden">Loading...</span>
     </div>
 </div>
-  <iframe id="report_iframe" class="embed-responsive-item" onload="$('.iframe-loading').css('background-image', 'none'); $('#spinner').hide(); $('.iframe-loading iframe').show();" src="{{ url_for("wodreport.report_raw", username=username, category=category, name=name, subpath=subpath) }}" title="Report details"></iframe>
+  <iframe id="report_iframe" class="embed-responsive-item" onload="$('.iframe-loading').css('background-image', 'none'); $('#spinner').hide(); $('.iframe-loading iframe').show();" src="{{ url_for("wodreport.report_raw", username=report.owner, category=report.category.name, name=report.name, subpath=subpath) }}" title="Report details"></iframe>
 </div>
 {% endblock %}
 
 {% block sidebar_content %}
-TBD: meta for {{ name }}
+TBD: meta for {{ report.name }}
 {% endblock %}
