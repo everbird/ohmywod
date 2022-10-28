@@ -10,7 +10,7 @@ from flask import (
     render_template as rt,
     render_template_string as rt_string,
     redirect,
-    url_for, current_app, g
+    url_for, current_app, g, session, request
 )
 from flask_ldap3_login.forms import LDAPLoginForm
 from flask_login import login_user, current_user, login_required, logout_user
@@ -72,3 +72,10 @@ def register():
 def logout():
     logout_user()
     return redirect("/")
+
+
+@frontend.route("/api/user_session", methods=["POST"])
+def server_session():
+    sidebar_is_active = request.form.get("sidebar_is_active")
+    session['sidebar_is_active'] = sidebar_is_active == 'true'
+    return 'ok'

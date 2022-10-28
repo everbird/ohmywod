@@ -117,7 +117,7 @@
     <body>
         <div class="wrapper">
             <!-- Sidebar -->
-            <nav id="sidebar" class="d-flex flex-column flex-shrink-0 p-3 text-white bg-dark">
+            <nav id="sidebar" class="d-flex flex-column flex-shrink-0 p-3 text-white bg-dark {{ 'active' if session['sidebar_is_active'] else ''}}">
                 <div class="sidebar-header">
                     <h3>Oh my Wod</h3>
                 </div>
@@ -174,12 +174,12 @@
                 </div>
             </nav>
 
-            <div id="content">
+            <div id="content" class="{{ 'active' if session['sidebar_is_active'] else ''}}">
 
-                <nav id="navbar" class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
+                <nav id="navbar" class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top {{ 'active' if session['sidebar_is_active'] else ''}}">
 
                     <div class="container-fluid">
-                        <button type="button" id="sidebarCollapse" class="btn btn-primary">
+                        <button type="button" id="sidebarCollapse" class="btn btn-primary {{ 'active' if session['sidebar_is_active'] else ''}}">
                             <i class="fa-solid fa-bars"></i>
                         </button>
 
@@ -197,15 +197,31 @@
                     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/js/fontawesome.min.js" integrity="sha512-j3gF1rYV2kvAKJ0Jo5CdgLgSYS7QYmBVVUjduXdoeBkc4NFV4aSRTi+Rodkiy9ht7ZYEwF+s09S43Z1Y+ujUkA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
                     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.js"></script>
                     <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
+                    <script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.1/dist/js.cookie.min.js"></script>
                     <script>
                         $(document).ready(function () {
+
+                            function update_sidebar_active(is_active) {
+                                var payload = { 'sidebar_is_active': is_active};
+                                $.ajax({
+                                    type: "POST",
+                                    data: payload,
+                                    dataType: 'json',
+                                    url: "{{ url_for('frontend.server_session') }}"
+                                });
+                            };
+
                             $("#dismiss").on('click', function () {
                                 $('#sidebar, #content, #sidebarCollapse, #navbar').toggleClass('active');
+                                var is_active = $('#sidebar').hasClass("active");
+                                update_sidebar_active(is_active);
                             });
                             
                             $('#sidebarCollapse').on('click', function () {
                                 $('#sidebar, #content, #navbar').toggleClass('active');
                                 $(this).toggleClass('active');
+                                var is_active = $('#sidebar').hasClass("active");
+                                update_sidebar_active(is_active);
                             });
                         });
                     </script>

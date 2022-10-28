@@ -106,6 +106,7 @@ def report_reader(report_id, subpath="index.html"):
         report_html = etree.tostring(body, pretty_print=False, encoding='unicode')
         report_html = report_html.replace('<body>', '<div id="auto_extracted" style="width: 100vw;">')
         report_html = report_html.replace('</body>', '</div>')
+        report_html = report_html.replace('#', '#/')
 
         return rt(
             "report_reader.html",
