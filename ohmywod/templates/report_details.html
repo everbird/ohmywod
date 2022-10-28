@@ -55,8 +55,8 @@
     <div class="row spinner-border align-items-center mx-auto" role="status">
       <span class="visually-hidden">Loading...</span>
     </div>
-</div>
-  <iframe id="report_iframe" class="embed-responsive-item" onload="$('.iframe-loading').css('background-image', 'none'); $('#spinner').hide(); $('.iframe-loading iframe').show();" src="{{ url_for("wodreport.report_raw", username=report.owner, category=report.category.name, name=report.name, subpath=subpath) }}" title="Report details"></iframe>
+  </div>
+  <iframe id="report_iframe" class="embed-responsive-item" onload="$('#spinner').hide(); $('.iframe-loading iframe').show();" src="{{ url_for("wodreport.report_raw", username=report.owner, category=report.category.name, name=report.name, subpath=subpath) }}" title="Report details"></iframe>
   <a href="{{ url_for('wodreport.report_reader', report_id=report.id) }}">Reader</a>
 </div>
 {% endblock %}

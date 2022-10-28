@@ -440,13 +440,8 @@
                     <tbody>
                       <tr>
                         <td class="gadget_table_cell tableMinWidthRespectingContent" style="vertical-align:middle; white-space: nowrap; overflow: hidden;">
-                          <a href="/r/">目录</a>
-                          /
-                          <a href="{{ url_for('wodreport.view_category', category_id=report.category_id) }}">{{ report.category.name }}</a>
-                          /
-                          <a href="{{ url_for('wodreport.view_report', report_id=report.id) }}">{{ report.name }}</a>
-                          /
-                          战报阅读器:{{ subpath }} (<a href="{{ url_for('wodreport.view_report', report_id=report.id) }}">退出</a>)
+                          <a style="margin-left: 5px;" href="{{ url_for('wodreport.view_report', report_id=report.id) }}">{{ report.name }}</a>
+                          (<a href="{{ url_for('wodreport.view_report', report_id=report.id) }}">返回详情</a>)
                         </td>
                       </tr>
                     </tbody>
