@@ -8,6 +8,20 @@
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/fontawesome.min.css" integrity="sha512-RvQxwf+3zJuNwl4e0sZjQeX7kUa3o82bDETpgVCH2RiwYSZVDdFJ7N/woNigN/ldyOOoKw8584jM4plQdt8bhA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
         <title>{% block title %}{% endblock %} - WoD</title>
         <style type="text/css">
+            #right-content {
+                margin-top: 72px;
+            }
+
+            #navbar {
+                min-width: 300px;
+                margin-left: 335px;
+                transition: all 0.6s cubic-bezier(0.945, 0.020, 0.270, 0.665);
+            }
+
+            #navbar.active {
+                margin-left: 0;
+            }
+
             #nav_menu {
                 position: static;
             }
@@ -58,40 +72,9 @@
             #sidebarCollapse {
                 width: 40px;
                 height: 40px;
-                background: #444;
-                border-radius: 5px;
                 border-width: 0px;
             }
 
-            #sidebarCollapse span {
-                width: 80%;
-                height: 2px;
-                margin: 0 auto;
-                display: block;
-                background: #fff;
-                transition: all 0.8s cubic-bezier(0.810, -0.330, 0.345, 1.375);
-            }
-
-            #sidebarCollapse span:first-of-type {
-                /* rotate first one */
-                transform: rotate(45deg) translate(2px, 2px);
-            }
-            #sidebarCollapse span:nth-of-type(2) {
-                /* second one is not visible */
-                opacity: 0;
-            }
-            #sidebarCollapse span:last-of-type {
-                /* rotate third one */
-                transform: rotate(-45deg) translate(1px, -1px);
-            }
-
-            #sidebarCollapse.active span {
-                /* no rotation */
-                transform: none;
-                /* all bars are visible */
-                opacity: 1;
-                margin: 5px auto;
-            }
 
             @media (max-width: 768px) {
                 #content {
@@ -107,52 +90,26 @@
                     margin-left: 335px;
                 }
 
-                /* Reversing the behavior of the sidebar: 
-       it'll be rotated vertically and off canvas by default, 
-       collapsing in on toggle button click with removal of 
-       the vertical rotation.   */
                 #sidebar {
                     margin-left: -335px;
                     transform: rotateY(100deg);
                 }
+
                 #sidebar.active {
                     margin-left: 0;
                     transform: none;
                 }
 
-                /* Reversing the behavior of the bars: 
-       Removing the rotation from the first,
-       last bars and reappear the second bar on default state, 
-       and giving them a vertical margin */
-                #sidebarCollapse span:first-of-type,
-                #sidebarCollapse span:nth-of-type(2),
-                #sidebarCollapse span:last-of-type {
-                    transform: none;
-                    opacity: 1;
-                    margin: 5px auto;
+                #navbar {
+                    min-width: 300px;
+                    margin-left: 0;
                 }
 
-                /* Removing the vertical margin and make the first and last bars rotate again when the sidebar is open, hiding the second bar */
-                #sidebarCollapse.active span {
-                    margin: 0 auto;
-                }
-                #sidebarCollapse.active span:first-of-type {
-                    transform: rotate(45deg) translate(2px, 2px);
-                }
-                #sidebarCollapse.active span:nth-of-type(2) {
-                    opacity: 0;
-                }
-                #sidebarCollapse.active span:last-of-type {
-                    transform: rotate(-45deg) translate(1px, -1px);
+                #navbar.active {
+                    margin-left: 335px;
+                    transition: all 0.6s cubic-bezier(0.945, 0.020, 0.270, 0.665);
                 }
             }
-
-             .scrolled-down{
-                 transform:translateY(-100%); transition: all 0.3s ease-in-out;
-             }
-             .scrolled-up{
-                 transform:translateY(0); transition: all 0.3s ease-in-out;
-             }
 
         </style>
         {% endblock %}
@@ -219,13 +176,11 @@
 
             <div id="content">
 
-                <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+                <nav id="navbar" class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
 
                     <div class="container-fluid">
-                        <button type="button" id="sidebarCollapse" class="navbar-btn">
-                            <span></span>
-                            <span></span>
-                            <span></span>
+                        <button type="button" id="sidebarCollapse" class="btn btn-primary">
+                            <i class="fa-solid fa-bars"></i>
                         </button>
 
                         {% block nav_content %}{% endblock %}
@@ -236,6 +191,7 @@
 
                 <div id="footer">
                     {% block footer %}
+                    TBD: footer
                     <!-- Font Awesome JS -->
                     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/js/solid.min.js" integrity="sha512-dcTe66qF6q/NW1X64tKXnDDcaVyRowrsVQ9wX6u7KSQpYuAl5COzdMIYDg+HqAXhPpIz1LO9ilUCL4qCbHN5Ng==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
                     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/js/fontawesome.min.js" integrity="sha512-j3gF1rYV2kvAKJ0Jo5CdgLgSYS7QYmBVVUjduXdoeBkc4NFV4aSRTi+Rodkiy9ht7ZYEwF+s09S43Z1Y+ujUkA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
@@ -244,11 +200,11 @@
                     <script>
                         $(document).ready(function () {
                             $("#dismiss").on('click', function () {
-                                $('#sidebar, #content, #sidebarCollapse').toggleClass('active');
+                                $('#sidebar, #content, #sidebarCollapse, #navbar').toggleClass('active');
                             });
                             
                             $('#sidebarCollapse').on('click', function () {
-                                $('#sidebar, #content').toggleClass('active');
+                                $('#sidebar, #content, #navbar').toggleClass('active');
                                 $(this).toggleClass('active');
                             });
                         });
