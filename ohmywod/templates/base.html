@@ -202,12 +202,11 @@
                         $(document).ready(function () {
 
                             function update_sidebar_active(is_active) {
-                                var payload = { 'sidebar_is_active': is_active};
                                 $.ajax({
                                     type: "POST",
-                                    data: payload,
+                                    data: { 'sidebar_is_active': is_active},
                                     dataType: 'json',
-                                    url: "{{ url_for('frontend.server_session') }}"
+                                    url: "{{ url_for('frontend.server_session', key='sidebar_is_active') }}"
                                 });
                             };
 
