@@ -200,14 +200,21 @@
                     <script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.1/dist/js.cookie.min.js"></script>
                     <script>
                         $(document).ready(function () {
+                            const mediaQuery = window.matchMedia('(min-width: 768px)')
+                            const is_mobile = ! mediaQuery.matches
 
+                            // Always hide sidebar at first for mobile
+                            var remember_sidebar = ! is_mobile;
+                            
                             function update_sidebar_active(is_active) {
-                                $.ajax({
-                                    type: "POST",
-                                    data: { 'sidebar_is_active': is_active},
-                                    dataType: 'json',
-                                    url: "{{ url_for('frontend.server_session', key='sidebar_is_active') }}"
-                                });
+                                if (remember_sidebar) {
+                                    $.ajax({
+                                        type: "POST",
+                                        data: { 'sidebar_is_active': is_active},
+                                        dataType: 'json',
+                                        url: "{{ url_for('frontend.server_session', key='sidebar_is_active') }}"
+                                    });
+                                }
                             };
 
                             $("#dismiss").on('click', function () {

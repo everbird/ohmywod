@@ -76,10 +76,10 @@ def logout():
 
 @frontend.route("/api/session/<key>", methods=["POST"])
 def server_session(key):
+    boolean_keys = {'sidebar_is_active'}
     v = request.form.get(key)
-    if key == "sidebar_is_active":
+    if key in boolean_keys:
         #FIXME: TIL: json boolean -> python string rather than boolean in Flask
-        print('111', v)
         v = (v == 'true')
 
     session[key] = v
