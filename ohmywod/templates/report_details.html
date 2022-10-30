@@ -65,5 +65,23 @@ TBD: meta for {{ report.name }}
 {% endblock %}
 
 {% block nav_content %}
-<a class="btn btn-secondary" href="{{ url_for('wodreport.report_reader', report_id=report.id) }}" role="button">全屏</a>
+<button id="fullscreen-btn" class="btn btn-secondary" role="button">全屏</button>
+{% endblock %}
+
+{% block footer %}
+  {{ super() }}
+<script>
+  $(document).ready(function () {
+      
+      $("#fullscreen-btn").on("click", function () {
+          var iframe_href = $("#report_iframe")[0].contentWindow.location.href;
+          var reader_href = iframe_href.replace(
+              "{{ url_for("wodreport.report_raw", username=report.owner, category=report.category.name, name=report.name, subpath=subpath) }}",
+              "{{ url_for('wodreport.report_reader', report_id=report.id) }}"
+          );
+          var scroll_top = $("#report_iframe")[0].contentWindow.document.body.scrollTop;
+          window.location.href = reader_href + "?scroll_top=" + scroll_top;
+      });
+  });
+</script>
 {% endblock %}

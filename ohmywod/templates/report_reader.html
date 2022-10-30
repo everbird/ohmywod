@@ -4,6 +4,7 @@
     <meta http-equiv="Content-Language" content="cn">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="SHORTCUT ICON" href="http://info.world-of-dungeons.org/wod/css/WOD.gif" type="image/gif">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.js"></script>
     <script type="text/javascript" src="http://delta.world-of-dungeons.org/wod/javascript/wod_standard.js?1662631467"></script>
     <script type="text/javascript" src="http://delta.world-of-dungeons.org/wod/javascript/wodtooltip.js?1662631467"></script>
     <title>我的战报</title>
@@ -453,24 +454,6 @@
           </tr>
           <tr>
             <td id="gadgettable-center-td" class="tableMinWidthRespectingContent gadgettable-column" style="vertical-align:top;">
-              <div id="gadgettable-center">
-                <table width="100%" cellspacing="0" cellpadding="0">
-                  <tbody>
-                    <tr>
-                      <td class="gadget_table_cell" style="vertical-align:middle; white-space: nowrap; overflow: hidden;" align="center">
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-                <div class="gadget horizontal_seperator lang-cn">
-                  <div class="gadget_inner" style="height:70px;">
-                    <div class="gadget_scroll" style="height:70px;">
-                      <div class="gadget_body">
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
               <div class="gadget main_content lang-cn">
                 {{ report_html|safe }}
               </div>
@@ -478,5 +461,13 @@
           </tr>
       </table>
     </div>
+    <script>
+      $(document).ready(function () {
+          var urlParams = new URLSearchParams(window.location.search);
+          var scroll_top = parseInt(urlParams.get('scroll_top'));
+          report_offsety = $("#gadgettable-center-td")[0].getBoundingClientRect().y;
+          window.document.body.scrollTop = scroll_top + report_offsety;
+      });
+    </script>
   </body>
 </html>
