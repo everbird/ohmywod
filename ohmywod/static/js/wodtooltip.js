@@ -213,6 +213,11 @@ function wodToolTipShowOnToolTip()
 
 function wodToolTipShow(ev, _this)
 {
+    // Avoid double tooltip
+    if ($("#tooltip_here").is(':visible')) {
+        return;
+    }
+    
     if(!_this)
         _this = this;
 

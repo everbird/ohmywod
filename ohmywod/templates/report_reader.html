@@ -22,15 +22,30 @@
 
       /*]]>*/
     </style>
-    <script type="text/javascript">window.onload = function(e){wodToolTipInit();wodInitialize('delta.world-of-dungeons.org','','/wod/spiel/','/wod/ajax/','WOD','cn','/wod/css//skins/skin-4/','/wod/css/','1','1');}
-      function o(t,n){ 
+    <script type="text/javascript">
+      window.onload = function(e) {
+          wodToolTipInit();
+          wodInitialize('delta.world-of-dungeons.org','','/wod/spiel/','/wod/ajax/','WOD','cn','/wod/css//skins/skin-4/','/wod/css/','1','1');
+      }
+
+      function o(t,n) { 
           return;
         
           var url="http://delta.world-of-dungeons.org/wod/spiel/";
           if(t=="n"){url += "help/npc"}
           if(t=="s"){url += "hero/skill"}
           if(t=="i"){url += "hero/item"}
-          return wo(url + ".php?name=" + n + "&IS_POPUP=1");}
+          return wo(url + ".php?name=" + n + "&IS_POPUP=1");
+      }
+
+      function original_o(t,n) { 
+          var url="http://delta.world-of-dungeons.org/wod/spiel/";
+          if(t=="n"){url += "help/npc"}
+          if(t=="s"){url += "hero/skill"}
+          if(t=="i"){url += "hero/item"}
+          return wo(url + ".php?name=" + n + "&IS_POPUP=1");
+      }
+
       var CTable=function(){};
       CTable.GetNumber = function(cell) {
           var numberPatten = /^\s?([\d]+\.?[\d]*)\s?_?\s?([\d]*\.?[\d]*)\s?$/;
@@ -463,8 +478,9 @@
           </tr>
       </table>
     </div>
-    <div class="tooltip">
-      <a id="dismiss_tooltip" href="#/">[Close]</a>
+    <div class="tooltip" id="tooltip_new">
+      <button id="dismiss_tooltip" class="button clickable">关闭</button>
+      <button id="goto_tooltip" class="button clickable">跳转</button>
       <hr/>
       <div id="tooltip_here"></div>
     </div>
@@ -482,47 +498,66 @@
               $(".tooltip").hide();
           });
 
-          $("a")
-              .on("mousedown touchstart", function (ev) {
-                  if (typeof ev.touches !== 'undefined' && ev.touches.length > 0) {
-                      var touch = ev.touches[0];
-                      xDown = touch.pageX;
-                      yDown = touch.pageY;
-                  } else {
-                      xDown = ev.pageX;
-                      yDown = ev.pageY;
-                  }
-              })
-              .on("mouseup touchend", function (ev) {
-                  if (typeof ev.changedTouches !== 'undefined' && ev.changedTouches.length > 0) {
-                      var touch = ev.changedTouches[0];
-                      xUp = touch.pageX;
-                      yUp = touch.pageY;
-                  } else {
-                      xUp = ev.pageX;
-                      yUp = ev.pageY;
-                  }
+          $("a, span")
+              .on("mousedown mouseup touchstart touchend click", function (ev) {
+                  ev.preventDefault();
+                  if (ev.type == "touchstart" || ev.type == "mousedown") {
+                      if (typeof ev.touches !== 'undefined' && ev.touches.length > 0) {
+                          touch = ev.touches[0];
+                          xDown = touch.pageX;
+                          yDown = touch.pageY;
+                      } else {
+                          xDown = ev.pageX;
+                          yDown = ev.pageY;
+                      }
+                  } else if (ev.type == "touchend" || ev.type == "mouseup") {
+                      if (typeof ev.changedTouches !== 'undefined' && ev.changedTouches.length > 0) {
+                          touch = ev.changedTouches[0];
+                          xUp = touch.pageX;
+                          yUp = touch.pageY;
+                      } else {
+                          xUp = ev.pageX;
+                          yUp = ev.pageY;
+                      }
 
-                  if (Math.abs(xDown - xUp) > 5 || Math.abs(yDown - yUp) > 5) {
+                      if (Math.abs(xDown - xUp) > 5 || Math.abs(yDown - yUp) > 5) {
+                          return;
+                      }
+
+                      t = ev.currentTarget;
+                      if (t.onmouseover) {
+                          tip_content = t.getAttribute("onmouseover")
+                          tip_content = tip_content.replaceAll("return wodToolTip(this,'", "");
+                          tip_content = tip_content.replaceAll("');", "");
+                          tip_content = tip_content.replaceAll("wodToolTip(this,'", "");
+                          tip_content = tip_content.replaceAll("')", "");
+                          tip_content = tip_content.replaceAll("\\'", "'");
+                          tip_content = tip_content.replaceAll('\\"', '"');
+                          $("#tooltip_here").html(tip_content);
+
+                          const popperInstance = Popper.createPopper(t, tooltip[0]);
+                          tooltip.show();
+                          // Avoid double tooltip
+                          wodToolTipClose();
+
+                          $("#goto_tooltip").on("click", function () {
+                              onclick_fn = t.getAttribute("onclick");
+                              onclick_fn = onclick_fn.replace("return o(", "original_o(");
+                              eval(onclick_fn);
+                          });
+                      }
+                  } else if (ev.type == "click") {
+                      onclick_fn = t.getAttribute("onclick");
+                      onclick_fn = onclick_fn.replace("return ", "");
+                      eval(onclick_fn);
+                      return;
+                  } else if (ev.type == "mouseover") {
+                      mouseover_fn = t.getAttribute("mouseover");
+                      mouseover_fn = mouseover_fn.replace("return ", "");
+                      eval(mouseover_fn);
                       return;
                   }
-
-                  t = ev.currentTarget;
-                  if (t.onmouseover) {
-                      tip_content = t.getAttribute("onmouseover")
-                      tip_content = tip_content.replaceAll("return wodToolTip(this,'", "");
-                      tip_content = tip_content.replaceAll("');", "");
-                      tip_content = tip_content.replaceAll("wodToolTip(this,'", "");
-                      tip_content = tip_content.replaceAll("')", "");
-                      tip_content = tip_content.replaceAll("\\'", "'");
-                      tip_content = tip_content.replaceAll('\\"', '"');
-                      $("#tooltip_here").html(tip_content);
-
-                      const popperInstance = Popper.createPopper(t, tooltip[0]);
-                      tooltip.show();
-                  }
-              })
-          ;
+              });
 
       });
 

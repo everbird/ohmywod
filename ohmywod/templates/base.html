@@ -253,7 +253,7 @@
                                         yUp = ev.pageY;
                                     }
                                     if (xDown != xUp || yDown != yUp) {
-                                        if (xUp < xDown) {
+                                        if (xDown - xUp > 10) {
                                             $('#sidebar, #content, #sidebarCollapse, #navbar').toggleClass('active');
                                             var is_active = $('#sidebar').hasClass("active");
                                             update_sidebar_active(is_active);
