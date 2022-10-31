@@ -6,7 +6,8 @@
     <link rel="SHORTCUT ICON" href="http://info.world-of-dungeons.org/wod/css/WOD.gif" type="image/gif">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.js"></script>
     <script type="text/javascript" src="http://delta.world-of-dungeons.org/wod/javascript/wod_standard.js?1662631467"></script>
-    <script type="text/javascript" src="http://delta.world-of-dungeons.org/wod/javascript/wodtooltip.js?1662631467"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='js/wodtooltip.js') }}"></script>
+    <script src="https://unpkg.com/@popperjs/core@2"></script>
     <title>我的战报</title>
     <link rel="stylesheet" type="text/css" href="http://delta.world-of-dungeons.org/wod/css/layout.css?1662631467">
     <link rel="stylesheet" type="text/css" href="http://delta.world-of-dungeons.org/wod/css//skins/skin-4/skin-cn.css?1662631467">
@@ -18,6 +19,7 @@
       .tableMinHeightRespectingContent {
           height:1px;
       }
+
       /*]]>*/
     </style>
     <script type="text/javascript">window.onload = function(e){wodToolTipInit();wodInitialize('delta.world-of-dungeons.org','','/wod/spiel/','/wod/ajax/','WOD','cn','/wod/css//skins/skin-4/','/wod/css/','1','1');}
@@ -461,13 +463,69 @@
           </tr>
       </table>
     </div>
+    <div class="tooltip">
+      <a id="dismiss_tooltip" href="#/">[Close]</a>
+      <hr/>
+      <div id="tooltip_here"></div>
+    </div>
     <script>
       $(document).ready(function () {
           var urlParams = new URLSearchParams(window.location.search);
           var scroll_top = parseInt(urlParams.get('scroll_top'));
           report_offsety = $("#gadgettable-center-td")[0].getBoundingClientRect().y;
           window.document.body.scrollTop = scroll_top + report_offsety;
+
+          const tooltip = $('.tooltip');
+          tooltip.hide();
+
+          $("#dismiss_tooltip").on("click", function () {
+              $(".tooltip").hide();
+          });
+
+          $("a")
+              .on("mousedown touchstart", function (ev) {
+                  if (typeof ev.touches !== 'undefined' && ev.touches.length > 0) {
+                      var touch = ev.touches[0];
+                      xDown = touch.pageX;
+                      yDown = touch.pageY;
+                  } else {
+                      xDown = ev.pageX;
+                      yDown = ev.pageY;
+                  }
+              })
+              .on("mouseup touchend", function (ev) {
+                  if (typeof ev.changedTouches !== 'undefined' && ev.changedTouches.length > 0) {
+                      var touch = ev.changedTouches[0];
+                      xUp = touch.pageX;
+                      yUp = touch.pageY;
+                  } else {
+                      xUp = ev.pageX;
+                      yUp = ev.pageY;
+                  }
+
+                  if (Math.abs(xDown - xUp) > 5 || Math.abs(yDown - yUp) > 5) {
+                      return;
+                  }
+
+                  t = ev.currentTarget;
+                  if (t.onmouseover) {
+                      tip_content = t.getAttribute("onmouseover")
+                      tip_content = tip_content.replaceAll("return wodToolTip(this,'", "");
+                      tip_content = tip_content.replaceAll("');", "");
+                      tip_content = tip_content.replaceAll("wodToolTip(this,'", "");
+                      tip_content = tip_content.replaceAll("')", "");
+                      tip_content = tip_content.replaceAll("\\'", "'");
+                      tip_content = tip_content.replaceAll('\\"', '"');
+                      $("#tooltip_here").html(tip_content);
+
+                      const popperInstance = Popper.createPopper(t, tooltip[0]);
+                      tooltip.show();
+                  }
+              })
+          ;
+
       });
+
     </script>
   </body>
 </html>
