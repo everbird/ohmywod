@@ -547,6 +547,7 @@
                               eval(onclick_fn);
                           });
                       } else if (t.tagName == "A") {
+                          $("#tooltip_here").html("");
                           const popperInstance = Popper.createPopper(t, tooltip[0]);
                           tooltip.show();
                           // Avoid double tooltip
