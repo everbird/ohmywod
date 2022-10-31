@@ -543,6 +543,19 @@
                           $("#goto_tooltip").on("click", function () {
                               onclick_fn = t.getAttribute("onclick");
                               onclick_fn = onclick_fn.replace("return o(", "original_o(");
+                              onclick_fn = onclick_fn.replace("return ", "");
+                              eval(onclick_fn);
+                          });
+                      } else if (t.tagName == "A") {
+                          const popperInstance = Popper.createPopper(t, tooltip[0]);
+                          tooltip.show();
+                          // Avoid double tooltip
+                          wodToolTipClose();
+
+                          $("#goto_tooltip").on("click", function () {
+                              onclick_fn = t.getAttribute("onclick");
+                              onclick_fn = onclick_fn.replace("return o(", "original_o(");
+                              onclick_fn = onclick_fn.replace("return ", "");
                               eval(onclick_fn);
                           });
                       }
