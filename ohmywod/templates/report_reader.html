@@ -28,6 +28,10 @@
           wodInitialize('delta.world-of-dungeons.org','','/wod/spiel/','/wod/ajax/','WOD','cn','/wod/css//skins/skin-4/','/wod/css/','1','1');
       }
 
+      function dummy_jump(t,n) {
+          return;
+      }
+
       function o(t,n) { 
           return;
         
@@ -553,9 +557,12 @@
                               eval(onclick_fn);
                           });
                       } else if (t.tagName == "A") {
-                          if (t.parentElement.tagName == 'LI' || t.parentElement.tagName == 'P') {
+                          if (t.parentElement.tagName == 'P') {
                               window.location = t.href;
                               return true;
+                          } else if (t.parentElement.tagName == 'LI') {
+      console.info("run onclick");
+                              return false;
                           } else if (!t.onclick) {
                               window.location = t.href;
                               return true;
@@ -570,6 +577,7 @@
                           $("#goto_tooltip").on("click", function () {
                               onclick_fn = t.getAttribute("onclick");
                               onclick_fn = onclick_fn.replace("return o(", "original_o(");
+                              onclick_fn = onclick_fn.replace("return dummy_jump(", "jump(");
                               onclick_fn = onclick_fn.replace("return ", "");
                               eval(onclick_fn);
                           });
