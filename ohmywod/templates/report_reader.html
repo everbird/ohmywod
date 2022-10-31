@@ -491,6 +491,12 @@
           report_offsety = $("#gadgettable-center-td")[0].getBoundingClientRect().y;
           window.document.body.scrollTop = scroll_top + report_offsety;
 
+          function goToAnchor(anchor) {
+              var loc = document.location.toString().split('#')[0];
+              document.location = loc + '#' + anchor;
+              return false;
+          }
+          
           const tooltip = $('.tooltip');
           tooltip.hide();
 
@@ -547,9 +553,14 @@
                               eval(onclick_fn);
                           });
                       } else if (t.tagName == "A") {
-                          if (t.parentElement.tagName == 'LI') {
-                              return;
+                          if (t.parentElement.tagName == 'LI' || t.parentElement.tagName == 'P') {
+                              window.location = t.href;
+                              return true;
+                          } else if (!t.onclick) {
+                              window.location = t.href;
+                              return true;
                           }
+
                           $("#tooltip_here").html("");
                           const popperInstance = Popper.createPopper(t, tooltip[0]);
                           tooltip.show();
