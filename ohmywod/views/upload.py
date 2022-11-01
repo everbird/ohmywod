@@ -43,7 +43,7 @@ def process(category_id):
     if fobj and allowed_file(fobj.filename):
         #filename = secure_filename(fobj.filename)
         filename = fobj.filename
-        uid = os.path.join(category, filename)
+        uid = os.path.join(str(category.id), filename)
         dpath = Path(
             os.path.join(
                 current_app.config['UPLOAD_DIR'],

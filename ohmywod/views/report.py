@@ -18,7 +18,8 @@ from flask_login import current_user
 from flask_wtf import FlaskForm
 from lxml import etree, html
 from wtforms import StringField, SubmitField
-from wtforms.validators import DataRequired
+from wtforms.validators import DataRequired, ValidationError
+from wtforms.widgets import TextArea
 
 from ohmywod.controllers.report import ReportController
 
@@ -127,8 +128,18 @@ def report_page():
 
 class NewCategoryForm(FlaskForm):
     name = StringField('name', validators =[DataRequired()])
-    description = StringField("description")
+    description = StringField("description", widget=TextArea())
     submit = SubmitField("Create")
+
+    def validate_name(form, field):
+        name = field.data
+        rc = ReportController()
+        if rc.get_category_by_name_and_username(name, current_user.username):
+            raise ValidationError(
+                "Category {} exists for username:{}"
+                .format(name, current_user.username)
+            )
+
 
 
 @report.route("/new_category", methods=['GET', 'POST'])
@@ -138,12 +149,11 @@ def new_category():
         rc = ReportController()
         name = form.name.data
         description = form.description.data
-        rc.create_category(name, description, current_user.username)
+        category = rc.create_category(name, description, current_user.username)
         return redirect(
             url_for(
-                "wodreport.report_category",
-                username=current_user.username,
-                category=name
+                "wodreport.view_category",
+                category_id=category.id
             )
         )
     return rt("new_category.html", form=form)

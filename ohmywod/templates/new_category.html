@@ -3,25 +3,29 @@
 {% block title %}战报 - New Category{% endblock %}
 
 {% block content %}
-    <h1>Create a new Category</h1>
-<br>
+<section class="w-100 p-4 d-flex justify-content-center pb-4">
 <form action="" method="post">
    {{ form.hidden_tag() }}
-   <div>
-      {{ form.name(placeholder="name") }}
+   <div class="text-center mb-4">
+      <h2>Create a new Category</h2>
+   </div>
+   <br>
+   <br>
+   <div class="mb-4">
+      {{ form.name(placeholder="name", class="form-control is-invalid" if form.name.errors else "form-control") }}
       {% for error in form.name.errors %}
-      <p>{{ error }}</p>
+        <div class="invalid-feedback">* {{ error }}</div>
       {% endfor %}
    </div>
-   <br>
-   <div>
-      {{ form.description(placeholder="description") }}
+   <div class="mb-4">
+      {{ form.description(placeholder="description", class="form-control is-invalid" if form.description.errors else "form-control") }}
       {% for error in form.description.errors %}
-      <p>{{ error }}</p>
+        <div class="invalid-feedback">* {{ error }}</div>
       {% endfor %}
    </div>
    <br>
-   <div>{{ form.submit() }}
+   <div class="d-grid gap-2">{{ form.submit(class="btn btn-primary mb-4") }}
    </div>
 </form>
+</section>
 {% endblock %}

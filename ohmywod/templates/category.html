@@ -18,7 +18,7 @@
         width:100%;
         padding-left: 15px;
         padding-right: 15px;
-        height:9rem;
+        padding-bottom: 15px;
         margin:0 auto;
         opacity:0;
         transition:opacity 1s .25s
@@ -64,6 +64,7 @@
     <input id="mypond" type="file" style="opacity: 1;"/>
 </div>
 {% endif %}
+{% if category.reports %}
 <table class="table table-striped table-dark">
     <thead>
         <tr>
@@ -80,6 +81,10 @@
     {% endfor %}
     </tbody>
 </table>
+{% else %}
+
+{% endif %}
+
 {% endblock %}
 
 {% block footer %}

@@ -31,6 +31,7 @@ class ReportController:
         category = ReportCategory(name=name, description=description, owner=owner)
         db.session.add(category)
         db.session.commit()
+        return category
 
     def get_all_categories(self):
         return ReportCategory.query.all()
@@ -43,3 +44,6 @@ class ReportController:
 
     def get_report(self, rid):
         return Report.query.get(rid)
+
+    def get_category_by_name_and_username(self, name, username):
+        return ReportCategory.query.filter_by(name=name, owner=username).all()
