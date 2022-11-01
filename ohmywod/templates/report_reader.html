@@ -550,7 +550,7 @@
                           // Avoid double tooltip
                           wodToolTipClose();
 
-                          $("#goto_tooltip").on("click", function () {
+                          $("#goto_tooltip").unbind("click").bind("click", function () {
                               onclick_fn = t.getAttribute("onclick");
                               onclick_fn = onclick_fn.replace("return o(", "original_o(");
                               onclick_fn = onclick_fn.replace("return ", "");
@@ -574,7 +574,7 @@
                           // Avoid double tooltip
                           wodToolTipClose();
 
-                          $("#goto_tooltip").on("click", function () {
+                          $("#goto_tooltip").unbind("click").bind("click", function () {
                               onclick_fn = t.getAttribute("onclick");
                               onclick_fn = onclick_fn.replace("return o(", "original_o(");
                               onclick_fn = onclick_fn.replace("return dummy_jump(", "jump(");
