@@ -15,8 +15,8 @@ from flask import (
 from flask_ldap3_login.forms import LDAPLoginForm
 from flask_login import login_user, current_user, login_required, logout_user
 from flask_wtf import FlaskForm
-from wtforms import StringField,PasswordField,SubmitField,BooleanField
-from wtforms.validators import DataRequired,Email,EqualTo
+from wtforms import StringField, PasswordField, SubmitField, BooleanField
+from wtforms.validators import DataRequired, Email, EqualTo, ValidationError
 
 from ohmywod.controllers.report import ReportController
 from ohmywod.controllers.user import UserController
@@ -51,6 +51,15 @@ class RegistrationForm(FlaskForm):
     password1 = PasswordField('Password', validators = [DataRequired()])
     password2 = PasswordField('Confirm Password', validators = [DataRequired(),EqualTo('password1')])
     submit = SubmitField('Register')
+
+    def validate_email(form, field):
+        email = field.data
+        if email:
+            uc = UserController()
+            ldap_user = uc.get_ldap_user_by_email(email)
+            db_user = uc.get_db_user_by_email(email)
+            if ldap_user or db_user:
+                raise ValidationError("Email is already used by other users.")
 
 
 @frontend.route('/register', methods = ['POST','GET'])

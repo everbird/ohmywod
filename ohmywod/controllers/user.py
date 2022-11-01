@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from ldap3 import HASHED_SALTED_SHA
+import json
+
+from ldap3 import HASHED_SALTED_SHA, SUBTREE
 from ldap3.utils.hashed import hashed
 
 from ohmywod.extensions import db, ldap_manager
@@ -51,3 +53,23 @@ class UserController:
         d = ldap_manager.get_user_info_for_username(username)
         if d:
             return LDAPUser.from_ldap_entry(d)
+
+    def get_db_user_by_email(self, email):
+        return User.query.filter_by(email=email).first()
+
+    def get_ldap_user_by_email(self, email):
+        conn = ldap_manager.connection
+        result = conn.search(
+            "dc=everbird,dc=me",
+            "(&(objectClass=inetOrgPerson)(mail={}))".format(email),
+            SUBTREE,
+            attributes=['*']
+        )
+        if result:
+            entry = conn.entries[0]
+            data = json.loads(entry.entry_to_json())
+            _entry = dict(
+                dn=data['dn'],
+                **data['attributes']
+            )
+            return LDAPUser.from_ldap_entry(_entry)

@@ -15,12 +15,8 @@ class ReportController:
         return Report.query.filter_by(owner=username).all()
 
     def create_report(self, category, name, owner):
-        c = ReportCategoryQuery.get_by_name(category)
-        if not c:
-            raise Error("category should exist")
-
         report = Report(
-            category_id=c.id,
+            category_id=category.id,
             owner=owner,
             name=name
         )

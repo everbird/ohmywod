@@ -63,7 +63,7 @@ def process(category_id):
             tpath.mkdir(parents=True, exist_ok=True)
             z.extractall(os.fspath(tpath))
 
-        rc.create_report(category.name, _filename, category.owner)
+        rc.create_report(category, _filename, category.owner)
         return uid
 
     abort(400)
