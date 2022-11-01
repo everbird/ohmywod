@@ -26,14 +26,14 @@
    <br>
    <br>
   <div class="form-outline mb-4">
-    {{ form.username(placeholder="Username", class="form-control is-invalid" if form.username.errors else "form-control"") }}
+    {{ form.username(placeholder="Username", class="form-control is-invalid" if form.username.errors else "form-control") }}
     {% for error in form.username.errors %}
         <div class="invalid-feedback">* {{ error }}</div>
     {% endfor %}
   </div>
 
   <div class="form-outline mb-4">
-    {{ form.password(placeholder="Password", class="form-control is-invalid" if form.password.errors else "form-control"") }}
+    {{ form.password(placeholder="Password", class="form-control is-invalid" if form.password.errors else "form-control") }}
     {% for error in form.password.errors %}
         <div class="invalid-feedback">* {{ error }}</div>
     {% endfor %}
