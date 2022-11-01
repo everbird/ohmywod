@@ -39,6 +39,7 @@
                 min-width: 300px;
                 width: calc(100% - 335px);
                 min-height: 100vh;
+                min-height: calc(var(--vh, 1vh) * 100);
                 transition: all 0.6s cubic-bezier(0.945, 0.020, 0.270, 0.665);
                 position: absolute;
                 top: 0;
@@ -60,6 +61,7 @@
                 top: 0;
                 left: 0;
                 height: 100vh;
+                height: calc(var(--vh, 1vh) * 100);
                 z-index: 999;
                 transition: all 0.6s cubic-bezier(0.945, 0.020, 0.270, 0.665);
                 transform-origin: center left; /* Set the transformed position of sidebar to center left side. */
@@ -135,13 +137,13 @@
                     </li>
                 </ul>
                 <hr>
-                <div id="sidebar_content" class="flex-column mb-auto">
+                <div id="sidebar_content">
                     {% block sidebar_content %}
 <p>TBD</p>
                     {% endblock %}
                 </div>
-                <hr>
-                <div id="sidebar_ad" class="align-items-center">
+                <div id="sidebar_ad" class="align-items-center mt-auto">
+                    <hr>
                     {% block sidebar_ad%}
                     <div class="text-center">
                         <img src="https://placehold.jp/300x250.png"></img>
@@ -174,7 +176,7 @@
                 </div>
             </nav>
 
-            <div id="content" class="{{ 'active' if session['sidebar_is_active'] else ''}}">
+            <div id="content" class="{{ 'active' if session['sidebar_is_active'] else ''}} d-flex flex-column">
 
                 <nav id="navbar" class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top {{ 'active' if session['sidebar_is_active'] else ''}}">
 
@@ -190,7 +192,7 @@
                 <div id="right-content">{% block content %}{% endblock %}</div>
 
 
-                <div id="footer">
+                <div id="footer" class="mt-auto">
                     {% block footer %}
                     TBD: footer
                     <!-- Font Awesome JS -->
@@ -201,6 +203,18 @@
                     <script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.1/dist/js.cookie.min.js"></script>
                     <script src="https://unpkg.com/@popperjs/core@2"></script>
                     <script>
+                        // REF: https://css-tricks.com/the-trick-to-viewport-units-on-mobile/
+                        // First we get the viewport height and we multiple it by 1% to get a value for a vh unit
+                        let vh = window.innerHeight * 0.01;
+                        // Then we set the value in the --vh custom property to the root of the document
+                        document.documentElement.style.setProperty('--vh', `${vh}px`);
+                        // We listen to the resize event
+                        window.addEventListener('resize', () => {
+                            // We execute the same script as before
+                            let vh = window.innerHeight * 0.01;
+                            document.documentElement.style.setProperty('--vh', `${vh}px`);
+                        });
+
                         const mediaQuery = window.matchMedia('(min-width: 768px)')
                         const is_mobile = ! mediaQuery.matches
 
