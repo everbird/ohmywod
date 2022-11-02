@@ -76,4 +76,4 @@ class UserController:
             return LDAPUser.from_ldap_entry(_entry)
 
     def get_db_user_by_display_name(self, display_name):
-        return User.query.filter_by(display_name=display).first()
+        return User.query.filter_by(display_name=display_name).first()
