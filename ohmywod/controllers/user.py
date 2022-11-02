@@ -35,6 +35,7 @@ class UserController:
         return user
 
     def save(self, username, display_name, email, passwd):
+        display_name = display_name or username
         if self.save_ldap_user(username, display_name, email, passwd):
             self.save_db_user(username, display_name, email, passwd)
 
@@ -42,7 +43,7 @@ class UserController:
         return False
 
     def get_db_user(self, username):
-        return User.get(username)
+        return User.query.filter_by(username=username).first()
 
     def get_ldap_user(self, dn):
         d = ldap_manager.get_user_info(dn)
@@ -73,3 +74,6 @@ class UserController:
                 **data['attributes']
             )
             return LDAPUser.from_ldap_entry(_entry)
+
+    def get_db_user_by_display_name(self, display_name):
+        return User.query.filter_by(display_name=display).first()

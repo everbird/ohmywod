@@ -58,7 +58,22 @@ class RegistrationForm(FlaskForm):
                 raise ValidationError("Email is already used by other users.")
 
     def validate_display_name(form, field):
-        pass
+        display_name = field.data
+        if display_name:
+            uc = UserController()
+            db_user = uc.get_db_user_by_display_name(display_name)
+            if db_user:
+                raise ValidationError("Display name is already used by other users.")
+
+    def validate_username(form, field):
+        username = field.data
+        if username:
+            uc = UserController()
+            db_user = uc.get_db_user(username)
+            if db_user:
+                raise ValidationError("Username is already used by other users.")
+
+
 
 
 @frontend.route('/register', methods = ['POST','GET'])
