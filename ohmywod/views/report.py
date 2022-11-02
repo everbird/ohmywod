@@ -26,6 +26,17 @@ from ohmywod.controllers.report import ReportController
 
 report = Blueprint("wodreport", __name__)
 
+
+@report.route("/")
+def home():
+    if not current_user or current_user.is_anonymous:
+        return redirect(url_for('frontend.login'))
+
+    rc = ReportController()
+    categories = rc.get_cateogories_by_user(current_user.username)
+    return rt("home.html", categories=categories)
+
+
 @report.route("/original/<username>/<category>/<name>/")
 @report.route("/original/<username>/<category>/<name>/<path:subpath>")
 def report_details(username, category, name, subpath="index.html"):
@@ -119,7 +130,7 @@ def report_reader(report_id, subpath="index.html"):
     return rt("report_details.html", report=report)
 
 
-@report.route("/")
+@report.route("/all")
 def report_page():
     rc = ReportController()
     categories = rc.get_all_categories()

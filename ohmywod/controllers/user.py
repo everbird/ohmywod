@@ -12,7 +12,7 @@ from ohmywod.models.user import User, LDAPUser
 
 class UserController:
 
-    def save_ldap_user(self, username, email, passwd):
+    def save_ldap_user(self, username, display_name, email, passwd):
         dn = f'cn={username},ou=users,dc=everbird,dc=me'
         hashed_passwd = hashed(HASHED_SALTED_SHA, passwd)
         conn = ldap_manager.connection
@@ -20,7 +20,7 @@ class UserController:
             dn,
             'inetOrgPerson',
             {
-                "displayName": username,
+                "displayName": display_name,
                 "mail": email,
                 "sn": username,
                 "userPassword": hashed_passwd,
@@ -28,15 +28,15 @@ class UserController:
         )
         return r
 
-    def save_db_user(self, username, email, passwd):
-        user = User(username=username, email=email)
+    def save_db_user(self, username, display_name, email, passwd):
+        user = User(username=username, display_name=display_name, email=email)
         db.session.add(user)
         db.session.commit()
         return user
 
-    def save(self, username, email, passwd):
-        if self.save_ldap_user(username, email, passwd):
-            self.save_db_user(username, email, passwd)
+    def save(self, username, display_name, email, passwd):
+        if self.save_ldap_user(username, display_name, email, passwd):
+            self.save_db_user(username, display_name, email, passwd)
 
             return True
         return False

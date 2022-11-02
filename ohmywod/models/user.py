@@ -10,6 +10,7 @@ from ohmywod.extensions import db, login_manager, ldap_manager
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(50), index=True, unique=True)
+    display_name = db.Column(db.String(255))
     email = db.Column(db.String(150), unique = True, index = True)
     joined_at = db.Column(db.DateTime(), default = datetime.utcnow, index = True)
 
@@ -30,6 +31,10 @@ class LDAPUser(UserMixin):
     @property
     def db_user(self):
         return User.get(self.username)
+
+    @property
+    def display_name(self):
+        return self.data.get('displayName')
 
     @classmethod
     def from_ldap_entry(cls, d):

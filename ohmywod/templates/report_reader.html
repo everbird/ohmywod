@@ -527,7 +527,7 @@
   
           const msgbox = $('#messagebox');
           msgbox.hide();
-          $(".r-anchor").on("click", function () {
+          $(".r-anchor").on("mouseup touchend", function () {
               var anchor = $( this ).attr("href");
               to_copy = window.location.origin + window.location.pathname + anchor;
               const el = document.createElement('textarea');
@@ -543,7 +543,7 @@
               t = $( this )[0];
               const p = Popper.createPopper(t, msgbox[0]);
               msgbox.show();
-              msgbox.fadeOut(2000);
+              msgbox.delay(2000).fadeOut();
           });
 
           // Tooltip
@@ -604,16 +604,22 @@
                           });
                       } else if (t.tagName == "A") {
                           if (t.parentElement.tagName == 'P') {
+                              // navigation
                               window.location = t.href;
                               return true;
                           } else if (t.parentElement.tagName == 'LI') {
-      console.info("run onclick");
+                              // Stat menu
+                              console.info("run onclick");
+                              onclick_fn = t.getAttribute("onclick");
+                              eval(onclick_fn);
                               return false;
                           } else if (!t.onclick) {
+                              // No tooltip
                               window.location = t.href;
                               return true;
                           }
 
+                          // For those need to pop a tooltip
                           $("#tooltip_here").html("");
                           const popperInstance = Popper.createPopper(t, tooltip[0]);
                           tooltip.show();

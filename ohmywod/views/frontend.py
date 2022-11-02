@@ -25,13 +25,8 @@ from ohmywod.controllers.user import UserController
 frontend = Blueprint("frontend", __name__)
 
 @frontend.route("/")
-def home():
-    if not current_user or current_user.is_anonymous:
-        return redirect(url_for('frontend.login'))
-
-    rc = ReportController()
-    categories = rc.get_cateogories_by_user(current_user.username)
-    return rt("home.html", categories=categories)
+def landing_page():
+    return rt("landing.html")
 
 
 @frontend.route('/login', methods=['GET', 'POST'])
@@ -40,13 +35,14 @@ def login():
 
     if form.validate_on_submit():
         login_user(form.user)  # Tell flask-login to log them in.
-        return redirect('/')  # Send them home
+        return redirect(url_for("wodreport.home"))  # Send them home
 
     return rt("login.html", form=form)
 
 
 class RegistrationForm(FlaskForm):
     username = StringField('username', validators =[DataRequired()])
+    display_name = StringField('display_name')
     email = StringField('Email', validators=[DataRequired(),Email()])
     password1 = PasswordField('Password', validators = [DataRequired()])
     password2 = PasswordField('Confirm Password', validators = [DataRequired(),EqualTo('password1')])
@@ -61,6 +57,9 @@ class RegistrationForm(FlaskForm):
             if ldap_user or db_user:
                 raise ValidationError("Email is already used by other users.")
 
+    def validate_display_name(form, field):
+        pass
+
 
 @frontend.route('/register', methods = ['POST','GET'])
 def register():
@@ -69,6 +68,7 @@ def register():
         uc = UserController()
         uc.save(
             username=form.username.data,
+            display_name=form.display_name.data,
             email=form.email.data,
             passwd=form.password1.data
         )
@@ -80,7 +80,7 @@ def register():
 @login_required
 def logout():
     logout_user()
-    return redirect("/")
+    return redirect(url_for('frontend.login'))
 
 
 @frontend.route("/api/session/<key>", methods=["POST"])
@@ -93,3 +93,13 @@ def server_session(key):
 
     session[key] = v
     return 'ok'
+
+
+@frontend.route("/help")
+def help_page():
+    return rt("help.html")
+
+
+@frontend.route("/feedback")
+def feedback_page():
+    return rt("feedback.html")

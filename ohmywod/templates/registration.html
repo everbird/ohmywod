@@ -18,6 +18,12 @@
       {% endfor %}
    </div>
    <div class="mb-4">
+      {{ form.display_name(placeholder="Display name", class="form-control is-invalid" if form.display_name.errors else "form-control") }}
+      {% for error in form.display_name.errors %}
+        <div class="invalid-feedback">* {{ error }}</div>
+      {% endfor %}
+   </div>
+   <div class="mb-4">
       {{ form.email(placeholder="Email", class="form-control is-invalid" if form.email.errors else "form-control") }}
       {% for error in form.email.errors %}
         <div class="invalid-feedback">* {{ error }}</div>

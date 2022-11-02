@@ -26,7 +26,9 @@
         <tr>
             <th scope="col">Id</th>
             <th scope="col">Name</th>
+            <th scope="col">Length</th>
             <th scope="col">Owner</th>
+            <th scope="col">Description</th>
         </tr>
     </thead>
     <tbody>
@@ -36,9 +38,9 @@
             <td>
                 <a href="{{ url_for('wodreport.view_category', category_id=category.id)  }}">{{ category.name }}</a>
             </td>
-            <td>
-                <a href="#">{{ category.owner }}</a>
-            </td>
+            <td>{{ category.reports | length}}</td>
+            <td>{{ category.owner }}</td>
+            <td>{{ category.description }}</td>
         </tr>
     {% endfor %}
     </tbody>

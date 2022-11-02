@@ -3,11 +3,15 @@
     <head>
         {% block head %}
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+        <link rel="shortcut icon" href="{{ url_for('static', filename='img/favicon.ico') }}">
         <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css')}}">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/fontawesome.min.css" integrity="sha512-RvQxwf+3zJuNwl4e0sZjQeX7kUa3o82bDETpgVCH2RiwYSZVDdFJ7N/woNigN/ldyOOoKw8584jM4plQdt8bhA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
         <title>{% block title %}{% endblock %} - WoD</title>
         <style type="text/css">
+            .love {
+                margin-bottom: 0;
+            }
+
             #right-content {
                 margin-top: 72px;
             }
@@ -120,13 +124,14 @@
         <div class="wrapper">
             <!-- Sidebar -->
             <nav id="sidebar" class="d-flex flex-column flex-shrink-0 p-3 text-white bg-dark {{ 'active' if session['sidebar_is_active'] else ''}}">
-                <div class="sidebar-header">
-                    <h3>Oh my Wod</h3>
+                <div class="sidebar-header text-center">
+                    <h3><a class="text-white text-decoration-none" href="{{ url_for('frontend.landing_page') }}"><i class="fa-solid fa-scroll fa-flip-horizontal"></i> Oh My WoD</a></h3>
                 </div>
+
                 <hr>
                 <ul id="nav_menu" class="nav nav-pills flex-column">
                     <li class="nav-item">
-                        <a href="/" class="nav-link" aria-current="page">
+                        <a href="{{ url_for('wodreport.home') }}" class="nav-link" aria-current="page">
                             Home
                         </a>
                     </li>
@@ -135,18 +140,25 @@
                             All Reports
                         </a>
                     </li>
+                    <li>
+                        <a href="{{ url_for('frontend.help_page') }}" class="nav-link text-white">
+                            Help
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('frontend.feedback_page') }}" class="nav-link text-white">
+                            Feedback
+                        </a>
+                    </li>
                 </ul>
-                <hr>
-                <div id="sidebar_content">
-                    {% block sidebar_content %}
-<p>TBD</p>
-                    {% endblock %}
-                </div>
                 <div id="sidebar_ad" class="align-items-center mt-auto">
                     <hr>
                     {% block sidebar_ad%}
                     <div class="text-center">
-                        <img src="https://placehold.jp/300x250.png"></img>
+                        <!-- <img src="https://placehold.jp/300x250.png"></img> -->
+                        <a href="https://delta.world-of-dungeons.org" target="_blank">
+                            <img src="{{ url_for('static', filename='img/wod_small.png') }}"></img>
+                        </a>
                     </div>
                     {% endblock %}
                 </div>
@@ -164,6 +176,7 @@
                     </a>
                     <ul class="dropdown-menu dropdown-menu-dark text-small shadow" aria-labelledby="dropdownUser1" style="">
                         <li><a class="dropdown-item" href="{{ url_for("wodreport.new_category")  }}">New Category...</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for("wodreport.new_category")  }}">Preference</a></li>
                         <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item" href="{{ url_for("frontend.logout") }}">Sign out</a></li>
                     </ul>
