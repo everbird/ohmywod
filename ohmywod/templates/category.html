@@ -78,7 +78,7 @@
         <tr>
             <th scope="row">{{ r.id }}</th>
             <td><a href="{{ url_for('wodreport.view_report', report_id=r.id) }}">{{ r.name }}</a></td>
-            <td>{{ r.description  }}</td>
+            <td>{{ r.description | default("-", True) }}</td>
         </tr>
     {% endfor %}
     </tbody>
