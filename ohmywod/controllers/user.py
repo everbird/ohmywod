@@ -3,7 +3,7 @@
 
 import json
 
-from ldap3 import HASHED_SALTED_SHA, SUBTREE
+from ldap3 import HASHED_SALTED_SHA, SUBTREE, MODIFY_REPLACE
 from ldap3.utils.hashed import hashed
 
 from ohmywod.extensions import db, ldap_manager
@@ -77,3 +77,28 @@ class UserController:
 
     def get_db_user_by_display_name(self, display_name):
         return User.query.filter_by(display_name=display_name).first()
+
+    def update_user(self, username,
+                    display_name=None,
+                    email=None,
+                    password=None,
+                    reader_theme=None
+                    ):
+        ldap_user = self.get_ldap_user_by_username(username)
+        if display_name or email or password or reader_theme:
+            conn = ldap_manager.connection
+            d = {}
+            if display_name:
+                d['displayName'] = [(MODIFY_REPLACE, [display_name])]
+
+            if email:
+                d['mail'] = [(MODIFY_REPLACE, [email])]
+
+            if password:
+                hashed_passwd = hashed(HASHED_SALTED_SHA, password)
+                d['userPassword'] = [(MODIFY_REPLACE, [hashed_passwd])]
+
+            if reader_theme:
+                d['departmentNumber'] = [(MODIFY_REPLACE, [str(reader_theme)])]
+
+            conn.modify(ldap_user.dn, d)

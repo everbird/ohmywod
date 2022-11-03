@@ -30,11 +30,19 @@ class LDAPUser(UserMixin):
 
     @property
     def db_user(self):
-        return User.get(self.username)
+        return User.query.filter_by(username=self.username).first()
 
     @property
     def display_name(self):
         return self.data.get('displayName')
+
+    @property
+    def reader_theme(self):
+        # Even this looks weird, but just save the theme to
+        # "departmentNumber" to avoid creating a new table in DB
+        r = self.data.get('departmentNumber')
+        if r:
+            return int(r[0])
 
     @classmethod
     def from_ldap_entry(cls, d):

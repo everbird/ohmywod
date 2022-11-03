@@ -7,19 +7,24 @@ from pathlib import Path
 
 from flask import (
     Blueprint,
+    flash,
     render_template as rt,
     render_template_string as rt_string,
     redirect,
     url_for, current_app, g, session, request
 )
+from flask_ldap3_login import AuthenticationResponseStatus
 from flask_ldap3_login.forms import LDAPLoginForm
 from flask_login import login_user, current_user, login_required, logout_user
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, SubmitField, BooleanField
+from ldap3 import HASHED_SALTED_SHA
+from ldap3.utils.hashed import hashed
+from wtforms import StringField, PasswordField, SubmitField, BooleanField, SelectField
 from wtforms.validators import DataRequired, Email, EqualTo, ValidationError
 
 from ohmywod.controllers.report import ReportController
 from ohmywod.controllers.user import UserController
+from ohmywod.extensions import ldap_manager
 
 
 frontend = Blueprint("frontend", __name__)
@@ -118,3 +123,69 @@ def help_page():
 @frontend.route("/feedback")
 def feedback_page():
     return rt("feedback.html")
+
+
+class ProfileForm(FlaskForm):
+    display_name = StringField('display_name')
+    reader_theme = SelectField(
+        'Report reader theme',
+        choices=[
+            (1, 'Office'),
+            (2, 'WoD Stone'),
+            (3, 'WoD Classic'),
+            (4, 'WoD Alternative'),
+            (5, 'Starmarines'),
+            (6, 'Old Ages Classic'),
+            (7, 'Old Ages Default'),
+            (9, 'Zeitgeist'),
+            (10, 'Red Dragon'),
+        ]
+    )
+    email = StringField('Email', validators=[Email()])
+    old_password = PasswordField('Password')
+    new_password1 = PasswordField('Password')
+    new_password2 = PasswordField('Confirm Password', validators = [EqualTo('new_password1')])
+    submit = SubmitField('Update')
+
+    def validate_email(form, field):
+        email = field.data
+        if email and current_user.db_user.email != email:
+            uc = UserController()
+            ldap_user = uc.get_ldap_user_by_email(email)
+            db_user = uc.get_db_user_by_email(email)
+            if ldap_user or db_user:
+                raise ValidationError("Email is already used by other users.")
+
+    def validate_old_password(form, field):
+        old_password = field.data
+        if old_password:
+            result = ldap_manager.authenticate(current_user.username, old_password)
+            print(result.status)
+            if result.status != AuthenticationResponseStatus.success:
+                raise ValidationError("Password doesn't match with existing one")
+        elif form.new_password1.data or form.new_password2.data:
+            raise ValidationError("Old password is require when change to a new password.")
+
+
+
+@frontend.route("/profile", methods=["POST", "GET"])
+@login_required
+def profile_page():
+    form = ProfileForm(
+        display_name=current_user.display_name,
+        email=current_user.db_user.email,
+        reader_theme=current_user.reader_theme or 4,
+    )
+    if form.validate_on_submit():
+        uc = UserController()
+        uc.update_user(
+            current_user.username,
+            form.display_name.data,
+            form.email.data,
+            form.new_password1.data,
+            form.reader_theme.data
+        )
+
+        flash("Updated successfully.")
+        return redirect(url_for('frontend.profile_page'))
+    return rt("profile.html", form=form)
