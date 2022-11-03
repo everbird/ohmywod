@@ -80,7 +80,12 @@ TBD: meta for {{ report.name }}
               "{{ url_for('wodreport.report_reader', report_id=report.id) }}"
           );
           var scroll_top = $("#report_iframe")[0].contentWindow.document.body.scrollTop;
-          window.location.href = reader_href + "?scroll_top=" + scroll_top;
+          if (scroll_top > 0) {
+              window.location.href = reader_href + "?scroll_top=" + scroll_top;
+          } else {
+              window.location.href = reader_href;
+          }
+
       });
   });
 </script>

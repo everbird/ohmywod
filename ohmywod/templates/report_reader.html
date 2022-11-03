@@ -512,9 +512,11 @@
           // Scroll top
           if (!window.location.hash) {
               var urlParams = new URLSearchParams(window.location.search);
-              var scroll_top = parseInt(urlParams.get('scroll_top'));
-              report_offsety = $("#gadgettable-center-td")[0].getBoundingClientRect().y;
-              window.document.body.scrollTop = scroll_top + report_offsety;
+              if (urlParams.has('scroll_top')) {
+                  var scroll_top = parseInt(urlParams.get('scroll_top'));
+                  report_offsety = $("#gadgettable-center-td")[0].getBoundingClientRect().y;
+                  window.document.body.scrollTop = scroll_top + report_offsety;
+              }
           }
 
           // Report anchor
