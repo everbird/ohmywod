@@ -37,50 +37,22 @@ def home():
     return rt("home.html", categories=categories)
 
 
-@report.route("/original/<username>/<category>/<name>/")
-@report.route("/original/<username>/<category>/<name>/<path:subpath>")
-def report_details(username, category, name, subpath="index.html"):
-    data_dir = current_app.config["DATA_DIR"]
-    rpath = os.path.join(data_dir, username, category, name)
-    fpath = os.path.join(rpath, subpath)
-
-    if not subpath.endswith(".html"):
-        abort(404)
-
-    with open(fpath) as f:
-        raw = f.read()
-        tree = html.fromstring(raw)
-        body = tree.xpath("body")[0]
-        report_html = etree.tostring(body, pretty_print=False, encoding='unicode')
-        report_html = report_html.replace('<body>', '<div id="auto_extracted">')
-        report_html = report_html.replace('</body>', '</div>')
-
-        return rt(
-            "layout.html",
-            report_html=report_html,
-            username=username,
-            category=category,
-            name=name,
-            subpath=subpath
-        )
-
-
-
-
 # Used in iframe, username+cateogry+name should be uniqe
 @report.route("/raw/<username>/<category>/<name>/")
 @report.route("/raw/<username>/<category>/<name>/<path:subpath>")
 def report_raw(username, category, name, subpath="index.html"):
-    data_dir = current_app.config["DATA_DIR"]
-    rpath = os.path.join(data_dir, username, category, name)
-    fpath = os.path.join(rpath, subpath)
-
     if not subpath.endswith(".html"):
+        abort(404)
+
+    data_dir = Path(current_app.config["DATA_DIR"])
+    rpath = data_dir / username / category / name
+    fpath = rpath / subpath
+
+    if not fpath.exists():
         abort(404)
 
     with open(fpath) as f:
         raw = f.read()
-
         return rt_string(raw)
 
 
@@ -88,6 +60,9 @@ def report_raw(username, category, name, subpath="index.html"):
 def view_category(category_id):
     rc = ReportController()
     category = rc.get_category(category_id)
+    if not category:
+        abort(404)
+
     return rt("category.html", category=category)
 
 
@@ -95,6 +70,9 @@ def view_category(category_id):
 def view_report(report_id):
     rc = ReportController()
     report = rc.get_report(report_id)
+    if not report:
+        abort(404)
+
     return rt("report_details.html", report=report)
 
 
@@ -107,11 +85,14 @@ def report_reader(report_id, subpath="index.html"):
     rc = ReportController()
     report = rc.get_report(report_id)
 
-    data_dir = current_app.config["DATA_DIR"]
-    rpath = os.path.join(data_dir, report.owner, report.category.name, report.name)
-    fpath = os.path.join(rpath, subpath)
+    data_dir = Path(current_app.config["DATA_DIR"])
+    rpath = data_dir / report.owner / report.category.name / report.name
+    fpath = rpath / subpath
 
-    with open(fpath) as f:
+    if not fpath.exists():
+        abort(404)
+
+    with fpath.open() as f:
         raw = f.read()
         tree = html.fromstring(raw)
         body = tree.xpath("body")[0]
