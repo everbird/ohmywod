@@ -104,7 +104,10 @@ def configure_cli(app):
 @login_manager.user_loader
 def load_user(dn):
     uc = UserController()
-    return uc.get_ldap_user(dn)
+    try:
+        return uc.get_ldap_user(dn)
+    except Exception as ex:
+        print(str(ex))
 
 
 @ldap_manager.save_user

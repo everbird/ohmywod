@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %}战报 - {{ category.name }}{% endblock %}
+
+{% block content %}
+<form action="" method="POST">
+  {{ form.hidden_tag() }}
+  <div class="text-center mb-4">
+    <h2>Edit category: {{ category.name }}</h2>
+  </div>
+  <br>
+  <div class="mb-4">
+    Description:
+    {{ form.description(placeholder="Description", class="form-control is-invalid" if form.description.errors else "form-control") }}
+    {% for error in form.description.errors %}
+        <div class="invalid-feedback">{{ error  }}</div>
+    {% endfor %}
+  </div>
+   <br>
+   <div class="d-grid gap-2">{{ form.submit(class="btn btn-primary mb-4") }}
+</form>
+{% endblock %}

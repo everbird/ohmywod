@@ -59,6 +59,9 @@
       </li>
   </ol>
 </nav>
+<div id="description">
+    {{ category.description }}
+</dvi>
 {% if current_user.username == category.owner %}
 <div class="pond" style="opacity: 1;">
     <input id="mypond" type="file" style="opacity: 1;"/>

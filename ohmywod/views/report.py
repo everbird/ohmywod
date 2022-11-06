@@ -14,7 +14,7 @@ from flask import (
     redirect,
     url_for
 )
-from flask_login import current_user
+from flask_login import current_user, login_required
 from flask_wtf import FlaskForm
 from lxml import etree, html
 from wtforms import StringField, SubmitField
@@ -22,6 +22,7 @@ from wtforms.validators import DataRequired, ValidationError
 from wtforms.widgets import TextArea
 
 from ohmywod.controllers.report import ReportController
+from ohmywod.extensions import db
 
 
 report = Blueprint("wodreport", __name__)
@@ -64,6 +65,28 @@ def view_category(category_id):
         abort(404)
 
     return rt("category.html", category=category)
+
+
+class EditCategoryForm(FlaskForm):
+    description = StringField("description", widget=TextArea())
+    submit = SubmitField("Update")
+
+
+@report.route("/category/<category_id>/edit", methods=["POST", "GET"])
+@login_required
+def edit_category(category_id):
+    rc = ReportController()
+    category = rc.get_category(category_id)
+    if not category:
+        abort(404)
+
+    form = EditCategoryForm(description=category.description)
+    if form.validate_on_submit():
+        category.description = form.description.data
+        db.session.commit()
+        return redirect(url_for("wodreport.view_category", category_id=category.id))
+
+    return rt("edit_category.html", category=category, form=form)
 
 
 @report.route("/report/<report_id>")
