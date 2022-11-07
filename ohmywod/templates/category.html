@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}战报 - {{ category.name }}{% endblock %}
+{% block title %}战报 - {{ category.title }}{% endblock %}
 
 {% block head %}
     {{ super() }}
@@ -55,7 +55,7 @@
          <a href="/r/">目录</a>
       </li>
       <li class="breadcrumb-item active text-truncate" aria-current="page">
-          {{ category.name }}
+          {{ category.title}}
       </li>
   </ol>
 </nav>
@@ -80,7 +80,7 @@
     {% for r in category.reports %}
         <tr>
             <th scope="row">{{ r.id }}</th>
-            <td><a href="{{ url_for('wodreport.view_report', report_id=r.id) }}">{{ r.name }}</a></td>
+            <td><a href="{{ url_for('wodreport.view_report', report_id=r.id) }}">{{ r.title }}</a></td>
             <td>{{ r.description | default("-", True) }}</td>
         </tr>
     {% endfor %}

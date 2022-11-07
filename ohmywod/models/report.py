@@ -48,16 +48,34 @@ class Report(db.Model):
     )
     created_at = db.Column(db.DateTime(), default = datetime.utcnow)
     owner = db.Column(db.String(255))
+    # Can not be modified since file path is fixed
     name = db.Column(db.String(255))
+    display_name = db.Column(db.String(255))
     description = db.Column(db.Text)
+
+    @property
+    def title(self):
+        if not self.display_name or len(self.display_name) == 0:
+            return self.name
+
+        return self.display_name
 
 
 class ReportCategory(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    # Can not be modified since file path is fixed
     name = db.Column(db.String(255), nullable=False)
     owner = db.Column(db.String(255), nullable=False)
     reports = db.relationship("Report", backref="category", lazy=True)
+    display_name = db.Column(db.String(255))
     description = db.Column(db.Text)
+
+    @property
+    def title(self):
+        if not self.display_name or len(self.display_name) == 0:
+            return self.name
+
+        return self.display_name
 
 
 class ReportDetails(db.Model):
@@ -66,7 +84,7 @@ class ReportDetails(db.Model):
         db.Integer,
         db.ForeignKey("report.id")
     )
-    report = relationship("Report", backref=backref("detail", uselist=False))
+    report = relationship("Report", backref=backref("details", uselist=False))
 
     # .net | .org | .de
     site_name = db.Column(db.String(255))

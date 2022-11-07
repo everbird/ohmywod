@@ -43,10 +43,10 @@
          <a href="/r/">目录</a>
       </li>
       <li class="breadcrumb-item text-truncate" aria-current="page">
-          <a href="{{ url_for('wodreport.view_category', category_id=report.category_id) }}">{{ report.category.name }}</a>
+          <a href="{{ url_for('wodreport.view_category', category_id=report.category_id) }}">{{ report.category.title}}</a>
       </li>
       <li class="breadcrumb-item active text-truncate" aria-current="page">
-          {{ report.name }}
+          <span alt="{{ report.name }}">{{ report.title }}</span>
       </li>
   </ol>
 </nav>
@@ -61,7 +61,7 @@
 {% endblock %}
 
 {% block sidebar_content %}
-TBD: meta for {{ report.name }}
+TBD: meta for {{ report.title }}
 {% endblock %}
 
 {% block nav_content %}

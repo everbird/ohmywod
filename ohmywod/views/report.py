@@ -18,11 +18,12 @@ from flask_login import current_user, login_required
 from flask_wtf import FlaskForm
 from lxml import etree, html
 from wtforms import StringField, SubmitField
-from wtforms.validators import DataRequired, ValidationError
+from wtforms.validators import DataRequired, ValidationError, Optional
 from wtforms.widgets import TextArea
 
 from ohmywod.controllers.report import ReportController
 from ohmywod.extensions import db
+from ohmywod.models.report import ReportDetails
 
 
 report = Blueprint("wodreport", __name__)
@@ -80,6 +81,9 @@ def edit_category(category_id):
     if not category:
         abort(404)
 
+    if current_user.username != category.owner:
+        abort(403)
+
     form = EditCategoryForm(description=category.description)
     if form.validate_on_submit():
         category.description = form.description.data
@@ -97,6 +101,88 @@ def view_report(report_id):
         abort(404)
 
     return rt("report_details.html", report=report)
+
+
+class EditReportForm(FlaskForm):
+    display_name = StringField("display_name", validators=[Optional()])
+    description = StringField("description", widget=TextArea())
+
+    site_name = StringField("site_name", validators=[Optional()])
+    server_name = StringField("server_name", validators=[Optional()])
+    group_name = StringField("group_name", validators=[Optional()])
+    group_size = StringField("group_size", validators=[Optional()])
+    dungeon_name = StringField("dungeon_name", validators=[Optional()])
+    dungeon_type = StringField("dungeon_type", validators=[Optional()])
+    dungeon_date = StringField("dungeon_date", validators=[Optional()])
+    challenge_name = StringField("challenge_name", validators=[Optional()])
+    challenge_type = StringField("challenge_type", validators=[Optional()])
+    challenge_floors = StringField("challenge_floors", validators=[Optional()])
+    succeed = StringField("succeed", validators=[Optional()])
+    level_min = StringField("level_min", validators=[Optional()])
+    level_max = StringField("level_max", validators=[Optional()])
+    classes = StringField("classes", validators=[Optional()])
+    races = StringField("races", validators=[Optional()])
+    classes_and_races = StringField("classes_and_races", validators=[Optional()])
+
+    submit = SubmitField("Update")
+
+
+@report.route("/report/<report_id>/edit", methods=["GET", "POST"])
+@login_required
+def edit_report(report_id):
+    rc = ReportController()
+    report = rc.get_report(report_id)
+    if not report:
+        abort(404)
+
+    if current_user.username != report.owner:
+        abort(403)
+
+    details = report.details or ReportDetails()
+    form = EditReportForm(
+        description=report.description,
+        display_name=report.display_name,
+        site_name=details.site_name,
+        server_name=details.server_name,
+        group_name=details.group_name,
+        group_size=details.group_size,
+        dungeon_name=details.dungeon_name,
+        dungeon_type=details.dungeon_type,
+        dungeon_date=details.dungeon_date,
+        challenge_name=details.challenge_name,
+        challenge_type=details.challenge_type,
+        challenge_floors=details.challenge_floors,
+        succeed=details.succeed,
+        level_min=details.level_min,
+        level_max=details.level_max,
+        classes=details.classes,
+        races=details.races,
+        classes_and_races=details.classes_and_races,
+    )
+    if form.validate_on_submit():
+        report.description = form.description.data
+        report.display_name = form.display_name.data
+        details.site_name = form.site_name.data
+        details.server_name = form.server_name.data
+        details.group_name = form.group_name.data
+        details.group_size = form.group_size.data
+        details.dungeon_name = form.dungeon_name.data
+        details.dungeon_type = form.dungeon_type.data
+        details.dungeon_date = form.dungeon_date.data
+        details.challenge_name = form.challenge_name.data
+        details.challenge_type = form.challenge_type.data
+        details.challenge_floors = form.challenge_floors.data
+        details.succeed = form.succeed.data
+        details.level_min = form.level_min.data
+        details.level_max = form.level_max.data
+        details.classes = form.classes.data
+        details.races = form.races.data
+        details.classes_and_races = form.classes_and_races.data
+        report.details = details
+        db.session.commit()
+        return redirect(url_for("wodreport.view_report", report_id=report.id))
+
+    return rt("edit_report.html", report=report, form=form)
 
 
 @report.route("/report/<report_id>/reader/")

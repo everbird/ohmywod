@@ -36,7 +36,7 @@
         <tr>
             <th scope="row">{{ category.id }}</th>
             <td>
-                <a href="{{ url_for('wodreport.view_category', category_id=category.id)  }}">{{ category.name }}</a>
+                <a href="{{ url_for('wodreport.view_category', category_id=category.id)  }}">{{ category.title }}</a>
             </td>
             <td>{{ category.reports | length}}</td>
             <td>{{ category.owner }}</td>
