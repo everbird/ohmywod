@@ -82,7 +82,8 @@ class UserController:
                     display_name=None,
                     email=None,
                     password=None,
-                    reader_theme=None
+                    reader_theme=None,
+                    app_theme=None
                     ):
         ldap_user = self.get_ldap_user_by_username(username)
         if display_name or email or password or reader_theme:
@@ -100,5 +101,8 @@ class UserController:
 
             if reader_theme:
                 d['departmentNumber'] = [(MODIFY_REPLACE, [str(reader_theme)])]
+
+            if app_theme:
+                d['employeeNumber'] = [(MODIFY_REPLACE, [str(app_theme)])]
 
             conn.modify(ldap_user.dn, d)

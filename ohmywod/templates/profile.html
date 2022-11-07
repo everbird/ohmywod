@@ -69,13 +69,15 @@
         <div class="invalid-feedback">* {{ error }}</div>
       {% endfor %}
    </div>
+   <div class="mb-4">
+      {{ form.app_theme.label }}:
+      {{ form.app_theme(class="form-control is-invalid" if form.app_theme.errors else "form-control") }}
+      {% for error in form.app_theme.errors %}
+        <div class="invalid-feedback">* {{ error }}</div>
+      {% endfor %}
+   </div>
    <div class="d-grid gap-2">{{ form.submit(class="btn btn-primary mb-4") }}
    </div>
-   <br>
-   <br>
-  <div class="d-flex align-items-center justify-content-center pb-4">
-    <p>Already have an account? <a href="{{ url_for('frontend.login') }}">Login</a></p>
-  </div>
 </form>
 </section>
 {% endblock %}

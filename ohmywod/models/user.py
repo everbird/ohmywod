@@ -51,3 +51,17 @@ class LDAPUser(UserMixin):
             username=d["cn"][0],
             data=d,
         )
+
+    @property
+    def app_theme(self):
+        r = self.data.get('employeeNumber')
+        if r:
+            return r
+
+    @property
+    def theme_css(self):
+        # similar to reader_theme
+        if self.app_theme:
+            return "css/themes/{}/bootstrap.min.css".format(self.app_theme)
+
+        return "css/bootstrap.min.css"

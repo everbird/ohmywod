@@ -141,6 +141,14 @@ class ProfileForm(FlaskForm):
             (10, 'Red Dragon'),
         ]
     )
+    app_theme = SelectField(
+        'App theme',
+        choices=[
+            ('darkly', 'Darkly'),
+            ('cyborg', 'Cyborg'),
+            ('vapor', 'Vapor'),
+        ]
+    )
     email = StringField('Email', validators=[Email()])
     old_password = PasswordField('Password')
     new_password1 = PasswordField('Password')
@@ -175,6 +183,7 @@ def profile_page():
         display_name=current_user.display_name,
         email=current_user.db_user.email,
         reader_theme=current_user.reader_theme or 4,
+        app_theme=current_user.app_theme,
     )
     if form.validate_on_submit():
         uc = UserController()
@@ -183,7 +192,8 @@ def profile_page():
             form.display_name.data,
             form.email.data,
             form.new_password1.data,
-            form.reader_theme.data
+            form.reader_theme.data,
+            form.app_theme.data
         )
 
         flash("Updated successfully.")
