@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block title %}战报 - {{ category.title }} - 调整顺序{% endblock %}
+
+{% block head %}
+    {{ super() }}
+<link href="https://unpkg.com/filepond@^4/dist/filepond.css" rel="stylesheet" />
+<style type="text/css">
+    #report-breadcrumb ol {
+        border-radius: 0px;
+    }
+
+    .breadcrumb-item {
+        max-width: 40%;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<nav id="report-breadcrumb" aria-label="breadcrumb">
+  <ol class="breadcrumb">
+      <li class="breadcrumb-item">
+         <a href="/r/">目录</a>
+      </li>
+      <li class="breadcrumb-item active text-truncate" aria-current="page">
+          {{ category.title}}
+      </li>
+  </ol>
+</nav>
+<div id="description">
+    {{ category.description }}
+</dvi>
+{% if category.reports %}
+<form action="{{ url_for('wodreport.reorder_category', category_id=category.id)}}" method="POST">
+  <div>
+    <input class="btn btn-primary" type="submit" value="Submit"></input>
+  </div>
+<table class="table table-striped table-dark">
+    <thead>
+        <tr>
+            <th scope="col">Order</th>
+            <th scope="col">Id</th>
+            <th scope="col">Name</th>
+            <th scope="col">Description</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for r in category.sorted_reports %}
+        <tr>
+          <th scope="row">
+            <input name="order-{{ r.id }}" type="text" size="3" value="{{ r.order|default("", True) }}"></input>
+          </th>
+            <th scope="row">{{ r.id }}</th>
+            <td><a href="{{ url_for('wodreport.view_report', report_id=r.id) }}">{{ r.title }}</a></td>
+            <td>{{ r.description | default("-", True) }}</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+</form>
+{% else %}
+
+{% endif %}
+
+{% endblock %}

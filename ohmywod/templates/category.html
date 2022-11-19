@@ -77,7 +77,7 @@
         </tr>
     </thead>
     <tbody>
-    {% for r in category.reports %}
+    {% for r in category.sorted_reports %}
         <tr>
             <th scope="row">{{ r.id }}</th>
             <td><a href="{{ url_for('wodreport.view_report', report_id=r.id) }}">{{ r.title }}</a></td>

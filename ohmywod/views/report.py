@@ -12,12 +12,13 @@ from flask import (
     abort,
     current_app,
     redirect,
-    url_for
+    url_for,
+    request
 )
 from flask_login import current_user, login_required
 from flask_wtf import FlaskForm
 from lxml import etree, html
-from wtforms import StringField, SubmitField
+from wtforms import StringField, SubmitField, SelectField
 from wtforms.validators import DataRequired, ValidationError, Optional
 from wtforms.widgets import TextArea
 
@@ -69,6 +70,17 @@ def view_category(category_id):
 
 
 class EditCategoryForm(FlaskForm):
+    order_by = SelectField(
+        "Order reports by",
+        choices=[
+            ("ctime", "Created At"),
+            ("name", "Name"),
+            ("customized", "Customized order"),
+            ("reversed_ctime", "Created At(reversed)"),
+            ("reversed_name", "Name(reversed)"),
+            ("reversed_customized", "Customized order(reversed)"),
+        ]
+    )
     description = StringField("description", widget=TextArea())
     submit = SubmitField("Update")
 
@@ -84,13 +96,47 @@ def edit_category(category_id):
     if current_user.username != category.owner:
         abort(403)
 
-    form = EditCategoryForm(description=category.description)
+    form = EditCategoryForm(
+        description=category.description,
+        order_by=category.order_by
+    )
     if form.validate_on_submit():
         category.description = form.description.data
+        category.order_by = form.order_by.data
         db.session.commit()
         return redirect(url_for("wodreport.view_category", category_id=category.id))
 
     return rt("edit_category.html", category=category, form=form)
+
+
+@report.route("/category/<category_id>/reorder", methods=["POST", "GET"])
+@login_required
+def reorder_category(category_id):
+    rc = ReportController()
+    category = rc.get_category(category_id)
+    if not category:
+        abort(404)
+
+    if current_user.username != category.owner:
+        abort(403)
+
+
+    updates = []
+    d = request.form
+    for k, v in d.items():
+        if not v or not v.isnumeric():
+            continue
+
+        rid = k.replace("order-", "")
+        updates.append((rid, int(v)))
+
+    for rid, order in updates:
+        r = rc.get_report(rid)
+        r.order = order
+
+    db.session.commit()
+
+    return rt("reorder_category.html", category=category)
 
 
 @report.route("/report/<report_id>")

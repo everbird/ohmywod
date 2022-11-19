@@ -46,12 +46,14 @@ class Report(db.Model):
         db.ForeignKey("report_category.id"),
         nullable=False
     )
-    created_at = db.Column(db.DateTime(), default = datetime.utcnow)
     owner = db.Column(db.String(255))
     # Can not be modified since file path is fixed
     name = db.Column(db.String(255))
     display_name = db.Column(db.String(255))
     description = db.Column(db.Text)
+    order = db.Column(db.Integer, nullable=True)
+    created_at = db.Column(db.DateTime(), default = datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=db.func.now(), onupdate=db.func.now())
 
     @property
     def title(self):
@@ -69,6 +71,10 @@ class ReportCategory(db.Model):
     reports = db.relationship("Report", backref="category", lazy=True)
     display_name = db.Column(db.String(255))
     description = db.Column(db.Text)
+    # Order by: name, created_time, customized
+    order_by = db.Column(db.String(32))
+    created_at = db.Column(db.DateTime(), default = datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=db.func.now(), onupdate=db.func.now())
 
     @property
     def title(self):
@@ -76,6 +82,48 @@ class ReportCategory(db.Model):
             return self.name
 
         return self.display_name
+
+
+    @property
+    def sorted_reports(self):
+        rs = self.reports
+        d = {
+            "customized": "sorted_reports_by_customized_order",
+            "ctime": "sorted_reports_by_ctime",
+            "name": "sorted_reports_by_name",
+        }
+
+        order_by = self.order_by.replace("reversed_", "")
+        attr = d.get(order_by)
+        if attr:
+            rs = getattr(self, attr)
+
+        reversed = False
+        if self.order_by.startswith("reversed_"):
+            reversed = True
+
+        return rs[::-1] if reversed else rs
+
+
+    @property
+    def sorted_reports_by_customized_order(self):
+        def _fkey(r):
+            o1 = -r.order if r.order else -float("inf")
+            o2 = r.created_at
+            o3 = r.name
+            o4 = r.id
+            return (o1, o2, o3, o4)
+
+        return sorted(self.reports, key=_fkey, reverse=True)
+
+    @property
+    def sorted_reports_by_ctime(self):
+        return sorted(self.reports, key=lambda x: x.created_at)
+
+    @property
+    def sorted_reports_by_name(self):
+        return sorted(self.reports, key=lambda x: x.name)
+
 
 
 class ReportDetails(db.Model):
@@ -115,3 +163,6 @@ class ReportDetails(db.Model):
     races = db.Column(db.String(255))
 
     classes_and_races = db.Column(db.String(255))
+
+    created_at = db.Column(db.DateTime(), default = datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=db.func.now(), onupdate=db.func.now())

@@ -9,6 +9,13 @@
     <h2>Edit category: {{ category.name }}</h2>
   </div>
   <br>
+   <div class="mb-4">
+      {{ form.order_by.label }}:
+      {{ form.order_by(class="form-control is-invalid" if form.order_by.errors else "form-control") }}
+      {% for error in form.order_by.errors %}
+        <div class="invalid-feedback">* {{ error }}</div>
+      {% endfor %}
+   </div>
   <div class="mb-4">
     Description:
     {{ form.description(placeholder="Description", class="form-control is-invalid" if form.description.errors else "form-control") }}
