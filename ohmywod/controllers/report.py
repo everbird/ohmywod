@@ -29,8 +29,11 @@ class ReportController:
         db.session.commit()
         return category
 
-    def get_all_categories(self):
-        return ReportCategory.query.all()
+    def get_all_categories(self, page=None, per_page=None):
+        if not page or not per_page:
+            return ReportCategory.query.all()
+        else:
+            return ReportCategory.query.paginate(page=page, per_page=per_page)
 
     def get_all_reports(self):
         return Report.query.all()

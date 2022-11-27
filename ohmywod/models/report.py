@@ -93,13 +93,13 @@ class ReportCategory(db.Model):
             "name": "sorted_reports_by_name",
         }
 
-        order_by = self.order_by.replace("reversed_", "")
+        order_by = self.order_by.replace("reversed_", "") if self.order_by else "ctime"
         attr = d.get(order_by)
         if attr:
             rs = getattr(self, attr)
 
         reversed = False
-        if self.order_by.startswith("reversed_"):
+        if self.order_by and self.order_by.startswith("reversed_"):
             reversed = True
 
         return rs[::-1] if reversed else rs

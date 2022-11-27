@@ -3,6 +3,7 @@
 from flask_admin import Admin, AdminIndexView, expose
 from flask_ldap3_login import LDAP3LoginManager
 from flask_login import LoginManager
+from flask_paginate import Pagination, get_page_args
 from flask_sqlalchemy import SQLAlchemy
 
 from ohmywod.decorators import requires_auth
@@ -20,3 +21,4 @@ db = SQLAlchemy()
 admin = Admin(name='Admin of Ohmywod', index_view=AuthAdminHome(), template_mode='bootstrap3')
 login_manager = LoginManager()
 ldap_manager = LDAP3LoginManager()
+

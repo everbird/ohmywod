@@ -23,7 +23,7 @@ from wtforms.validators import DataRequired, ValidationError, Optional
 from wtforms.widgets import TextArea
 
 from ohmywod.controllers.report import ReportController
-from ohmywod.extensions import db
+from ohmywod.extensions import db, Pagination, get_page_args
 from ohmywod.models.report import ReportDetails
 
 
@@ -66,7 +66,27 @@ def view_category(category_id):
     if not category:
         abort(404)
 
-    return rt("category.html", category=category)
+    page, per_page, offset = get_page_args(
+        page_parameter='page',
+        per_page_parameter='per_page'
+    )
+    sorted_reports = category.sorted_reports
+    total = len(sorted_reports)
+    reports = sorted_reports[offset:offset+per_page]
+    pagination = Pagination(
+        page=page,
+        per_page=per_page,
+        total=total,
+        css_framework='bootstrap5'
+    )
+    return rt(
+        "category.html",
+        category=category,
+        reports=reports,
+        pagination=pagination,
+        page=page,
+        per_page=per_page
+    )
 
 
 class EditCategoryForm(FlaskForm):
@@ -269,9 +289,26 @@ def report_reader(report_id, subpath="index.html"):
 @report.route("/all")
 def report_page():
     rc = ReportController()
-    categories = rc.get_all_categories()
-    return rt("root.html", categories=categories)
-
+    page, per_page, offset = get_page_args(
+        page_parameter='page',
+        per_page_parameter='per_page'
+    )
+    all_categories = rc.get_all_categories()
+    total = len(all_categories)
+    categories = all_categories[offset:offset+per_page]
+    pagination = Pagination(
+        page=page,
+        per_page=per_page,
+        total=total,
+        css_framework='bootstrap5'
+    )
+    return rt(
+        "root.html",
+        categories=categories,
+        pagination=pagination,
+        page=page,
+        per_page=per_page
+    )
 
 class NewCategoryForm(FlaskForm):
     name = StringField('name', validators =[DataRequired()])
