@@ -166,7 +166,8 @@ def view_report(report_id):
     if not report:
         abort(404)
 
-    return rt("report_details.html", report=report)
+    details = report.details
+    return rt("report_details.html", report=report, details=details)
 
 
 class EditReportForm(FlaskForm):

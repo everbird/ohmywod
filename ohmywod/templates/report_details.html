@@ -14,7 +14,7 @@
   }
 
   .iframe-loading {
-      height: calc(100vh - 72px - 36px - 113px);
+      height: calc(100vh - 72px - 36px - 113px - 56px);
   }
 
   .iframe-loading iframe {
@@ -31,6 +31,11 @@
   #spinner .spinner-border {
       width: 100px;
       height: 100px;
+  }
+
+  .nav-link {
+      margin-top: 1em;
+      margin-left: 1em;
   }
 
 </style>
@@ -50,14 +55,121 @@
       </li>
   </ol>
 </nav>
-<div class="embed-responsive iframe-loading">
-  <div id="spinner" class="row text-center align-items-center">
-    <div class="row spinner-border align-items-center mx-auto" role="status">
-      <span class="visually-hidden">Loading...</span>
-    </div>
-  </div>
-  <iframe id="report_iframe" class="embed-responsive-item" onload="$('#spinner').hide(); $('.iframe-loading iframe').show();" src="{{ url_for("wodreport.report_raw", username=report.owner, category=report.category.name, name=report.name, subpath=subpath) }}" title="Report details"></iframe>
+<div>
+  <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button class="nav-link active" id="pills-report-tab" data-bs-toggle="pill" data-bs-target="#pills-report" type="button" role="tab" aria-controls="pills-report" aria-selected="true">Report(raw)</button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="pills-details-tab" data-bs-toggle="pill" data-bs-target="#pills-details" type="button" role="tab" aria-controls="pills-details" aria-selected="false">Metadata</button>
+    </li>
+  </ul>
 </div>
+<div class="tab-content" id="pills-tabContent">
+    <div class="tab-pane fade show active" id="pills-report" role="tabpanel" aria-labelledby="pills-report-tab">
+      <div class="embed-responsive iframe-loading">
+        <div id="spinner" class="row text-center align-items-center">
+          <div class="row spinner-border align-items-center mx-auto" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+        </div>
+        <iframe id="report_iframe" class="embed-responsive-item" onload="$('#spinner').hide(); $('.iframe-loading iframe').show();" src="{{ url_for("wodreport.report_raw", username=report.owner, category=report.category.name, name=report.name, subpath=subpath) }}" title="Report details"></iframe>
+      </div>
+    </div>
+    <div class="tab-pane fade" id="pills-details" role="tabpanel" aria-labelledby="pills-details-tab">
+      <table class="table">
+        <tr>
+          <td>ID</td>
+          <td>{{ report.id }}</td>
+        </tr>
+        <tr>
+          <td>Name</td>
+          <td>{{ report.name }}</td>
+        </tr>
+        <tr>
+          <td>Display Name</td>
+          <td>{{ report.display_name }}</td>
+        </tr>
+        <tr>
+          <td>Order</td>
+          <td>{{ report.order }}</td>
+        </tr>
+      </table>
+      <table class="table">
+        <tr>
+          <td>Site Name</td>
+          <td>{{ details.site_name }}</td>
+        </tr>
+        <tr>
+          <td>Name</td>
+          <td>{{ details.server_name }}</td>
+        </tr>
+        <tr>
+          <td>Group Name</td>
+          <td>{{ details.group_name }}</td>
+        </tr>
+        <tr>
+          <td>Group Size</td>
+          <td>{{ details.group_size }}</td>
+        </tr>
+        <tr>
+          <td>Dungeon Name</td>
+          <td>{{ details.dungeon_name }}</td>
+        </tr>
+        <tr>
+          <td>Dungeon Type</td>
+          <td>{{ details.dungeon_type }}</td>
+        </tr>
+        <tr>
+          <td>Dungeon Date</td>
+          <td>{{ details.dungeon_date }}</td>
+        </tr>
+        <tr>
+          <td>Challenge Name</td>
+          <td>{{ details.challenge_name }}</td>
+        </tr>
+        <tr>
+          <td>Challenge Type</td>
+          <td>{{ details.challenge_type }}</td>
+        </tr>
+        <tr>
+          <td>Challenge Floor</td>
+          <td>{{ details.challenge_floors }}</td>
+        </tr>
+        <tr>
+          <td>Succeed</td>
+          <td>{{ details.succeed }}</td>
+        </tr>
+        <tr>
+          <td>Level Min</td>
+          <td>{{ details.level_min }}</td>
+        </tr>
+        <tr>
+          <td>Level Max</td>
+          <td>{{ details.level_min }}</td>
+        </tr>
+        <tr>
+          <td>Classes</td>
+          <td>{{ details.classes }}</td>
+        </tr>
+        <tr>
+          <td>Races</td>
+          <td>{{ details.races }}</td>
+        </tr>
+        <tr>
+          <td>Classes and Races</td>
+          <td>{{ details.classes_and_races }}</td>
+        </tr>
+        <tr>
+          <td>Created At</td>
+          <td>{{ details.created_at }}</td>
+        </tr>
+        <tr>
+          <td>Updated At</td>
+          <td>{{ details.updated_at }}</td>
+        </tr>
+      </table>
+    </div>
 {% endblock %}
 
 {% block sidebar_content %}
