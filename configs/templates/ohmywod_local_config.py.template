@@ -2,7 +2,8 @@
 
 class DefaultConfig(object):
     DEBUG = True
-    SECRET_KEY = "secret"
+    # Need to replace it before deployment
+    SECRET_KEY = "<secret:secret_key>"
 
     # --- SQLAlchemy ---
     SQLALCHEMY_DATABASE_URI = "sqlite:///ohmywod_d.sqlite"
@@ -18,8 +19,8 @@ class DefaultConfig(object):
     LDAP_USER_LOGIN_ATTR = 'cn'
     # The Username to bind to LDAP with
     LDAP_BIND_USER_DN = "cn=admin,dc=everbird,dc=me"
-    # The Password to bind to LDAP with
-    LDAP_BIND_USER_PASSWORD = "2Bornot2Bldap"
+    # The Password to bind to LDAP with. Need to replace it before deployment.
+    LDAP_BIND_USER_PASSWORD = "<secret:ldap_passwd>"
 
     # Override the group => groupOfNames and person => inetOrgPerson
     LDAP_GROUP_OBJECT_FILTER = "(objectclass=groupOfNames)"

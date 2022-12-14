@@ -2,7 +2,7 @@
 
 class DefaultConfig(object):
     DEBUG = False
-    SECRET_KEY = "6e848025ab466c03faa992f11cfb132be8b6935dbb0bb358898163ca2bc9e3f8"
+    SECRET_KEY = "<secret:secret_key>"
 
     # --- SQLAlchemy ---
     SQLALCHEMY_DATABASE_URI = "sqlite:////data/ohmywod/ohmywod_d.sqlite"
@@ -19,7 +19,7 @@ class DefaultConfig(object):
     # The Username to bind to LDAP with
     LDAP_BIND_USER_DN = "cn=admin,dc=everbird,dc=me"
     # The Password to bind to LDAP with
-    LDAP_BIND_USER_PASSWORD = "2Bornot2Bldap"
+    LDAP_BIND_USER_PASSWORD = "<secret:ldap_passwd>"
 
     # Override the group => groupOfNames and person => inetOrgPerson
     LDAP_GROUP_OBJECT_FILTER = "(objectclass=groupOfNames)"
