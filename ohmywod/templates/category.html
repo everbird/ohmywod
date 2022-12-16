@@ -59,9 +59,15 @@
       </li>
   </ol>
 </nav>
-<div id="description">
+<div id="description" class="m-3">
     {{ category.description }}
-</dvi>
+    {% if current_user.username == category.owner %}
+    <br>
+    [ <a href="{{ url_for('wodreport.edit_category', category_id=category.id) }}">Edit</a> |
+    <a href="{{ url_for('wodreport.reorder_category', category_id=category.id) }}">Reorder</a>
+    ]
+    {% endif %}
+</div>
 {% if current_user.username == category.owner %}
 <div class="pond" style="opacity: 1;">
     <input id="mypond" type="file" style="opacity: 1;"/>
@@ -81,7 +87,7 @@
         <tr>
             <th scope="row">{{ r.id }}</th>
             <td><a href="{{ url_for('wodreport.view_report', report_id=r.id) }}">{{ r.title }}</a></td>
-            <td>{{ r.description | default("-", True) }}</td>
+            <td>{{ r.description | default("-", True) | truncate(60) }}</td>
         </tr>
     {% endfor %}
     </tbody>

@@ -20,7 +20,7 @@
                 <th scope="row">{{ c.id }}</th>
                 <td><a href="{{ url_for('wodreport.view_category', category_id=c.id) }}">{{ c.name }}</a></td>
                 <td>{{ c.reports | length }}</td>
-                <td>{{ c.description }}</td>
+                <td>{{ c.description | truncate(60) }}</td>
             </tr>
             {% endfor %}
         </tbody>
