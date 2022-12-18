@@ -21,7 +21,9 @@ from ldap3 import HASHED_SALTED_SHA
 from ldap3.utils.hashed import hashed
 from wtforms import StringField, PasswordField, SubmitField, BooleanField, SelectField
 from wtforms.validators import DataRequired, Email, EqualTo, ValidationError
+from wtforms.widgets import TextArea
 
+from ohmywod.controllers.feedback import FeedbackController
 from ohmywod.controllers.report import ReportController
 from ohmywod.controllers.user import UserController
 from ohmywod.extensions import ldap_manager
@@ -117,12 +119,28 @@ def server_session(key):
 
 @frontend.route("/help")
 def help_page():
-    return rt("help.html")
+    return redirect(url_for("frontend.landing_page"))
+    # return rt("help.html")
 
 
-@frontend.route("/feedback")
+class FeedbackForm(FlaskForm):
+    username = StringField('Your Name')
+    feedback = StringField("Content", widget=TextArea())
+    submit = SubmitField("Submit")
+
+
+@frontend.route("/feedback", methods=["POST", "GET"])
 def feedback_page():
-    return rt("feedback.html")
+    form = FeedbackForm()
+    if form.validate_on_submit():
+        fc = FeedbackController()
+        fc.create_feedback(
+            form.username.data,
+            form.feedback.data
+        )
+        return rt("feedback_submitted.html")
+
+    return rt("feedback.html", form=form)
 
 
 class ProfileForm(FlaskForm):

@@ -21,6 +21,7 @@ except ImportError as e:
         raise
 
 from ohmywod.extensions import db, admin, login_manager, ldap_manager
+from ohmywod.models.feedback import Feedback
 from ohmywod.models.report import Report
 from ohmywod.models.user import User, LDAPUser
 
@@ -81,6 +82,8 @@ def configure_extensions(app):
         category='Online'))
     admin.add_view(_make_model_view(User,
         endpoint='user', category='User'))
+    admin.add_view(_make_model_view(Feedback,
+        endpoint='feedback', category='Misc'))
 
     admin.init_app(app)
 

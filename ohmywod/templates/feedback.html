@@ -3,5 +3,25 @@
 {% block title %}战报 - details{% endblock %}
 
 {% block content %}
-TBD: feedback page
+<div class="m-3">
+<form action="" method="POST">
+   {{ form.hidden_tag() }}
+  <div class="text-center mb-4">
+    <h2>Feedback</h2>
+  </div>
+
+   <div class="mb-4">
+      {{ form.username.label }}:
+      {{ form.username(placeholder="Your name", class="form-control") }}
+   </div>
+   <div class="mb-4">
+      {{ form.feedback.label }}:
+      {{ form.feedback(placeholder="Please fill your feedback here.", class="form-control", rows="6") }}
+   </div>
+
+   <div class="d-grid gap-2">
+     {{ form.submit(class="btn btn-primary mb-4") }}
+   </div>
+</form>
+</div>
 {% endblock %}

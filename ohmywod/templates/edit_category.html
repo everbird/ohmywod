@@ -18,7 +18,7 @@
       {% endfor %}
    </div>
   <div class="mb-4">
-    Description:
+    Description (BBCode supported):
     {{ form.description(placeholder="Description", class="form-control is-invalid" if form.description.errors else "form-control", rows="4") }}
     {% for error in form.description.errors %}
         <div class="invalid-feedback">{{ error  }}</div>
