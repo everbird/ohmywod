@@ -27,13 +27,14 @@
       </li>
   </ol>
 </nav>
-<div id="description">
+<div id="description" class="m-3">
     {{ category.description }}
-</dvi>
+</div>
 {% if category.reports %}
 <form action="{{ url_for('wodreport.reorder_category', category_id=category.id)}}" method="POST">
-  <div>
+  <div class="m-3">
     <input class="btn btn-primary" type="submit" value="Submit"></input>
+    <a class="btn btn-secondary" href="{{ url_for('wodreport.view_category', category_id=category.id) }}">Cancel</a>
   </div>
 <table class="table table-striped table-dark">
     <thead>

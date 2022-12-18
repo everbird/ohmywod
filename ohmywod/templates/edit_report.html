@@ -3,146 +3,151 @@
 {% block title %}战报 - {{ report.name }}{% endblock %}
 
 {% block content %}
-<form action="" method="POST">
-  {{ form.hidden_tag() }}
-  <div class="text-center mb-4">
-    <h2>Edit report: {{ report.name }}</h2>
-  </div>
-  <br>
-  <div class="mb-4">
-    Display Name:
-    {{ form.display_name(placeholder="Description", class="form-control is-invalid" if form.display_name.errors else "form-control") }}
-    {% for error in form.display_name.errors %}
-        <div class="invalid-feedback">{{ error  }}</div>
-    {% endfor %}
-  </div>
-  <div class="mb-4">
-    Description:
-    {{ form.description(placeholder="Description", class="form-control is-invalid" if form.description.errors else "form-control") }}
-    {% for error in form.description.errors %}
-        <div class="invalid-feedback">{{ error  }}</div>
-    {% endfor %}
-  </div>
-   <br>
-  <div class="mb-4">
-    Site Name:
-    {{ form.site_name(placeholder="Site name", class="form-control is-invalid" if form.site_name.errors else "form-control") }}
-    {% for error in form.site_name.errors %}
-        <div class="invalid-feedback">{{ error  }}</div>
-    {% endfor %}
-  </div>
-  <div class="mb-4">
-    Server Name:
-    {{ form.server_name(placeholder="Server name", class="form-control is-invalid" if form.server_name.errors else "form-control") }}
-    {% for error in form.server_name.errors %}
-        <div class="invalid-feedback">{{ error  }}</div>
-    {% endfor %}
-  </div>
-   <br>
-  <div class="mb-4">
-    Group Name:
-    {{ form.group_name(placeholder="Group name", class="form-control is-invalid" if form.group_name.errors else "form-control") }}
-    {% for error in form.group_name.errors %}
-        <div class="invalid-feedback">{{ error  }}</div>
-    {% endfor %}
-  </div>
-  <div class="mb-4">
-    Group Size:
-    {{ form.group_size(placeholder="Group size", class="form-control is-invalid" if form.group_size.errors else "form-control") }}
-    {% for error in form.group_size.errors %}
-        <div class="invalid-feedback">{{ error  }}</div>
-    {% endfor %}
-  </div>
-   <br>
-  <div class="mb-4">
-    Dungeon Name:
-    {{ form.dungeon_name(placeholder="Dungeon name", class="form-control is-invalid" if form.dungeon_name.errors else "form-control") }}
-    {% for error in form.dungeon_name.errors %}
-        <div class="invalid-feedback">{{ error  }}</div>
-    {% endfor %}
-  </div>
-  <div class="mb-4">
-    Dungeon Type:
-    {{ form.dungeon_type(placeholder="Dungeon Type", class="form-control is-invalid" if form.dungeon_type.errors else "form-control") }}
-    {% for error in form.dungeon_type.errors %}
-        <div class="invalid-feedback">{{ error  }}</div>
-    {% endfor %}
-  </div>
-  <div class="mb-4">
-    Dungeon Date:
-    {{ form.dungeon_date(placeholder="Dungeon Date", class="form-control is-invalid" if form.dungeon_date.errors else "form-control") }}
-    {% for error in form.dungeon_date.errors %}
-        <div class="invalid-feedback">{{ error  }}</div>
-    {% endfor %}
-  </div>
-   <br>
-  <div class="mb-4">
-    Challenge Name:
-    {{ form.challenge_name(placeholder="Challenge name", class="form-control is-invalid" if form.challenge_name.errors else "form-control") }}
-    {% for error in form.challenge_name.errors %}
-        <div class="invalid-feedback">{{ error  }}</div>
-    {% endfor %}
-  </div>
-  <div class="mb-4">
-    Challenge Type:
-    {{ form.challenge_type(placeholder="Group name", class="form-control is-invalid" if form.challenge_type.errors else "form-control") }}
-    {% for error in form.challenge_type.errors %}
-        <div class="invalid-feedback">{{ error  }}</div>
-    {% endfor %}
-  </div>
-  <div class="mb-4">
-    Challenge Floors:
-    {{ form.challenge_floors(placeholder="Group name", class="form-control is-invalid" if form.challenge_floors.errors else "form-control") }}
-    {% for error in form.challenge_floors.errors %}
-        <div class="invalid-feedback">{{ error  }}</div>
-    {% endfor %}
-  </div>
-   <br>
-  <div class="mb-4">
-    Succeed:
-    {{ form.succeed(placeholder="Group name", class="form-control is-invalid" if form.succeed.errors else "form-control") }}
-    {% for error in form.succeed.errors %}
-        <div class="invalid-feedback">{{ error  }}</div>
-    {% endfor %}
-  </div>
-   <br>
-  <div class="mb-4">
-    Min Level:
-    {{ form.level_min(placeholder="Group name", class="form-control is-invalid" if form.level_min.errors else "form-control") }}
-    {% for error in form.level_min.errors %}
-        <div class="invalid-feedback">{{ error  }}</div>
-    {% endfor %}
-  </div>
-  <div class="mb-4">
-    Max Level:
-    {{ form.level_max(placeholder="Group name", class="form-control is-invalid" if form.level_max.errors else "form-control") }}
-    {% for error in form.level_max.errors %}
-        <div class="invalid-feedback">{{ error  }}</div>
-    {% endfor %}
-  </div>
-   <br>
-  <div class="mb-4">
-    Classes:
-    {{ form.classes(placeholder="Group name", class="form-control is-invalid" if form.classes.errors else "form-control") }}
-    {% for error in form.classes.errors %}
-        <div class="invalid-feedback">{{ error  }}</div>
-    {% endfor %}
-  </div>
-  <div class="mb-4">
-    Races:
-    {{ form.races(placeholder="Group name", class="form-control is-invalid" if form.races.errors else "form-control") }}
-    {% for error in form.races.errors %}
-        <div class="invalid-feedback">{{ error  }}</div>
-    {% endfor %}
-  </div>
-  <div class="mb-4">
-    Classes and Races:
-    {{ form.classes_and_races(placeholder="Group name", class="form-control is-invalid" if form.classes_and_races.errors else "form-control") }}
-    {% for error in form.classes_and_races.errors %}
-        <div class="invalid-feedback">{{ error  }}</div>
-    {% endfor %}
-  </div>
-   <br>
-   <div class="d-grid gap-2">{{ form.submit(class="btn btn-primary mb-4") }}
-</form>
+<div class="m-3">
+  <form action="" method="POST">
+    {{ form.hidden_tag() }}
+    <div class="text-center mb-4">
+      <h2>Edit report: {{ report.name }}</h2>
+    </div>
+    <br>
+    <div class="mb-4">
+      Display Name:
+      {{ form.display_name(placeholder="Description", class="form-control is-invalid" if form.display_name.errors else "form-control") }}
+      {% for error in form.display_name.errors %}
+          <div class="invalid-feedback">{{ error  }}</div>
+      {% endfor %}
+    </div>
+    <div class="mb-4">
+      Description:
+      {{ form.description(placeholder="Description", class="form-control is-invalid" if form.description.errors else "form-control") }}
+      {% for error in form.description.errors %}
+          <div class="invalid-feedback">{{ error  }}</div>
+      {% endfor %}
+    </div>
+    <br>
+    <div class="mb-4">
+      Site Name:
+      {{ form.site_name(placeholder="Site name", class="form-control is-invalid" if form.site_name.errors else "form-control") }}
+      {% for error in form.site_name.errors %}
+          <div class="invalid-feedback">{{ error  }}</div>
+      {% endfor %}
+    </div>
+    <div class="mb-4">
+      Server Name:
+      {{ form.server_name(placeholder="Server name", class="form-control is-invalid" if form.server_name.errors else "form-control") }}
+      {% for error in form.server_name.errors %}
+          <div class="invalid-feedback">{{ error  }}</div>
+      {% endfor %}
+    </div>
+    <br>
+    <div class="mb-4">
+      Group Name:
+      {{ form.group_name(placeholder="Group name", class="form-control is-invalid" if form.group_name.errors else "form-control") }}
+      {% for error in form.group_name.errors %}
+          <div class="invalid-feedback">{{ error  }}</div>
+      {% endfor %}
+    </div>
+    <div class="mb-4">
+      Group Size:
+      {{ form.group_size(placeholder="Group size", class="form-control is-invalid" if form.group_size.errors else "form-control") }}
+      {% for error in form.group_size.errors %}
+          <div class="invalid-feedback">{{ error  }}</div>
+      {% endfor %}
+    </div>
+    <br>
+    <div class="mb-4">
+      Dungeon Name:
+      {{ form.dungeon_name(placeholder="Dungeon name", class="form-control is-invalid" if form.dungeon_name.errors else "form-control") }}
+      {% for error in form.dungeon_name.errors %}
+          <div class="invalid-feedback">{{ error  }}</div>
+      {% endfor %}
+    </div>
+    <div class="mb-4">
+      Dungeon Type:
+      {{ form.dungeon_type(placeholder="Dungeon Type", class="form-control is-invalid" if form.dungeon_type.errors else "form-control") }}
+      {% for error in form.dungeon_type.errors %}
+          <div class="invalid-feedback">{{ error  }}</div>
+      {% endfor %}
+    </div>
+    <div class="mb-4">
+      Dungeon Date:
+      {{ form.dungeon_date(placeholder="Dungeon Date", class="form-control is-invalid" if form.dungeon_date.errors else "form-control") }}
+      {% for error in form.dungeon_date.errors %}
+          <div class="invalid-feedback">{{ error  }}</div>
+      {% endfor %}
+    </div>
+    <br>
+    <div class="mb-4">
+      Challenge Name:
+      {{ form.challenge_name(placeholder="Challenge name", class="form-control is-invalid" if form.challenge_name.errors else "form-control") }}
+      {% for error in form.challenge_name.errors %}
+          <div class="invalid-feedback">{{ error  }}</div>
+      {% endfor %}
+    </div>
+    <div class="mb-4">
+      Challenge Type:
+      {{ form.challenge_type(placeholder="Group name", class="form-control is-invalid" if form.challenge_type.errors else "form-control") }}
+      {% for error in form.challenge_type.errors %}
+          <div class="invalid-feedback">{{ error  }}</div>
+      {% endfor %}
+    </div>
+    <div class="mb-4">
+      Challenge Floors:
+      {{ form.challenge_floors(placeholder="Group name", class="form-control is-invalid" if form.challenge_floors.errors else "form-control") }}
+      {% for error in form.challenge_floors.errors %}
+          <div class="invalid-feedback">{{ error  }}</div>
+      {% endfor %}
+    </div>
+    <br>
+    <div class="mb-4">
+      Succeed:
+      {{ form.succeed(placeholder="Group name", class="form-control is-invalid" if form.succeed.errors else "form-control") }}
+      {% for error in form.succeed.errors %}
+          <div class="invalid-feedback">{{ error  }}</div>
+      {% endfor %}
+    </div>
+    <br>
+    <div class="mb-4">
+      Min Level:
+      {{ form.level_min(placeholder="Group name", class="form-control is-invalid" if form.level_min.errors else "form-control") }}
+      {% for error in form.level_min.errors %}
+          <div class="invalid-feedback">{{ error  }}</div>
+      {% endfor %}
+    </div>
+    <div class="mb-4">
+      Max Level:
+      {{ form.level_max(placeholder="Group name", class="form-control is-invalid" if form.level_max.errors else "form-control") }}
+      {% for error in form.level_max.errors %}
+          <div class="invalid-feedback">{{ error  }}</div>
+      {% endfor %}
+    </div>
+    <br>
+    <div class="mb-4">
+      Classes:
+      {{ form.classes(placeholder="Group name", class="form-control is-invalid" if form.classes.errors else "form-control") }}
+      {% for error in form.classes.errors %}
+          <div class="invalid-feedback">{{ error  }}</div>
+      {% endfor %}
+    </div>
+    <div class="mb-4">
+      Races:
+      {{ form.races(placeholder="Group name", class="form-control is-invalid" if form.races.errors else "form-control") }}
+      {% for error in form.races.errors %}
+          <div class="invalid-feedback">{{ error  }}</div>
+      {% endfor %}
+    </div>
+    <div class="mb-4">
+      Classes and Races:
+      {{ form.classes_and_races(placeholder="Group name", class="form-control is-invalid" if form.classes_and_races.errors else "form-control") }}
+      {% for error in form.classes_and_races.errors %}
+          <div class="invalid-feedback">{{ error  }}</div>
+      {% endfor %}
+    </div>
+    <br>
+    <div class="d-grid gap-2">
+      {{ form.submit(class="btn btn-primary mb-4") }}
+      <a class="btn btn-secondary" href="{{ url_for('wodreport.view_report', report_id=report.id) }}">Cancel</a>
+    </div>
+  </form>
+</div>
 {% endblock %}

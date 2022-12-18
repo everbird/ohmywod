@@ -3,6 +3,7 @@
 {% block title %}战报 - {{ category.name }}{% endblock %}
 
 {% block content %}
+<div class="m-3">
 <form action="" method="POST">
   {{ form.hidden_tag() }}
   <div class="text-center mb-4">
@@ -24,6 +25,10 @@
     {% endfor %}
   </div>
    <br>
-   <div class="d-grid gap-2">{{ form.submit(class="btn btn-primary mb-4") }}
+   <div class="d-grid gap-2">
+     {{ form.submit(class="btn btn-primary mb-4") }}
+     <a class="btn btn-secondary" href="{{ url_for('wodreport.view_category', category_id=category.id) }}">Cancel</a>
+   </div>
 </form>
+</div>
 {% endblock %}

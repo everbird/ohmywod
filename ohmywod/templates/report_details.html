@@ -4,6 +4,7 @@
 
 {% block head %}
   {{ super() }}
+
 <style type="text/css">
   .breadcrumb {
       margin-bottom: 0px;
@@ -38,6 +39,9 @@
       margin-left: 1em;
   }
 
+  @media (max-width: 768px) {
+  }
+
 </style>
 {% endblock %}
 
@@ -63,11 +67,6 @@
     <li class="nav-item" role="presentation">
       <button class="nav-link" id="pills-details-tab" data-bs-toggle="pill" data-bs-target="#pills-details" type="button" role="tab" aria-controls="pills-details" aria-selected="false">Metadata</button>
     </li>
-    {% if current_user.username == report.owner %}
-    <li class="nav-item">
-      <a class="nav-link" href="{{ url_for('wodreport.edit_report', report_id=report.id) }}">Edit</a>
-    </li>
-    {% endif %}
   </ul>
 </div>
 <div class="tab-content" id="pills-tabContent">
@@ -85,74 +84,79 @@
       <div class="m-3">
         <p>{{ report.description }}</p>
       </div>
+        {% if current_user.username == report.owner %}
+        <div>
+          [<a href="{{ url_for('wodreport.edit_report', report_id=report.id) }}">Edit</a>]
+        <div>
+        {% endif %}
       <dl class="row">
-        <dt class="col-sm-3">ID</dt>
-        <dd class="col-sm-9">{{ report.id | default("-")}}</dd>
+        <dt class="col-sm-3 col-3">ID</dt>
+        <dd class="col-sm-9 col-9">{{ report.id | default("-")}}</dd>
 
-        <dt class="col-sm-3">Name</dt>
-        <dd class="col-sm-9">{{ report.name | default("-")}}</dd>
+        <dt class="col-sm-3 col-3">Name</dt>
+        <dd class="col-sm-9 col-9">{{ report.name | default("-")}}</dd>
 
-        <dt class="col-sm-3">Display Name</dt>
-        <dd class="col-sm-9">{{ report.display_name | default("-")}}</dd>
+        <dt class="col-sm-3 col-3">Display Name</dt>
+        <dd class="col-sm-9 col-9">{{ report.display_name | default("-")}}</dd>
 
-        <dt class="col-sm-3">Order</dt>
-        <dd class="col-sm-9">{{ report.order | default("-")}}</dd>
+        <dt class="col-sm-3 col-3">Order</dt>
+        <dd class="col-sm-9 col-9">{{ report.order | default("-")}}</dd>
       </dl>
       <dl class="row">
 
-        <dt class="col-sm-3">Site Name</dt>
-        <dd class="col-sm-9">{{ details.site_name | default("-")}}</dd>
+        <dt class="col-sm-3 col-3">Site Name</dt>
+        <dd class="col-sm-9 col-9">{{ details.site_name | default("-")}}</dd>
 
-        <dt class="col-sm-3">Name</dt>
-        <dd class="col-sm-9">{{ details.server_name | default("-")}}</dd>
+        <dt class="col-sm-3 col-3">Name</dt>
+        <dd class="col-sm-9 col-9">{{ details.server_name | default("-")}}</dd>
 
-        <dt class="col-sm-3">Group Name</dt>
-        <dd class="col-sm-9">{{ details.group_name | default("-")}}</dd>
+        <dt class="col-sm-3 col-3">Group Name</dt>
+        <dd class="col-sm-9 col-9">{{ details.group_name | default("-")}}</dd>
 
-        <dt class="col-sm-3">Group Size</dt>
-        <dd class="col-sm-9">{{ details.group_size | default("-")}}</dd>
+        <dt class="col-sm-3 col-3">Group Size</dt>
+        <dd class="col-sm-9 col-9">{{ details.group_size | default("-")}}</dd>
 
-        <dt class="col-sm-3">Dungeon Name</dt>
-        <dd class="col-sm-9">{{ details.dungeon_name | default("-")}}</dd>
+        <dt class="col-sm-3 col-3">Dungeon Name</dt>
+        <dd class="col-sm-9 col-9">{{ details.dungeon_name | default("-")}}</dd>
 
-        <dt class="col-sm-3">Dungeon Type</dt>
-        <dd class="col-sm-9">{{ details.dungeon_type | default("-")}}</dd>
+        <dt class="col-sm-3 col-3">Dungeon Type</dt>
+        <dd class="col-sm-9 col-9">{{ details.dungeon_type | default("-")}}</dd>
 
-        <dt class="col-sm-3">Dungeon Date</dt>
-        <dd class="col-sm-9">{{ details.dungeon_date | default("-")}}</dd>
+        <dt class="col-sm-3 col-3">Dungeon Date</dt>
+        <dd class="col-sm-9 col-9">{{ details.dungeon_date | default("-")}}</dd>
 
-        <dt class="col-sm-3">Challenge Name</dt>
-        <dd class="col-sm-9">{{ details.challenge_name | default("-")}}</dd>
+        <dt class="col-sm-3 col-3">Challenge Name</dt>
+        <dd class="col-sm-9 col-9">{{ details.challenge_name | default("-")}}</dd>
 
-        <dt class="col-sm-3">Challenge Type</dt>
-        <dd class="col-sm-9">{{ details.challenge_type | default("-")}}</dd>
+        <dt class="col-sm-3 col-3">Challenge Type</dt>
+        <dd class="col-sm-9 col-9">{{ details.challenge_type | default("-")}}</dd>
 
-        <dt class="col-sm-3">Challenge Floor</dt>
-        <dd class="col-sm-9">{{ details.challenge_floors | default("-")}}</dd>
+        <dt class="col-sm-3 col-3">Challenge Floor</dt>
+        <dd class="col-sm-9 col-9">{{ details.challenge_floors | default("-")}}</dd>
 
-        <dt class="col-sm-3">Succeed</dt>
-        <dd class="col-sm-9">{{ details.succeed | default("-")}}</dd>
+        <dt class="col-sm-3 col-3">Succeed</dt>
+        <dd class="col-sm-9 col-9">{{ details.succeed | default("-")}}</dd>
 
-        <dt class="col-sm-3">Level Min</dt>
-        <dd class="col-sm-9">{{ details.level_min | default("-")}}</dd>
+        <dt class="col-sm-3 col-3">Level Min</dt>
+        <dd class="col-sm-9 col-9">{{ details.level_min | default("-")}}</dd>
 
-        <dt class="col-sm-3">Level Max</dt>
-        <dd class="col-sm-9">{{ details.level_min | default("-")}}</dd>
+        <dt class="col-sm-3 col-3">Level Max</dt>
+        <dd class="col-sm-9 col-9">{{ details.level_min | default("-")}}</dd>
 
-        <dt class="col-sm-3">Classes</dt>
-        <dd class="col-sm-9">{{ details.classes | default("-")}}</dd>
+        <dt class="col-sm-3 col-3">Classes</dt>
+        <dd class="col-sm-9 col-9">{{ details.classes | default("-")}}</dd>
 
-        <dt class="col-sm-3">Races</dt>
-        <dd class="col-sm-9">{{ details.races | default("-")}}</dd>
+        <dt class="col-sm-3 col-3">Races</dt>
+        <dd class="col-sm-9 col-9">{{ details.races | default("-")}}</dd>
 
-        <dt class="col-sm-3">Classes and Races</dt>
-        <dd class="col-sm-9">{{ details.classes_and_races | default("-")}}</dd>
+        <dt class="col-sm-3 col-3">Classes and Races</dt>
+        <dd class="col-sm-9 col-9">{{ details.classes_and_races | default("-")}}</dd>
 
-        <dt class="col-sm-3">Created At</dt>
-        <dd class="col-sm-9">{{ details.created_at | default("-")}}</dd>
+        <dt class="col-sm-3 col-3">Created At</dt>
+        <dd class="col-sm-9 col-9">{{ details.created_at | default("-")}}</dd>
 
-        <dt class="col-sm-3">Updated At</dt>
-        <dd class="col-sm-9">{{ details.updated_at | default("-")}}</dd>
+        <dt class="col-sm-3 col-3">Updated At</dt>
+        <dd class="col-sm-9 col-9">{{ details.updated_at | default("-")}}</dd>
       </dl>
     </div>
 {% endblock %}
