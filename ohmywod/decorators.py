@@ -7,14 +7,17 @@ Snippet from http://flask.pocoo.org/snippets/8/
 
 from functools import wraps
 
-from flask import request, Response
+from flask import request, Response, current_app
 
 
 def check_auth(username, password):
     """This function is called to check if a username /
     password combination is valid.
     """
-    return username == 'admin' and password == 'secret'
+    return (
+        username == current_app.config["FLASK_ADMIN_USERNAME"]
+        and password == current_app.config["FLASK_ADMIN_PASSWD"]
+    )
 
 
 def authenticate():

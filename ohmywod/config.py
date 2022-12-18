@@ -33,3 +33,5 @@ class DefaultConfig(object):
 
 
     FLASK_ADMIN_SWATCH = "darkly"
+    FLASK_ADMIN_USERNAME = "<secret:flask_admin_username>"
+    FLASK_ADMIN_PASSWD = "<secret:flask_admin_passwd>"

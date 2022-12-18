@@ -21,6 +21,7 @@ except ImportError as e:
         raise
 
 from ohmywod.extensions import db, admin, login_manager, ldap_manager
+from ohmywod.decorators import check_auth
 from ohmywod.models.feedback import Feedback
 from ohmywod.models.report import Report
 from ohmywod.models.user import User, LDAPUser
@@ -64,9 +65,6 @@ def configure_extensions(app):
     db.init_app(app)
     login_manager.init_app(app)
     ldap_manager.init_app(app)
-
-    def check_auth(username, password):
-        return username == 'admin' and password == 'secret'
 
     def _make_model_view(model_class, *args, **kwargs):
 

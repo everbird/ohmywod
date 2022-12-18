@@ -32,3 +32,7 @@ class DefaultConfig(object):
     DATA_DIR = ".data/report"
     UPLOAD_DIR = ".data/upload"
     ALLOWED_EXTENSIONS = {'zip'}
+
+    # --- Flask Admin ---
+    FLASK_ADMIN_USERNAME = "<secret:flask_admin_username>"
+    FLASK_ADMIN_PASSWD = "<secret:flask_admin_passwd>"
