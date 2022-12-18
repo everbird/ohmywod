@@ -26,7 +26,7 @@
 
   #spinner {
       width: 100%;
-      height: 100vh;
+      height: calc(100vh - 72px - 36px - 113px - 56px);
   }
 
   #spinner .spinner-border {
@@ -87,7 +87,7 @@
         {% if current_user.username == report.owner %}
         <div>
           [<a href="{{ url_for('wodreport.edit_report', report_id=report.id) }}">Edit</a>]
-        <div>
+        </div>
         {% endif %}
       <dl class="row">
         <dt class="col-sm-3 col-3">ID</dt>
