@@ -6,7 +6,7 @@
         <link rel="shortcut icon" href="{{ url_for('static', filename='img/favicon.ico') }}">
         <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css' if current_user.is_anonymous else current_user.theme_css )}}">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/fontawesome.min.css" integrity="sha512-RvQxwf+3zJuNwl4e0sZjQeX7kUa3o82bDETpgVCH2RiwYSZVDdFJ7N/woNigN/ldyOOoKw8584jM4plQdt8bhA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-        <title>{% block title %}{% endblock %} - WoD</title>
+        <title>{% block title %}{% endblock %} - OhMyWoD</title>
         <style type="text/css">
             .love {
                 margin-bottom: 0;
@@ -126,6 +126,7 @@
             <nav id="sidebar" class="d-flex flex-column flex-shrink-0 p-3 text-white bg-dark {{ 'active' if session['sidebar_is_active'] else ''}}">
                 <div class="sidebar-header text-center">
                     <h3><a class="text-white text-decoration-none" href="{{ url_for('frontend.landing_page') }}"><i class="fa-solid fa-scroll fa-flip-horizontal"></i> Oh My WoD</a></h3>
+                    <small>alpha version</small>
                 </div>
 
                 <hr>
