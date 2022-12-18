@@ -60,7 +60,7 @@
   </ol>
 </nav>
 <div id="description" class="m-3">
-    {{ category.description }}
+    {{ category.description_rendered | safe }}
     {% if current_user.username == category.owner %}
     <br>
     [ <a href="{{ url_for('wodreport.edit_category', category_id=category.id) }}">Edit</a> |

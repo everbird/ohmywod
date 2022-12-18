@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from datetime import datetime
 
+import bbcode
 from flask_sqlalchemy import BaseQuery
 from sqlalchemy.orm import backref, relationship
 
@@ -61,6 +62,10 @@ class Report(db.Model):
             return self.name
 
         return self.display_name
+
+    @property
+    def description_rendered(self):
+        return bbcode.render_html(self.description)
 
 
 class ReportCategory(db.Model):
@@ -123,6 +128,10 @@ class ReportCategory(db.Model):
     @property
     def sorted_reports_by_name(self):
         return sorted(self.reports, key=lambda x: x.name)
+
+    @property
+    def description_rendered(self):
+        return bbcode.render_html(self.description)
 
 
 
