@@ -19,7 +19,7 @@ serverurl=unix://$VAR_PATH/$APP_NAME/run/supervisor.sock
 prompt=seer
 
 [program:web]
-command=gunicorn -c gunicorn_config.py deploy:application
+command=$VAR_PATH/$APP_NAME/venv/bin/gunicorn -c gunicorn_config.py deploy:application
 directory=%(here)s
 redirect_stderr=true
 stdout_logfile=$VAR_PATH/$APP_NAME/log/supervisord-web-out.log
