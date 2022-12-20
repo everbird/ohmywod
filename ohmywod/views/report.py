@@ -13,7 +13,8 @@ from flask import (
     current_app,
     redirect,
     url_for,
-    request
+    request,
+    jsonify
 )
 from flask_login import current_user, login_required
 from flask_wtf import FlaskForm
@@ -25,6 +26,7 @@ from wtforms.widgets import TextArea
 from ohmywod.controllers.report import ReportController
 from ohmywod.extensions import db, Pagination, get_page_args
 from ohmywod.models.report import ReportDetails
+from ohmywod.presenters.report import ReportPresenter
 
 
 report = Blueprint("wodreport", __name__)
@@ -163,11 +165,18 @@ def reorder_category(category_id):
 def view_report(report_id):
     rc = ReportController()
     report = rc.get_report(report_id)
+    report_presenter = ReportPresenter(report)
     if not report:
         abort(404)
 
+    rc.incr_views(report_id)
     details = report.details
-    return rt("report_details.html", report=report, details=details)
+    return rt(
+        "report_details.html",
+        report=report,
+        details=details,
+        report_presenter=report_presenter
+    )
 
 
 class EditReportForm(FlaskForm):
@@ -342,3 +351,59 @@ def new_category():
             )
         )
     return rt("new_category.html", form=form)
+
+
+@report.route("/report/<report_id>/like", methods=['POST'])
+@login_required
+def ajax_like(report_id):
+    username = current_user.username
+    rc = ReportController()
+    report = rc.get_report(report_id)
+    if report:
+        rc.like(username, report_id)
+        r = {"status": 0, "message": "Liked successfully."}
+    else:
+        r = {"status": 1, "message": f"Report {report_id} doesn't exist."}
+    return jsonify(r)
+
+
+@report.route("/report/<report_id>/unlike", methods=['POST'])
+@login_required
+def ajax_unlike(report_id):
+    username = current_user.username
+    rc = ReportController()
+    report = rc.get_report(report_id)
+    if report:
+        rc.unlike(username, report_id)
+        r = {"status": 0, "message": "Uniked successfully."}
+    else:
+        r = {"status": 1, "message": f"Report {report_id} doesn't exist."}
+    return jsonify(r)
+
+
+@report.route("/report/<report_id>/add_favorite", methods=['POST'])
+@login_required
+def ajax_add_favorite(report_id):
+    username = current_user.username
+    rc = ReportController()
+    report = rc.get_report(report_id)
+    if report:
+        rc.add_favor(username, report_id)
+        r = {"status": 0, "message": "Favorite added successfully."}
+    else:
+        r = {"status": 1, "message": f"Report {report_id} doesn't exist."}
+    return jsonify(r)
+
+
+@report.route("/report/<report_id>/cancel_favorite", methods=['POST'])
+@login_required
+def ajax_cancel_favorite(report_id):
+    username = current_user.username
+    rc = ReportController()
+    report = rc.get_report(report_id)
+    if report:
+        rc.cancel_favor(username, report_id)
+        r = {"status": 0, "message": "Favorite cancelled successfully."}
+    else:
+        r = {"status": 1, "message": f"Report {report_id} doesn't exist."}
+    return jsonify(r)

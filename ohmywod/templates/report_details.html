@@ -7,7 +7,7 @@
 
 <style type="text/css">
   .breadcrumb {
-      margin-bottom: 0px;
+      margin-bottom: 0px;w
   }
 
   .breadcrumb-item {
@@ -15,7 +15,7 @@
   }
 
   .iframe-loading {
-      height: calc(100vh - 72px - 36px - 113px - 56px);
+      height: calc(100vh - 72px - 36px - 113px - 56px - 54px);
   }
 
   .iframe-loading iframe {
@@ -26,7 +26,7 @@
 
   #spinner {
       width: 100%;
-      height: calc(100vh - 72px - 36px - 113px - 56px);
+      height: calc(100vh - 72px - 36px - 113px - 56px - 54px);
   }
 
   #spinner .spinner-border {
@@ -78,6 +78,27 @@
           </div>
         </div>
         <iframe id="report_iframe" class="embed-responsive-item" onload="$('#spinner').hide(); $('.iframe-loading iframe').show();" src="{{ url_for("wodreport.report_raw", username=report.owner, category=report.category.name, name=report.name, subpath=subpath) }}" title="Report details"></iframe>
+      </div>
+      <div class="m-2">
+        <span class="me-2">
+          <i class="fa-solid fa-eye"></i> 查看: {{ report_presenter.views }}
+        </span>
+        {% set liked = current_user.is_authenticated and report_presenter.is_liked_by(current_user.username) %}
+        <button type="button" id="like-btn" class="btn btn-primary me-2 {% if liked %}liked-on{% endif %}">
+          {% if liked %}
+          <i class="fa-solid fa-heart"></i> 已喜欢
+          {% else %}
+          <i class="fa-regular fa-heart"></i> 喜欢
+          {% endif%}
+        </button>
+        {% set favorited = current_user.is_authenticated and report_presenter.is_favorited_by(current_user.username) %}
+        <button type="button" id="favorite-btn" class="btn btn-primary me-2 {% if favorited %}favorited-on{% endif %}">
+          {% if favorited %}
+          <i class="fa-solid fa-star"></i> 已收藏
+          {% else %}
+          <i class="fa-regular fa-star"></i> 收藏
+          {% endif%}
+        </button>
       </div>
     </div>
     <div class="tab-pane fade" id="pills-details" role="tabpanel" aria-labelledby="pills-details-tab">
@@ -187,6 +208,40 @@ TBD: meta for {{ report.title }}
               window.location.href = reader_href;
           }
 
+      });
+
+      $("#like-btn").on("click", function () {
+          var like_btn = $(this);
+          if (like_btn.hasClass("liked-on")) {
+              $.post("{{ url_for('wodreport.ajax_unlike', report_id=report.id) }}", function(data) {
+                  console.info("unliked");
+              });
+              like_btn.toggleClass("liked-on");
+              like_btn.html('<i class="fa-regular fa-heart"></i> 喜欢');
+          } else {
+              $.post("{{ url_for('wodreport.ajax_like', report_id=report.id) }}", function(data) {
+                  console.info("liked");
+              });
+              like_btn.toggleClass("liked-on");
+              like_btn.html('<i class="fa-solid fa-heart"></i> 已喜欢');
+          }
+      });
+
+      $("#favorite-btn").on("click", function () {
+          var favorite_btn = $(this);
+          if (favorite_btn.hasClass("favorited-on")) {
+              $.post("{{ url_for('wodreport.ajax_cancel_favorite', report_id=report.id) }}", function(data) {
+                  console.info("cancelld favorite");
+              });
+              favorite_btn.toggleClass("favorited-on");
+              favorite_btn.html('<i class="fa-regular fa-star"></i> 收藏');
+          } else {
+              $.post("{{ url_for('wodreport.ajax_add_favorite', report_id=report.id) }}", function(data) {
+                  console.info("added favorite");
+              });
+              favorite_btn.toggleClass("favorited-on");
+              favorite_btn.html('<i class="fa-solid fa-star"></i> 已收藏');
+          }
       });
   });
 </script>
