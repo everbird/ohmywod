@@ -9,7 +9,7 @@ REDIS_STORE_HOST = "localhost"
 REDIS_STORE_PORT = 6379
 REDIS_CACHE_HOST = "localhost"
 REDIS_CACHE_PORT = 7379
-REDIS_BIN_PATH = "/usr/sbin/redis-server"
+REDIS_BIN_PATH = "/usr/bin/redis-server"
 
 
 try:
