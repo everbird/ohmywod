@@ -68,6 +68,14 @@ class ReportController:
         key = f"/stats/report/{report_id}/views"
         return redis.get(key)
 
+    def incr_reader_views(self, report_id):
+        key = f"/stats/report/{report_id}/reader"
+        return redis.incr(key)
+
+    def get_reader_views(self, report_id):
+        key = f"/stats/report/{report_id}/reader"
+        return redis.get(key)
+
     def incr_likes_cnt(self, report_id):
         key = f"/stats/report/{report_id}/likes"
         return redis.incr(key)

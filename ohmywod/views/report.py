@@ -278,6 +278,8 @@ def report_reader(report_id, subpath="index.html"):
     if not fpath.exists():
         abort(404)
 
+    rc.incr_reader_views(report.id)
+    rc.incr_views(report.id)
     with fpath.open() as f:
         raw = f.read()
         tree = html.fromstring(raw)
