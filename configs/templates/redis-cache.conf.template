@@ -1,0 +1,9 @@
+## redis for memcache use
+
+daemonize no
+port $REDIS_CACHE_PORT
+pidfile $VAR_PATH/$APP_NAME/run/redis-cache-$REDIS_CACHE_PORT.pid
+logfile $VAR_PATH/$APP_NAME/log/redis-cache-$REDIS_CACHE_PORT.log
+dir $DATA_PATH/$APP_NAME/redis/cache
+
+maxmemory 80m

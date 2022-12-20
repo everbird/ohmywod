@@ -20,7 +20,9 @@ except ImportError as e:
         # the ImportError is raised inside local_config
         raise
 
-from ohmywod.extensions import db, admin, login_manager, ldap_manager
+from ohmywod.extensions import (
+    db, admin, login_manager, ldap_manager, redis, cache
+)
 from ohmywod.decorators import check_auth
 from ohmywod.models.feedback import Feedback
 from ohmywod.models.report import Report
@@ -65,6 +67,8 @@ def configure_extensions(app):
     db.init_app(app)
     login_manager.init_app(app)
     ldap_manager.init_app(app)
+    redis.init_app(app)
+    cache.init_app(app)
 
     def _make_model_view(model_class, *args, **kwargs):
 

@@ -40,7 +40,7 @@
             </td>
             <td>{{ category.reports | length}}</td>
             <td>{{ category.owner }}</td>
-            <td>{{ category.description }}</td>
+            <td>{{ category.description | truncate(60) }}</td>
         </tr>
     {% endfor %}
     </tbody>

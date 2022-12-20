@@ -1,0 +1,11 @@
+## redis for persistence store
+
+daemonize no
+port $REDIS_STORE_PORT
+pidfile $VAR_PATH/$APP_NAME/run/redis-store-$REDIS_STORE_PORT.pid
+logfile $VAR_PATH/$APP_NAME/log/redis-store-$REDIS_STORE_PORT.log
+dir $DATA_PATH/$APP_NAME/redis/store
+
+save 900 1
+save 300 10
+save 60 10000

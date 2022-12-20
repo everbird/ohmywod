@@ -60,6 +60,8 @@
   </ol>
 </nav>
 <div id="description" class="m-3">
+    <h2>{{ category.title }}</h2>
+    <br>
     {{ category.description_rendered | safe }}
     {% if current_user.username == category.owner %}
     <br>

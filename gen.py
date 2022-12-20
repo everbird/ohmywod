@@ -18,9 +18,13 @@ ENV_GENERATE_FILES = {
             'configs/templates/local_config.py.template': 'configs/local_config.py',
             'configs/templates/supervisord.conf.template': 'supervisord.conf',
             'configs/templates/ohmywod_local_config.py.template': 'ohmywod/local_config.py',
+            'configs/templates/redis-store.conf.template': 'redis-store.conf',
+            'configs/templates/redis-cache.conf.template': 'redis-cache.conf',
             },
         'product': {
             'configs/templates/supervisord.conf.template': 'supervisord.conf',
+            'configs/templates/redis-store.conf.template': 'redis-store.conf',
+            'configs/templates/redis-cache.conf.template': 'redis-cache.conf',
             }
         }
 

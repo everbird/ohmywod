@@ -3,7 +3,7 @@
 {% block title %}战报 - New Category{% endblock %}
 
 {% block content %}
-<section class="w-100 p-4 d-flex justify-content-center pb-4">
+<div class="m-3">
 <form action="" method="post">
    {{ form.hidden_tag() }}
    <div class="text-center mb-4">
@@ -12,20 +12,24 @@
    <br>
    <br>
    <div class="mb-4">
+      Name:
       {{ form.name(placeholder="name", class="form-control is-invalid" if form.name.errors else "form-control") }}
       {% for error in form.name.errors %}
         <div class="invalid-feedback">* {{ error }}</div>
       {% endfor %}
    </div>
    <div class="mb-4">
-      {{ form.description(placeholder="description", class="form-control is-invalid" if form.description.errors else "form-control") }}
+      Description: (BBCode supported)
+      {{ form.description(placeholder="description", class="form-control is-invalid" if form.description.errors else "form-control", rows=4) }}
       {% for error in form.description.errors %}
         <div class="invalid-feedback">* {{ error }}</div>
       {% endfor %}
    </div>
    <br>
-   <div class="d-grid gap-2">{{ form.submit(class="btn btn-primary mb-4") }}
+   <div class="d-grid gap-2">
+      {{ form.submit(class="btn btn-primary mb-4") }}
+      <a href="{{ url_for('wodreport.home') }}" class="btn btn-secondary">Cancel</a>
    </div>
 </form>
-</section>
+</div>
 {% endblock %}

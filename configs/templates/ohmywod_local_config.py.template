@@ -36,3 +36,13 @@ class DefaultConfig(object):
     # --- Flask Admin ---
     FLASK_ADMIN_USERNAME = "<secret:flask_admin_username>"
     FLASK_ADMIN_PASSWD = "<secret:flask_admin_passwd>"
+
+    # --- Redis Store ---
+    REDIS_HOST = '$REDIS_STORE_HOST'
+    REDIS_PORT = $REDIS_STORE_PORT
+
+    # --- Redis Cache ---
+    CACHE_TYPE = 'redis'
+    CACHE_DEFAULT_TIMEOUT = 300
+    CACHE_REDIS_HOST = '$REDIS_CACHE_HOST'
+    CACHE_REDIS_PORT = $REDIS_CACHE_PORT

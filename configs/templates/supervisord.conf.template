@@ -25,5 +25,11 @@ redirect_stderr=true
 stdout_logfile=$VAR_PATH/$APP_NAME/log/supervisord-web-out.log
 stderr_logfile=$VAR_PATH/$APP_NAME/log/supervisord-web-error.log
 
+[program:redis-store]
+command=$REDIS_BIN_PATH redis-store.conf
+
+[program:redis-cache]
+command=$REDIS_BIN_PATH redis-cache.conf
+
 [include]
 files = spvsr_generated.ini spvsr_local.ini
