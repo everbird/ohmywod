@@ -47,6 +47,9 @@ class ReportController:
         return Report.query.get(rid)
 
     def get_reports(self, rids):
+        if not rids:
+            return []
+
         ordering = case(
             {_id: index for index, _id in enumerate(rids)},
             value=Report.id

@@ -86,17 +86,17 @@
         {% set liked = current_user.is_authenticated and report_presenter.is_liked_by(current_user.username) %}
         <button type="button" id="like-btn" class="btn btn-primary me-2 {% if liked %}liked-on{% endif %}">
           {% if liked %}
-          <i class="fa-solid fa-heart"></i> 已喜欢
+          <i class="fa-solid fa-heart"></i> 已喜欢({{ report_presenter.likes }})
           {% else %}
-          <i class="fa-regular fa-heart"></i> 喜欢
+          <i class="fa-regular fa-heart"></i> 喜欢({{ report_presenter.likes }})
           {% endif%}
         </button>
         {% set favorited = current_user.is_authenticated and report_presenter.is_favorited_by(current_user.username) %}
         <button type="button" id="favorite-btn" class="btn btn-primary me-2 {% if favorited %}favorited-on{% endif %}">
           {% if favorited %}
-          <i class="fa-solid fa-star"></i> 已收藏
+          <i class="fa-solid fa-star"></i> 已收藏({{ report_presenter.favors }})
           {% else %}
-          <i class="fa-regular fa-star"></i> 收藏
+          <i class="fa-regular fa-star"></i> 收藏({{ report_presenter.favors }})
           {% endif%}
         </button>
       </div>
@@ -217,13 +217,13 @@ TBD: meta for {{ report.title }}
                   console.info("unliked");
               });
               like_btn.toggleClass("liked-on");
-              like_btn.html('<i class="fa-regular fa-heart"></i> 喜欢');
+              like_btn.html('<i class="fa-regular fa-heart"></i> 喜欢({{ report_presenter.likes }})');
           } else {
               $.post("{{ url_for('wodreport.ajax_like', report_id=report.id) }}", function(data) {
                   console.info("liked");
               });
               like_btn.toggleClass("liked-on");
-              like_btn.html('<i class="fa-solid fa-heart"></i> 已喜欢');
+              like_btn.html('<i class="fa-solid fa-heart"></i> 已喜欢({{ report_presenter.likes }})');
           }
       });
 
@@ -234,13 +234,13 @@ TBD: meta for {{ report.title }}
                   console.info("cancelld favorite");
               });
               favorite_btn.toggleClass("favorited-on");
-              favorite_btn.html('<i class="fa-regular fa-star"></i> 收藏');
+              favorite_btn.html('<i class="fa-regular fa-star"></i> 收藏({{ report_presenter.favors }})');
           } else {
               $.post("{{ url_for('wodreport.ajax_add_favorite', report_id=report.id) }}", function(data) {
                   console.info("added favorite");
               });
               favorite_btn.toggleClass("favorited-on");
-              favorite_btn.html('<i class="fa-solid fa-star"></i> 已收藏');
+              favorite_btn.html('<i class="fa-solid fa-star"></i> 已收藏({{ report_presenter.favors }})');
           }
       });
   });
