@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+from sqlalchemy.sql.expression import case
 
 from ohmywod.extensions import db, redis
 from ohmywod.models.favorite import Favorite
@@ -45,6 +46,14 @@ class ReportController:
     def get_report(self, rid):
         return Report.query.get(rid)
 
+    def get_reports(self, rids):
+        ordering = case(
+            {_id: index for index, _id in enumerate(rids)},
+            value=Report.id
+        )
+        rs = Report.query.filter(Report.id.in_(rids)).order_by(ordering).all()
+        return rs
+
     def get_category_by_name_and_username(self, name, username):
         return ReportCategory.query.filter_by(name=name, owner=username).all()
 
@@ -54,6 +63,30 @@ class ReportController:
 
     def get_views(self, report_id):
         key = f"/stats/report/{report_id}/views"
+        return redis.get(key)
+
+    def incr_likes_cnt(self, report_id):
+        key = f"/stats/report/{report_id}/likes"
+        return redis.incr(key)
+
+    def decr_likes_cnt(self, report_id):
+        key = f"/stats/report/{report_id}/likes"
+        return redis.decr(key)
+
+    def get_likes_cnt(self, report_id):
+        key = f"/stats/report/{report_id}/likes"
+        return redis.get(key)
+
+    def incr_favors(self, report_id):
+        key = f"/stats/report/{report_id}/favors"
+        return redis.incr(key)
+
+    def decr_favors(self, report_id):
+        key = f"/stats/report/{report_id}/favors"
+        return redis.decr(key)
+
+    def get_favors(self, report_id):
+        key = f"/stats/report/{report_id}/favors"
         return redis.get(key)
 
     def like(self, username, report_id):
@@ -105,3 +138,17 @@ class ReportController:
     def check_favor(self, username, report_id):
         favor = self.get_favor(username, report_id)
         return favor is not None
+
+    def get_favorite_reports(self, username, status=0):
+        kwargs = dict(
+            ftype="report",
+            username=username,
+        )
+        if status is not None:
+            kwargs["status"] = status
+
+        favors = Favorite.query.filter_by(
+            **kwargs
+        ).order_by(Favorite.updated_at.desc()).all()
+
+        return self.get_reports([int(x.report_id) for x in favors])

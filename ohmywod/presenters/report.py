@@ -11,7 +11,18 @@ class ReportPresenter:
 
     @property
     def views(self):
-        return int(self.rc.get_views(self.report.id))
+        r = self.rc.get_views(self.report.id)
+        return int(r) if r else 0
+
+    @property
+    def likes(self):
+        r = self.rc.get_likes_cnt(self.report.id)
+        return int(r) if r else 0
+
+    @property
+    def favors(self):
+        r = self.rc.get_favors(self.report.id)
+        return int(r) if r else 0
 
     def is_liked_by(self, username):
         rids = self.rc.get_likes(username)

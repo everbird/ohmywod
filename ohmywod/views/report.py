@@ -39,7 +39,8 @@ def home():
 
     rc = ReportController()
     categories = rc.get_cateogories_by_user(current_user.username)
-    return rt("home.html", categories=categories)
+    favor_reports = rc.get_favorite_reports(current_user.username)
+    return rt("home.html", categories=categories, favor_reports=favor_reports)
 
 
 # Used in iframe, username+cateogry+name should be uniqe
@@ -362,6 +363,7 @@ def ajax_like(report_id):
     if report:
         rc.like(username, report_id)
         r = {"status": 0, "message": "Liked successfully."}
+        rc.incr_likes_cnt(report_id)
     else:
         r = {"status": 1, "message": f"Report {report_id} doesn't exist."}
     return jsonify(r)
@@ -376,6 +378,7 @@ def ajax_unlike(report_id):
     if report:
         rc.unlike(username, report_id)
         r = {"status": 0, "message": "Uniked successfully."}
+        rc.decr_likes_cnt(report_id)
     else:
         r = {"status": 1, "message": f"Report {report_id} doesn't exist."}
     return jsonify(r)
@@ -390,6 +393,7 @@ def ajax_add_favorite(report_id):
     if report:
         rc.add_favor(username, report_id)
         r = {"status": 0, "message": "Favorite added successfully."}
+        rc.incr_favors(report_id)
     else:
         r = {"status": 1, "message": f"Report {report_id} doesn't exist."}
     return jsonify(r)
@@ -404,6 +408,7 @@ def ajax_cancel_favorite(report_id):
     if report:
         rc.cancel_favor(username, report_id)
         r = {"status": 0, "message": "Favorite cancelled successfully."}
+        rc.decr_favors(report_id)
     else:
         r = {"status": 1, "message": f"Report {report_id} doesn't exist."}
     return jsonify(r)

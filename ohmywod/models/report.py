@@ -67,6 +67,19 @@ class Report(db.Model):
     def description_rendered(self):
         return bbcode.render_html(self.description)
 
+    @property
+    def presenter(self):
+        return self.get_presenter()
+
+    def get_presenter(self):
+        from ohmywod.presenters.report import ReportPresenter
+        return ReportPresenter(self)
+
+    def get_favor(self, username, status=0):
+        from ohmywod.controllers.report import ReportController
+        rc = ReportController()
+        return rc.get_favor(username, self.id, status=status)
+
 
 class ReportCategory(db.Model):
     id = db.Column(db.Integer, primary_key=True)

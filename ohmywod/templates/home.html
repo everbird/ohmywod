@@ -3,8 +3,49 @@
 {% block title %}战报 - Home{% endblock %}
 
 {% block content %}
-    <h1>Welcome: {{ current_user.display_name }}</h1>
-    <h2>My categories</h2>
+    <div class="m-3">
+    <h1>欢迎: {{ current_user.display_name }}</h1>
+    </div>
+    <br>
+
+    {% if current_user.is_authenticated %}
+    <div class="m-3">
+    <h2>我的收藏（最近5个）：</h2>
+    {% if favor_reports %}
+    <table class="table table-striped table-dark">
+        <thead>
+            <tr>
+                <th scope="col">Id</th>
+                <th scope="col">Name</th>
+                <th scope="col">Onwer</th>
+                <th scope="col">Description</th>
+                <th scope="col">收藏时间</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for r in favor_reports[:5] %}
+            <tr>
+                <th scope="row">{{ r.id }}</th>
+                <td><a href="{{ url_for('wodreport.view_report', report_id=r.id) }}">{{ r.title }}</a></td>
+                <td>{{ r.owner }}</td>
+                <td>{{ r.description | default("-", True) | truncate(60) }}</td>
+                {% set favor = r.get_favor(current_user.username) %}
+                <td>{{ favor.updated_at }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>还没有收藏任何战报</p>
+
+    {% endif %}
+    </div>
+
+    <br>
+    {% endif %}
+
+    <div class="m-3">
+    <h2>我创建的目录：</h2>
     <table class="table table-striped table-dark">
         <thead>
             <tr>
@@ -25,7 +66,9 @@
             {% endfor %}
         </tbody>
     </table>
-    <p>
-        <a href="{{ url_for('wodreport.new_category') }}">Create a new category</a>
-    </p>
+    </div>
+
+    <div class="m-3">
+        <a type="button" class="btn btn-primary" href="{{ url_for('wodreport.new_category') }}">创建新目录</a>
+    </div>
 {% endblock %}

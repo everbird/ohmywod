@@ -81,6 +81,7 @@
         <tr>
             <th scope="col">Id</th>
             <th scope="col">Name</th>
+            <th scope="col">Views/Likes/Favorites</th>
             <th scope="col">Description</th>
         </tr>
     </thead>
@@ -89,6 +90,8 @@
         <tr>
             <th scope="row">{{ r.id }}</th>
             <td><a href="{{ url_for('wodreport.view_report', report_id=r.id) }}">{{ r.title }}</a></td>
+            {% set p = r.presenter %}
+            <td>{{ p.views }} / {{ p.likes }} / {{ p.favors }}</td>
             <td>{{ r.description | default("-", True) | truncate(60) }}</td>
         </tr>
     {% endfor %}
