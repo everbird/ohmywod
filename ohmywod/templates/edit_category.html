@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}战报 - {{ category.name }}{% endblock %}
+{% block title %}战报 - {{ category.title }}{% endblock %}
 
 {% block content %}
 <div class="m-3">
@@ -10,6 +10,13 @@
     <h2>Edit category: {{ category.name }}</h2>
   </div>
   <br>
+  <div class="mb-4">
+    Display Name:
+    {{ form.display_name(placeholder="Description", class="form-control is-invalid" if form.display_name.errors else "form-control") }}
+    {% for error in form.display_name.errors %}
+    <div class="invalid-feedback">{{ error  }}</div>
+    {% endfor %}
+  </div>
    <div class="mb-4">
       {{ form.order_by.label }}:
       {{ form.order_by(class="form-control is-invalid" if form.order_by.errors else "form-control") }}

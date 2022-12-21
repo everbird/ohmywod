@@ -103,6 +103,7 @@ class EditCategoryForm(FlaskForm):
             ("reversed_customized", "Customized order(reversed)"),
         ]
     )
+    display_name = StringField("display_name", validators=[Optional()])
     description = StringField("description", widget=TextArea())
     submit = SubmitField("Update")
 
@@ -119,10 +120,12 @@ def edit_category(category_id):
         abort(403)
 
     form = EditCategoryForm(
+        display_name=category.display_name,
         description=category.description,
         order_by=category.order_by
     )
     if form.validate_on_submit():
+        category.display_name = form.display_name.data
         category.description = form.description.data
         category.order_by = form.order_by.data
         db.session.commit()
