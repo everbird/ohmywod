@@ -439,3 +439,11 @@ def favorite_reports():
         page=page,
         per_page=per_page
     )
+
+
+@report.route("/user/<username>/categories")
+@login_required
+def user_categories(username):
+    rc = ReportController()
+    categories = rc.get_cateogories_by_user(username)
+    return rt("user_categories.html", categories=categories, username=username)

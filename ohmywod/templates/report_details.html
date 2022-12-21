@@ -122,6 +122,16 @@
 
         <dt class="col-sm-3 col-3">Order</dt>
         <dd class="col-sm-9 col-9">{{ report.order | default("-")}}</dd>
+
+        <dt class="col-sm-3 col-3">Owner</dt>
+        <dd class="col-sm-9 col-9">
+          {% if report.owner %}
+          <a href="{{ url_for('wodreport.user_categories', username=report.owner) }}">{{ report.owner }}</a>
+          {% else %}
+          -
+          {% endif %}
+        </dd>
+
       </dl>
       <dl class="row">
 
