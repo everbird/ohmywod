@@ -287,6 +287,7 @@ def report_reader(report_id, subpath="index.html"):
         report_html = report_html.replace('</body>', '</div>')
         report_html = report_html.replace('#"', '#/"')
         report_html = report_html.replace('jump(', 'dummy_jump(')
+        report_html = report_html.replace('http:', 'https:')
 
         return rt(
             "report_reader.html",
