@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}战报 - 我的收藏{% endblock %}
+
+
+{% block content %}
+<div class="m-3">
+<h2>我的收藏</h2>
+<br>
+{% if reports %}
+<table class="table table-striped table-dark">
+    <thead>
+        <tr>
+            <th scope="col">Id</th>
+            <th scope="col">Name</th>
+            <th scope="col">Views/Likes/Favorites</th>
+            <th scope="col">Description</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for r in reports %}
+        <tr>
+            <th scope="row">{{ r.id }}</th>
+            <td><a href="{{ url_for('wodreport.view_report', report_id=r.id) }}">{{ r.title }}</a></td>
+            {% set p = r.presenter %}
+            <td>{{ p.views }} / {{ p.likes }} / {{ p.favors }}</td>
+            <td>{{ r.description | default("-", True) | truncate(60) }}</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{{ pagination.links }}
+{% else %}
+<p>还没有收藏任何战报，不妨去 <a href="{{ url_for('wodreport.report_page') }}">All Reports</a> 逛逛</p>
+{% endif %}
+
+</div>
+{% endblock %}

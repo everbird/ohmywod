@@ -414,3 +414,30 @@ def ajax_cancel_favorite(report_id):
     else:
         r = {"status": 1, "message": f"Report {report_id} doesn't exist."}
     return jsonify(r)
+
+
+@report.route("favor")
+@login_required
+def favorite_reports():
+    username = current_user.username
+    rc = ReportController()
+    favor_reports = rc.get_favorite_reports(current_user.username)
+    page, per_page, offset = get_page_args(
+        page_parameter='page',
+        per_page_parameter='per_page'
+    )
+    total = len(favor_reports)
+    reports = favor_reports[offset:offset+per_page]
+    pagination = Pagination(
+        page=page,
+        per_page=per_page,
+        total=total,
+        css_framework='bootstrap5'
+    )
+    return rt(
+        "favor.html",
+        reports=reports,
+        pagination=pagination,
+        page=page,
+        per_page=per_page
+    )
