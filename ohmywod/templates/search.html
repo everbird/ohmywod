@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}战报 - 搜索{% endblock %}
+
+{% block content %}
+<div class="m-3">
+  <div>
+    <form class="d-flex" method="GET">
+      <input class="form-control me-sm-2" type="search" placeholder="Search" name="q" value="{{ q  }}">
+      <button class="btn btn-secondary my-2 my-sm-0" type="submit">Search</button>
+    </form>
+  </div>
+  <br>
+  <div>
+    {% if q %}
+    <h2>{{ q }} 的搜索结果：</h2>
+    {% if reports %}
+    <div class="table-responsive">
+    <table class="table table-striped table-dark">
+      <thead>
+        <tr>
+          <th scope="col">Id</th>
+          <th scope="col">Name</th>
+          <th scope="col">Onwer</th>
+          <th scope="col">Views / Likes / Favor</th>
+          <th scope="col">Description</th>
+          <th scope="col">收藏时间</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in reports %}
+        <tr>
+          <th scope="row">{{ r.id }}</th>
+          <td><a href="{{ url_for('wodreport.view_report', report_id=r.id) }}">{{ r.title }}</a></td>
+          <td><a href="{{ url_for('wodreport.user_categories', username=r.owner) }}">{{ r.owner }}</a></td>
+          {% set p = r.presenter %}
+          <td>{{ p.views }} / {{ p.likes }} / {{ p.favors }}</td>
+          <td>{{ r.description | default("-", True) | truncate(60) }}</td>
+          {% set favor = r.get_favor(current_user.username) %}
+          <td>{{ favor.updated_at }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    </div>
+    {{ pagination.links }}
+    {% else %}
+    <p>没有搜索到匹配该关键字的战报</p>
+    {% endif %}
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

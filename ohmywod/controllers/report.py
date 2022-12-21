@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+from sqlalchemy.sql import text
 from sqlalchemy.sql.expression import case
 
 from ohmywod.extensions import db, redis
@@ -163,3 +164,15 @@ class ReportController:
         ).order_by(Favorite.updated_at.desc()).all()
 
         return self.get_reports([int(x.report_id) for x in favors])
+
+    def search(self, q):
+        sql = text('''
+        SELECT id
+        FROM report
+        WHERE (description LIKE :q
+          or name LIKE :q
+          or display_name LIKE :q)
+        ''')
+        c = db.engine.execute(sql, q="%{}%".format(q))
+        rids = [x[0] for x in c.fetchall()]
+        return self.get_reports(rids)

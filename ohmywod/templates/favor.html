@@ -14,8 +14,10 @@
         <tr>
             <th scope="col">Id</th>
             <th scope="col">Name</th>
-            <th scope="col">Views/Likes/Favorites</th>
+            <th scope="col">Onwer</th>
+            <th scope="col">Views / Likes / Favor</th>
             <th scope="col">Description</th>
+            <th scope="col">收藏时间</th>
         </tr>
     </thead>
     <tbody>
@@ -23,9 +25,12 @@
         <tr>
             <th scope="row">{{ r.id }}</th>
             <td><a href="{{ url_for('wodreport.view_report', report_id=r.id) }}">{{ r.title }}</a></td>
+            <td><a href="{{ url_for('wodreport.user_categories', username=r.owner) }}">{{ r.owner }}</a></td>
             {% set p = r.presenter %}
             <td>{{ p.views }} / {{ p.likes }} / {{ p.favors }}</td>
             <td>{{ r.description | default("-", True) | truncate(60) }}</td>
+            {% set favor = r.get_favor(current_user.username) %}
+            <td>{{ favor.updated_at }}</td>
         </tr>
     {% endfor %}
     </tbody>

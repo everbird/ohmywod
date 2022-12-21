@@ -442,8 +442,37 @@ def favorite_reports():
 
 
 @report.route("/user/<username>/categories")
-@login_required
 def user_categories(username):
     rc = ReportController()
     categories = rc.get_cateogories_by_user(username)
     return rt("user_categories.html", categories=categories, username=username)
+
+
+@report.route("search")
+def search():
+    args = request.args
+    q = args.get("q") or ""
+    reports = []
+    rc = ReportController()
+    reports = rc.search(q)
+
+    page, per_page, offset = get_page_args(
+        page_parameter='page',
+        per_page_parameter='per_page'
+    )
+    total = len(reports)
+    reports = reports[offset:offset+per_page]
+    pagination = Pagination(
+        page=page,
+        per_page=per_page,
+        total=total,
+        css_framework='bootstrap5'
+    )
+    return rt(
+        "search.html",
+        q=q,
+        reports=reports,
+        pagination=pagination,
+        page=page,
+        per_page=per_page
+    )
