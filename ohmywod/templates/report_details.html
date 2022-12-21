@@ -102,7 +102,7 @@
       </div>
     </div>
     <div class="tab-pane fade" id="pills-details" role="tabpanel" aria-labelledby="pills-details-tab">
-      <div class="m-3">
+      <div id="report-desc" class="m-3">
         <p>{{ report.description_rendered | safe }}</p>
       </div>
         {% if current_user.username == report.owner %}
