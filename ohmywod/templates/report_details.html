@@ -34,7 +34,7 @@
       height: 100px;
   }
 
-  .nav-link {
+  #pills-tab .nav-link {
       margin-top: 1em;
       margin-left: 1em;
   }
@@ -62,10 +62,10 @@
 <div>
   <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
     <li class="nav-item" role="presentation">
-      <button class="nav-link active" id="pills-report-tab" data-bs-toggle="pill" data-bs-target="#pills-report" type="button" role="tab" aria-controls="pills-report" aria-selected="true">Report(raw)</button>
+      <button class="nav-link active" id="pills-report-tab" data-bs-toggle="pill" data-bs-target="#pills-report" type="button" role="tab" aria-controls="pills-report" aria-selected="true">战报 (原始版)</button>
     </li>
     <li class="nav-item" role="presentation">
-      <button class="nav-link" id="pills-details-tab" data-bs-toggle="pill" data-bs-target="#pills-details" type="button" role="tab" aria-controls="pills-details" aria-selected="false">Metadata</button>
+      <button class="nav-link" id="pills-details-tab" data-bs-toggle="pill" data-bs-target="#pills-details" type="button" role="tab" aria-controls="pills-details" aria-selected="false">元信息</button>
     </li>
   </ul>
 </div>
@@ -198,7 +198,7 @@ TBD: meta for {{ report.title }}
 
 {% block nav_content %}
     {{ super() }}
-<button id="fullscreen-btn" class="btn btn-secondary" role="button">加强版</button>
+<button id="fullscreen-btn" class="btn btn-secondary" role="button">查看战报加强版</button>
 {% endblock %}
 
 {% block footer %}

@@ -133,32 +133,32 @@
                 <ul id="nav_menu" class="nav nav-pills flex-column">
                     <li class="nav-item">
                         <a href="{{ url_for('wodreport.home') }}" class="nav-link" aria-current="page">
-                            Home
+                            我的主页 (Home)
                         </a>
                     </li>
                     <li>
                         <a href="{{ url_for('wodreport.report_page') }}" class="nav-link text-white">
-                            All Reports
+                            浏览战报 (All Reports)
                         </a>
                     </li>
                     <li>
                         <a href="{{ url_for('wodreport.search') }}" class="nav-link text-white">
-                            Search
+                            搜索 (Search)
                         </a>
                     </li>
                     <li>
                         <a href="{{ url_for('wodreport.favorite_reports') }}" class="nav-link text-white">
-                            My Favorites
+                            我的收藏 (My Favorites)
                         </a>
                     </li>
                     <li>
                         <a href="{{ url_for('frontend.help_page') }}" class="nav-link text-white">
-                            Help
+                            帮助 (Help)
                         </a>
                     </li>
                     <li>
                         <a href="{{ url_for('frontend.feedback_page') }}" class="nav-link text-white">
-                            Feedback
+                            反馈 (Feedback)
                         </a>
                     </li>
                 </ul>
@@ -186,11 +186,11 @@
                         <strong>{{ current_user.username }}</strong>
                     </a>
                     <ul class="dropdown-menu dropdown-menu-dark text-small shadow" aria-labelledby="dropdownUser1" style="">
-                        <li><a class="dropdown-item" href="{{ url_for("wodreport.new_category")  }}">New Category ...</a></li>
-                        <li><a class="dropdown-item" href="{{ url_for("frontend.profile_page")  }}">Profile & Preference</a></li>
-                        <li><a class="dropdown-item" href="{{ url_for("wodreport.favorite_reports")  }}">我的收藏</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for("wodreport.new_category")  }}">新建目录 (New Category) ...</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for("frontend.profile_page")  }}">设置 (Profile & Preference)</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for("wodreport.favorite_reports")  }}">我的收藏 (My Favorites)</a></li>
                         <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item" href="{{ url_for("frontend.logout") }}">Sign out</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for("frontend.logout") }}">登出 (Sign out)</a></li>
                     </ul>
                 </div>
                 {% endif %}
