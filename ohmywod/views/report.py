@@ -57,6 +57,7 @@ def report_raw(username, category, name, subpath="index.html"):
 
     with open(fpath) as f:
         raw = f.read()
+        raw = raw.replace('http:', 'https:')
         return rt_string(raw)
 
 
