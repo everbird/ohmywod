@@ -24,7 +24,7 @@
           <th scope="col">Onwer</th>
           <th scope="col">Views / Likes / Favor</th>
           <th scope="col">Description</th>
-          <th scope="col">收藏时间</th>
+          <th scope="col">Updated At</th>
         </tr>
       </thead>
       <tbody>
@@ -36,8 +36,7 @@
           {% set p = r.presenter %}
           <td>{{ p.views }} / {{ p.likes }} / {{ p.favors }}</td>
           <td>{{ r.description | default("-", True) | truncate(60) }}</td>
-          {% set favor = r.get_favor(current_user.username) %}
-          <td>{{ favor.updated_at }}</td>
+          <td>{{ r.updated_at }}</td>
         </tr>
         {% endfor %}
       </tbody>
