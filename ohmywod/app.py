@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import click
-from flask import Flask, request
+from flask import Flask, request, redirect, url_for
 from flask_admin.contrib import sqla
 from flask_ldap3_login import LDAP3LoginManager
 from flask_login import LoginManager
@@ -118,3 +118,8 @@ def load_user(dn):
 @ldap_manager.save_user
 def save_user(dn, username, data, memberships):
     return LDAPUser.from_ldap_entry(data)
+
+
+@login_manager.unauthorized_handler
+def unauthorized_callback():
+    return redirect(url_for('frontend.login') +'?next=' + request.path)

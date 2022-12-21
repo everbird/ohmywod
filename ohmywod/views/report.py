@@ -33,10 +33,8 @@ report = Blueprint("wodreport", __name__)
 
 
 @report.route("/")
+@login_required
 def home():
-    if not current_user or current_user.is_anonymous:
-        return redirect(url_for('frontend.login'))
-
     rc = ReportController()
     categories = rc.get_cateogories_by_user(current_user.username)
     favor_reports = rc.get_favorite_reports(current_user.username)

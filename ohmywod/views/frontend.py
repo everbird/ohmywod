@@ -42,6 +42,11 @@ def login():
 
     if form.validate_on_submit():
         login_user(form.user)  # Tell flask-login to log them in.
+        args = request.args
+        next_url = args.get("next")
+        if next_url:
+            return redirect(next_url)
+
         return redirect(url_for("wodreport.home"))  # Send them home
 
     return rt("login.html", form=form)
