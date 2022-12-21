@@ -474,5 +474,6 @@ def search():
         reports=reports,
         pagination=pagination,
         page=page,
-        per_page=per_page
+        per_page=per_page,
+        total=total
     )
