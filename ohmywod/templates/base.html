@@ -126,15 +126,26 @@
             <nav id="sidebar" class="d-flex flex-column flex-shrink-0 p-3 text-white bg-dark {{ 'active' if session['sidebar_is_active'] else ''}}">
                 <div class="sidebar-header text-center">
                     <h3><a class="text-white text-decoration-none" href="{{ url_for('frontend.landing_page') }}"><i class="fa-solid fa-scroll fa-flip-horizontal"></i> Oh My WoD</a></h3>
-                    <small>alpha version</small>
                 </div>
 
                 <hr>
                 <ul id="nav_menu" class="nav nav-pills flex-column">
                     <li class="nav-item">
-                        <a href="{{ url_for('wodreport.home') }}" class="nav-link" aria-current="page">
-                            我的主页 (Home)
-                        </a>
+                        <div class="dropdown">
+                            <a href="#" role="button" id="dropdown-mine" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" aria-current="page">
+                                我的 (Mine)
+                            </a>
+                            <ul class="dropdown-menu" aria-labelledby="dropdown-mine">
+                                <li>
+                                    <a class="dropdown-item" href="{{ url_for('wodreport.home') }}">我的主页 (Home)</a>
+                                </li>
+                                <li>
+                                    <a href="{{ url_for('wodreport.favorite_reports') }}" class="dropdown-item">
+                                        我的收藏 (My Favorites)
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
                     </li>
                     <li>
                         <a href="{{ url_for('wodreport.report_page') }}" class="nav-link text-white">
@@ -144,11 +155,6 @@
                     <li>
                         <a href="{{ url_for('wodreport.search') }}" class="nav-link text-white">
                             搜索 (Search)
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ url_for('wodreport.favorite_reports') }}" class="nav-link text-white">
-                            我的收藏 (My Favorites)
                         </a>
                     </li>
                     <li>
