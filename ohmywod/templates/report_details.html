@@ -84,7 +84,7 @@
           <i class="fa-solid fa-eye"></i> 查看: {{ report_presenter.views }}
         </span>
         {% set liked = current_user.is_authenticated and report_presenter.is_liked_by(current_user.username) %}
-        <button type="button" id="like-btn" class="btn btn-primary me-2 {% if liked %}liked-on{% endif %}">
+        <button type="button" id="like-btn" class="btn btn-primary me-2 {% if liked %}liked-on{% endif %} {% if not current_user.is_authenticated %}disabled{% endif %}">
           {% if liked %}
           <i class="fa-solid fa-heart"></i> 已喜欢({{ report_presenter.likes }})
           {% else %}
@@ -92,7 +92,7 @@
           {% endif%}
         </button>
         {% set favorited = current_user.is_authenticated and report_presenter.is_favorited_by(current_user.username) %}
-        <button type="button" id="favorite-btn" class="btn btn-primary me-2 {% if favorited %}favorited-on{% endif %}">
+        <button type="button" id="favorite-btn" class="btn btn-primary me-2 {% if favorited %}favorited-on{% endif %} {% if not current_user.is_authenticated %}disabled{% endif %}">
           {% if favorited %}
           <i class="fa-solid fa-star"></i> 已收藏({{ report_presenter.favors }})
           {% else %}
