@@ -178,6 +178,7 @@ def view_report(report_id):
         "report_details.html",
         report=report,
         details=details,
+        subpath="index.html",
         report_presenter=report_presenter
     )
 
@@ -299,7 +300,7 @@ def report_reader(report_id, subpath="index.html"):
             report=report,
             subpath=subpath
         )
-    return rt("report_details.html", report=report)
+    return rt("report_details.html", report=report, subpath="index.html")
 
 
 @report.route("/all")
