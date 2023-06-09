@@ -1,6 +1,6 @@
 ![](https://wod.everbird.me/static/img/favicon.ico) [OhMyWoD](https://wod.everbird.me) - 一个[WoD](https://world-of-dungeons.org)战报分享网站
 
-以下介绍 Copy 自 https://wod.everbird.me
+以下介绍 Copy 自 https://wod.everbird.me ：
 
 ---
 
@@ -12,7 +12,7 @@
 
 若要上传战报，首先你需要准备好导出的战报 zip 文件。关于如何导出战报，请参看[如何导出战报](#如何导出战报)。
 
-然后，登录本网站后，从 [我的主页 (Home)](https://wod.everbird.me/r/r/) 进入一个你已建立的目录，或新建一个。在目录页面上方显示 "Drag & Drop your files or Browse" 的区域，可以点击后在弹出窗口选择一个或多个战报 zip 文件，或者直接将需要上传的战报 zip 文件拖拽到该区域。你会看到每个文件上传的进度，上传过程中请不要打断或刷新页面。等全部上传完成后，刷新该页面，即可看到新上传的战报。
+然后，登录本网站后，从 [我的主页 (Home)](https://wod.everbird.me/r/) 进入一个你已建立的目录，或新建一个。在目录页面上方显示 "Drag & Drop your files or Browse" 的区域，可以点击后在弹出窗口选择一个或多个战报 zip 文件，或者直接将需要上传的战报 zip 文件拖拽到该区域。你会看到每个文件上传的进度，上传过程中请不要打断或刷新页面。等全部上传完成后，刷新该页面，即可看到新上传的战报。
 
 上传的所有战报都可以在 [浏览战报 (All Reports)](https://wod.everbird.me/r/all) 页面找到。对于任何人，只要点击相应战报名字，或者直接访问战报相应的超链接地址，你会进入战报页面（例如：[这个战报](https://wod.everbird.me//r/report/126){:target="_blank"}）。这里默认中间区会显示你所上传战报的“原始版” 标签页（即战报 zip 解压出的原始 html 文件），这里的战报是可以像平时在 WoD 游戏中一样浏览的（不过更推荐使用“加强版”战报浏览器，下面会说）；你可以点击“元数据”标签页查看该战报的更多元数据；如果需要修改战报名称或其他元信息，战报上传者可以点击“元数据”标签内的“Edit”按钮。
 
