@@ -222,3 +222,8 @@ def profile_page():
         flash("Updated successfully.")
         return redirect(url_for('frontend.profile_page'))
     return rt("profile.html", form=form)
+
+
+@frontend.route("ads.txt")
+def ads_txt():
+    return rt("ads.txt")
