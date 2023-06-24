@@ -53,6 +53,7 @@ class Report(db.Model):
     display_name = db.Column(db.String(255))
     description = db.Column(db.Text)
     order = db.Column(db.Integer, nullable=True)
+    status = db.Column(db.Integer)
     created_at = db.Column(db.DateTime(), default = datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=db.func.now(), onupdate=db.func.now())
 
