@@ -92,6 +92,7 @@ class ReportCategory(db.Model):
     description = db.Column(db.Text)
     # Order by: name, created_time, customized
     order_by = db.Column(db.String(32))
+    status = db.Column(db.Integer)
     created_at = db.Column(db.DateTime(), default = datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=db.func.now(), onupdate=db.func.now())
 
