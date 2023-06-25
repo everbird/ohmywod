@@ -30,7 +30,7 @@
 <div id="description" class="m-3">
     {{ category.description }}
 </div>
-{% if category.reports %}
+{% if category.display_reports %}
 <form action="{{ url_for('wodreport.reorder_category', category_id=category.id)}}" method="POST">
   <div class="m-3">
     <input class="btn btn-primary" type="submit" value="Submit"></input>

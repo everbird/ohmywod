@@ -18,11 +18,16 @@ class ReportQuery(BaseQuery):
             criteria.append(db.or_(Report.name.ilike(keyword),
                 ))
         q = reduce(db.and_, criteria)
-        return self.filter(q).distinct()
+        rs = self.filter(q).distinct()
+        rs = [x for x in rs if not x.is_deleted]
+        return rs
 
     def get_by_username(self, username):
         exp = db.session.query(Report) \
-            .filter(Report.owner==username) \
+            .filter(
+                Report.owner==username,
+                Report.status==None,
+            )
 
         return exp.all()
 
@@ -31,13 +36,19 @@ class ReportCategoryQuery(BaseQuery):
 
     def get_by_username(self, username):
         exp = db.session.query(ReportCategory) \
-            .filter(ReportCategory.owner==username) \
+            .filter(
+                ReportCategory.owner==username,
+                ReportCategory.status==None,
+            )
 
         return exp.all()
 
     @classmethod
     def get_by_name(cls, name):
-        return ReportCategory.query.filter_by(name=name).first()
+        return ReportCategory.query.filter(
+            ReportCategory.name==name,
+            ReportCategory.status==None,
+        ).first()
 
 
 class Report(db.Model):
@@ -81,6 +92,10 @@ class Report(db.Model):
         rc = ReportController()
         return rc.get_favor(username, self.id, status=status)
 
+    @property
+    def is_deleted(self):
+        return self.status == 1
+
 
 class ReportCategory(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -106,7 +121,7 @@ class ReportCategory(db.Model):
 
     @property
     def sorted_reports(self):
-        rs = self.reports
+        rs = self.display_reports
         d = {
             "customized": "sorted_reports_by_customized_order",
             "ctime": "sorted_reports_by_ctime",
@@ -134,20 +149,27 @@ class ReportCategory(db.Model):
             o4 = r.id
             return (o1, o2, o3, o4)
 
-        return sorted(self.reports, key=_fkey, reverse=True)
+        return sorted(self.display_reports, key=_fkey, reverse=True)
 
     @property
     def sorted_reports_by_ctime(self):
-        return sorted(self.reports, key=lambda x: x.created_at)
+        return sorted(self.display_reports, key=lambda x: x.created_at)
 
     @property
     def sorted_reports_by_name(self):
-        return sorted(self.reports, key=lambda x: x.name)
+        return sorted(self.display_reports, key=lambda x: x.name)
 
     @property
     def description_rendered(self):
         return bbcode.render_html(self.description)
 
+    @property
+    def is_deleted(self):
+        return self.status == 1
+
+    @property
+    def display_reports(self):
+        return [x for x in self.reports if not x.is_deleted]
 
 
 class ReportDetails(db.Model):

@@ -11,11 +11,23 @@ from ohmywod.models.report import Report, ReportCategory, ReportCategoryQuery
 
 class ReportController:
 
-    def get_cateogories_by_user(self, username):
-        return ReportCategory.query.filter_by(owner=username).all()
+    def get_cateogories_by_user(self, username, show_deleted=False):
+        if show_deleted:
+            return ReportCategory.query.filter_by(owner=username).all()
 
-    def get_reports_by_user(self, username):
-        return Report.query.filter_by(owner=username).all()
+        return ReportCategory.query.filter(
+            ReportCategory.owner==username,
+            ReportCategory.status==None,
+        ).all()
+
+    def get_reports_by_user(self, username, show_deleted=False):
+        if show_deleted:
+            return Report.query.filter_by(owner=username).all()
+
+        return Report.query.filter(
+            Report.owner==username,
+            Report.status==None,
+        ).all()
 
     def create_report(self, category, name, owner):
         report = Report(
@@ -32,14 +44,17 @@ class ReportController:
         db.session.commit()
         return category
 
-    def get_all_categories(self, page=None, per_page=None):
+    def get_all_categories(self, page=None, per_page=None, show_deleted=False):
         if not page or not per_page:
             return ReportCategory.query.all()
         else:
             return ReportCategory.query.paginate(page=page, per_page=per_page)
 
-    def get_all_reports(self):
-        return Report.query.all()
+    def get_all_reports(self, show_deleted=False):
+        if show_deleted:
+            return Report.query.all()
+
+        return Report.query.filter(Report.status==None).all()
 
     def get_category(self, cid):
         return ReportCategory.query.get(cid)
@@ -58,8 +73,15 @@ class ReportController:
         rs = Report.query.filter(Report.id.in_(rids)).order_by(ordering).all()
         return rs
 
-    def get_category_by_name_and_username(self, name, username):
-        return ReportCategory.query.filter_by(name=name, owner=username).all()
+    def get_category_by_name_and_username(self, name, username, show_deleted=False):
+        if show_deleted:
+            return ReportCategory.query.filter_by(name=name, owner=username).all()
+
+        return ReportCategory.query.filter(
+            ReportCategory.name==name,
+            ReportCategory.owner==username,
+            ReportCategory.status==None,
+        ).all()
 
     def incr_views(self, report_id):
         key = f"/stats/report/{report_id}/views"
@@ -151,7 +173,7 @@ class ReportController:
         favor = self.get_favor(username, report_id)
         return favor is not None
 
-    def get_favorite_reports(self, username, status=0):
+    def get_favorite_reports(self, username, status=0, show_deleted=False):
         kwargs = dict(
             ftype="report",
             username=username,
@@ -163,9 +185,12 @@ class ReportController:
             **kwargs
         ).order_by(Favorite.updated_at.desc()).all()
 
-        return self.get_reports([int(x.report_id) for x in favors])
+        rs = self.get_reports([int(x.report_id) for x in favors])
+        if not show_deleted:
+            rs = [x for x in rs if not x.is_deleted]
+        return rs
 
-    def search(self, q):
+    def search(self, q, show_deleted=False):
         sql = text('''
         SELECT id
         FROM report
@@ -175,4 +200,7 @@ class ReportController:
         ''')
         c = db.engine.execute(sql, q="%{}%".format(q))
         rids = [x[0] for x in c.fetchall()]
-        return self.get_reports(rids)
+        rs = self.get_reports(rids)
+        if not show_deleted:
+            rs = [x for x in rs if not x.is_deleted]
+        return rs
