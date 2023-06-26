@@ -38,17 +38,35 @@ class ReportController:
         db.session.add(report)
         db.session.commit()
 
+    def delete_report(self, rid):
+        report = self.get_report(rid)
+        report.status = 1
+        db.session.add(report)
+        db.session.commit()
+
     def create_category(self, name, description, owner):
         category = ReportCategory(name=name, description=description, owner=owner)
         db.session.add(category)
         db.session.commit()
         return category
 
-    def get_all_categories(self, page=None, per_page=None, show_deleted=False):
-        if not page or not per_page:
-            return ReportCategory.query.all()
-        else:
-            return ReportCategory.query.paginate(page=page, per_page=per_page)
+    def delete_category(self, cid):
+        category = self.get_category(cid)
+        reports = category.display_reports
+
+        category.status = 1
+        db.session.add(category)
+
+        for r in reports:
+            r.status = 1
+            db.session.add(r)
+
+        db.session.commit()
+
+    def get_all_categories(self, show_deleted=False):
+        if not show_deleted:
+            return ReportCategory.query.filter(ReportCategory.status==None).all()
+        return ReportCategory.query.all()
 
     def get_all_reports(self, show_deleted=False):
         if show_deleted:

@@ -39,6 +39,14 @@
       margin-left: 1em;
   }
 
+  /*
+  .btn-primary-outline:hover {
+      color: #f0eb6e;
+      background-color: #38e896;
+      border-color: #0f3d1c;
+  }
+*/
+
   @media (max-width: 768px) {
   }
 
@@ -79,26 +87,54 @@
         </div>
         <iframe id="report_iframe" class="embed-responsive-item" onload="$('#spinner').hide(); $('.iframe-loading iframe').show();" src="{{ url_for("wodreport.report_raw", username=report.owner, category=report.category.name, name=report.name, subpath=subpath) }}" title="Report details"></iframe>
       </div>
-      <div class="m-2">
-        <span class="me-2">
-          <i class="fa-solid fa-eye"></i> 查看: {{ report_presenter.views }}
-        </span>
+      <div class="mt-2">
+        <button type="button" class="btn btn-primary-outline">
+          <i class="fa-solid fa-eye"></i> {{ report_presenter.views }}
+        </button>
         {% set liked = current_user.is_authenticated and report_presenter.is_liked_by(current_user.username) %}
-        <button type="button" id="like-btn" class="btn btn-primary me-2 {% if liked %}liked-on{% endif %} {% if not current_user.is_authenticated %}disabled{% endif %}">
+        <button type="button" id="like-btn" class="btn btn-primary-outline {% if liked %}liked-on{% endif %} {% if not current_user.is_authenticated %}disabled{% endif %}">
           {% if liked %}
-          <i class="fa-solid fa-heart"></i> 已喜欢({{ report_presenter.likes }})
+          <i class="text-danger fa-solid fa-heart"></i> {{ report_presenter.likes }}
           {% else %}
-          <i class="fa-regular fa-heart"></i> 喜欢({{ report_presenter.likes }})
+          <i class="fa-regular fa-heart"></i> {{ report_presenter.likes }}
           {% endif%}
         </button>
         {% set favorited = current_user.is_authenticated and report_presenter.is_favorited_by(current_user.username) %}
-        <button type="button" id="favorite-btn" class="btn btn-primary me-2 {% if favorited %}favorited-on{% endif %} {% if not current_user.is_authenticated %}disabled{% endif %}">
+        <button type="button" id="favorite-btn" class="btn btn-primary-outline {% if favorited %}favorited-on{% endif %} {% if not current_user.is_authenticated %}disabled{% endif %}">
           {% if favorited %}
-          <i class="fa-solid fa-star"></i> 已收藏({{ report_presenter.favors }})
+          <i class="text-warning fa-solid fa-star"></i> {{ report_presenter.favors }}
           {% else %}
-          <i class="fa-regular fa-star"></i> 收藏({{ report_presenter.favors }})
+          <i class="fa-regular fa-star"></i> {{ report_presenter.favors }}
           {% endif%}
         </button>
+        <div class="float-end me-3">
+          <button type="button" id="delete-btn" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#delete-report-modal">
+            <i class="fa-solid fa-trash"></i>
+            删除
+          </button>
+
+          <!-- Modal -->
+          <div class="modal fade" id="delete-report-modal" tabindex="-1" aria-labelledby="delete-report-modal-label" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+              <div class="modal-content">
+                <form action="{{ url_for("wodreport.delete_report", report_id=report.id) }}" method="POST">
+                  <div class="modal-header">
+                    <h5 class="modal-title" id="delete-report-modal-label">删除战报</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                  </div>
+                  <div class="modal-body">
+                    你是否确认要删除战报 {{ report.title }}？
+                  </div>
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-primary">确认删除</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+
+        </div>
       </div>
     </div>
     <div class="tab-pane fade" id="pills-details" role="tabpanel" aria-labelledby="pills-details-tab">
@@ -228,13 +264,13 @@ TBD: meta for {{ report.title }}
                   console.info("unliked");
               });
               like_btn.toggleClass("liked-on");
-              like_btn.html('<i class="fa-regular fa-heart"></i> 喜欢({{ report_presenter.likes }})');
+              like_btn.html('<i class="fa-regular fa-heart"></i> {{ report_presenter.likes }}');
           } else {
               $.post("{{ url_for('wodreport.ajax_like', report_id=report.id) }}", function(data) {
                   console.info("liked");
               });
               like_btn.toggleClass("liked-on");
-              like_btn.html('<i class="fa-solid fa-heart"></i> 已喜欢({{ report_presenter.likes }})');
+              like_btn.html('<i class="text-danger fa-solid fa-heart"></i> {{ report_presenter.likes }}');
           }
       });
 
@@ -245,13 +281,13 @@ TBD: meta for {{ report.title }}
                   console.info("cancelld favorite");
               });
               favorite_btn.toggleClass("favorited-on");
-              favorite_btn.html('<i class="fa-regular fa-star"></i> 收藏({{ report_presenter.favors }})');
+              favorite_btn.html('<i class="fa-regular fa-star"></i> {{ report_presenter.favors }}');
           } else {
               $.post("{{ url_for('wodreport.ajax_add_favorite', report_id=report.id) }}", function(data) {
                   console.info("added favorite");
               });
               favorite_btn.toggleClass("favorited-on");
-              favorite_btn.html('<i class="fa-solid fa-star"></i> 已收藏({{ report_presenter.favors }})');
+              favorite_btn.html('<i class="text-warning fa-solid fa-star"></i> {{ report_presenter.favors }}');
           }
       });
   });

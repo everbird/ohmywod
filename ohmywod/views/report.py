@@ -164,6 +164,22 @@ def reorder_category(category_id):
     return rt("reorder_category.html", category=category)
 
 
+@report.route("/category/<category_id>/delete", methods=["POST"])
+@login_required
+def delete_category(category_id):
+    rc = ReportController()
+    category = rc.get_category(category_id)
+    if not category:
+        abort(404)
+
+    if current_user.username != category.owner:
+        abort(403)
+
+    rc.delete_category(category.id)
+
+    return redirect(url_for("wodreport.report_page"))
+
+
 @report.route("/report/<report_id>")
 def view_report(report_id):
     rc = ReportController()
@@ -263,6 +279,22 @@ def edit_report(report_id):
         return redirect(url_for("wodreport.view_report", report_id=report.id))
 
     return rt("edit_report.html", report=report, form=form)
+
+
+@report.route("/report/<report_id>/delete", methods=["POST"])
+@login_required
+def delete_report(report_id):
+    rc = ReportController()
+    report = rc.get_report(report_id)
+    if not report:
+        abort(404)
+
+    if current_user.username != report.owner:
+        abort(403)
+
+    category = report.category
+    rc.delete_report(report.id)
+    return redirect(url_for("wodreport.view_category", category_id=category.id))
 
 
 @report.route("/report/<report_id>/reader/")

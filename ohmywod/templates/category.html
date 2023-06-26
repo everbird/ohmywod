@@ -74,9 +74,34 @@
     <a id="more-desc" href="#" class="d-none">显示更多</a>
     {% if current_user.username == category.owner %}
     <br>
-    [ <a href="{{ url_for('wodreport.edit_category', category_id=category.id) }}">Edit</a> |
-    <a href="{{ url_for('wodreport.reorder_category', category_id=category.id) }}">Reorder</a>
+    [ <a href="{{ url_for('wodreport.edit_category', category_id=category.id) }}" class="btn btn-link p-0 border-0">Edit</a> |
+    <a href="{{ url_for('wodreport.reorder_category', category_id=category.id) }}" class="btn btn-link p-0 border-0">Reorder</a> |
+    <button type="button" id="delete-btn" class="btn btn-secondary-outline btn-link p-0 border-0" data-bs-toggle="modal" data-bs-target="#delete-category-modal">
+      删除
+    </button>
     ]
+
+    <!-- Modal -->
+    <div class="modal fade" id="delete-category-modal" tabindex="-1" aria-labelledby="delete-category-modal-label" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <form action="{{ url_for("wodreport.delete_category", category_id=category.id) }}" method="POST">
+            <div class="modal-header">
+              <h5 class="modal-title" id="delete-category-modal-label">删除目录</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              你是否确认要删除目录 {{ category.title }}？<br>
+              <span class="text-danger">注意：该包含 {{ category.display_reports | length }} 个战报，删除目录会删除该目录下的所有战报。</span>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+              <button type="submit" class="btn btn-primary">确认删除</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
     {% endif %}
 </div>
 {% if current_user.username == category.owner %}
