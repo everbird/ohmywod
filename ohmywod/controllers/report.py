@@ -29,9 +29,9 @@ class ReportController:
             Report.status==None,
         ).all()
 
-    def create_report(self, category, name, owner):
+    def create_report(self, cid, name, owner):
         report = Report(
-            category_id=category.id,
+            category_id=cid,
             owner=owner,
             name=name
         )

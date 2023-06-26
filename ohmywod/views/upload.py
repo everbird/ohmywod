@@ -9,6 +9,7 @@ from flask import Blueprint, redirect, request, abort, current_app
 from flask_login import current_user
 
 from ohmywod.controllers.report import ReportController
+from ohmywod.extensions import db
 
 
 upload = Blueprint("upload", __name__)
@@ -63,7 +64,13 @@ def process(category_id):
             tpath.mkdir(parents=True, exist_ok=True)
             z.extractall(os.fspath(tpath))
 
-        rc.create_report(category, _filename, category.owner)
+        exist_reports = [x for x in category.display_reports if x.name == _filename]
+        if exist_reports:
+            report = sorted(exist_reports, key=lambda x: x.created_at, reverse=True)[0]
+            report.updated_at = db.func.now()
+            db.session.commit()
+        else:
+            rc.create_report(category.id, _filename, category.owner)
         return uid
 
     abort(400)

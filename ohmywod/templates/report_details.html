@@ -219,11 +219,17 @@
         <dt class="col-sm-3 col-3">Classes and Races</dt>
         <dd class="col-sm-9 col-9">{{ details.classes_and_races | default("-")}}</dd>
 
-        <dt class="col-sm-3 col-3">Created At</dt>
+        <dt class="col-sm-3 col-3">Details Created At</dt>
         <dd class="col-sm-9 col-9">{{ details.created_at | default("-")}}</dd>
 
-        <dt class="col-sm-3 col-3">Updated At</dt>
+        <dt class="col-sm-3 col-3">Details Updated At</dt>
         <dd class="col-sm-9 col-9">{{ details.updated_at | default("-")}}</dd>
+
+        <dt class="col-sm-3 col-3">Report Created At</dt>
+        <dd class="col-sm-9 col-9">{{ report.created_at | default("-")}}</dd>
+
+        <dt class="col-sm-3 col-3">Report Updated At</dt>
+        <dd class="col-sm-9 col-9">{{ report.updated_at | default("-")}}</dd>
       </dl>
     </div>
 {% endblock %}
