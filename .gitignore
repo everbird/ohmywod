@@ -7,3 +7,5 @@ __pycache__
 instance
 local_config.py
 supervisord.conf
+redis-cache.conf
+redis-store.conf
