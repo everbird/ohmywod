@@ -88,11 +88,11 @@
         <iframe id="report_iframe" class="embed-responsive-item" onload="$('#spinner').hide(); $('.iframe-loading iframe').show();" src="{{ url_for("wodreport.report_raw", username=report.owner, category=report.category.name, name=report.name, subpath=subpath) }}" title="Report details"></iframe>
       </div>
       <div class="mt-2">
-        <button type="button" class="btn btn-primary-outline">
+        <button type="button" class="btn btn-primary-outline border-0">
           <i class="fa-solid fa-eye"></i> {{ report_presenter.views }}
         </button>
         {% set liked = current_user.is_authenticated and report_presenter.is_liked_by(current_user.username) %}
-        <button type="button" id="like-btn" class="btn btn-primary-outline {% if liked %}liked-on{% endif %} {% if not current_user.is_authenticated %}disabled{% endif %}">
+        <button type="button" id="like-btn" class="btn btn-primary-outline border-0 {% if liked %}liked-on{% endif %} {% if not current_user.is_authenticated %}disabled{% endif %}">
           {% if liked %}
           <i class="text-danger fa-solid fa-heart"></i> {{ report_presenter.likes }}
           {% else %}
@@ -100,13 +100,15 @@
           {% endif%}
         </button>
         {% set favorited = current_user.is_authenticated and report_presenter.is_favorited_by(current_user.username) %}
-        <button type="button" id="favorite-btn" class="btn btn-primary-outline {% if favorited %}favorited-on{% endif %} {% if not current_user.is_authenticated %}disabled{% endif %}">
+        <button type="button" id="favorite-btn" class="btn btn-primary-outline border-0 {% if favorited %}favorited-on{% endif %} {% if not current_user.is_authenticated %}disabled{% endif %}">
           {% if favorited %}
           <i class="text-warning fa-solid fa-star"></i> {{ report_presenter.favors }}
           {% else %}
           <i class="fa-regular fa-star"></i> {{ report_presenter.favors }}
           {% endif%}
         </button>
+
+        {% if current_user.username == report.owner %}
         <div class="float-end me-3">
           <button type="button" id="delete-btn" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#delete-report-modal">
             <i class="fa-solid fa-trash"></i>
@@ -135,6 +137,8 @@
           </div>
 
         </div>
+        {% endif%}
+
       </div>
     </div>
     <div class="tab-pane fade" id="pills-details" role="tabpanel" aria-labelledby="pills-details-tab">

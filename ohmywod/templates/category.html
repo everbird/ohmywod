@@ -74,9 +74,9 @@
     <a id="more-desc" href="#" class="d-none">显示更多</a>
     {% if current_user.username == category.owner %}
     <br>
-    [ <a href="{{ url_for('wodreport.edit_category', category_id=category.id) }}" class="btn btn-link p-0 border-0">Edit</a> |
-    <a href="{{ url_for('wodreport.reorder_category', category_id=category.id) }}" class="btn btn-link p-0 border-0">Reorder</a> |
-    <button type="button" id="delete-btn" class="btn btn-secondary-outline btn-link p-0 border-0" data-bs-toggle="modal" data-bs-target="#delete-category-modal">
+    [ <a href="{{ url_for('wodreport.edit_category', category_id=category.id) }}" class="btn btn-link p-0 border-0">Edit</a>
+    | <a href="{{ url_for('wodreport.reorder_category', category_id=category.id) }}" class="btn btn-link p-0 border-0">Reorder</a>
+    | <button type="button" id="delete-btn" class="btn btn-secondary-outline btn-link p-0 border-0" data-bs-toggle="modal" data-bs-target="#delete-category-modal">
       删除
     </button>
     ]
