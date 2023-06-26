@@ -227,3 +227,8 @@ def profile_page():
 @frontend.route("ads.txt")
 def ads_txt():
     return rt("ads.txt")
+
+
+@frontend.route("robots.txt")
+def robots_txt():
+    return rt("robots.txt")

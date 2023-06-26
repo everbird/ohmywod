@@ -1,0 +1,11 @@
+User-agent: *
+Disallow: /r/report/*/cancel_favorite
+Disallow: /r/report/*/add_favorite
+Disallow: /r/report/*/unlike
+Disallow: /r/report/*/like
+Disallow: /r/raw/*
+Disallow: /api/*
+Disallow: /login*
+Disallow: /feedback
+Disallow: /register
+Disallow: /search
