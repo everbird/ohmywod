@@ -26,7 +26,7 @@ from ohmywod.extensions import (
 from ohmywod.decorators import check_auth
 from ohmywod.models.favorite import Favorite
 from ohmywod.models.feedback import Feedback
-from ohmywod.models.report import Report, ReportCategory
+from ohmywod.models.report import Report, ReportCategory, ReportDetails
 from ohmywod.models.user import User, LDAPUser
 
 
@@ -84,6 +84,8 @@ def configure_extensions(app):
     admin.add_view(_make_model_view(Report, endpoint='report',
         category='Online'))
     admin.add_view(_make_model_view(ReportCategory, endpoint='category',
+        category='Online'))
+    admin.add_view(_make_model_view(ReportDetails, endpoint='report_details',
         category='Online'))
     admin.add_view(_make_model_view(User,
         endpoint='user', category='User'))
