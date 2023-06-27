@@ -254,10 +254,11 @@ TBD: meta for {{ report.title }}
       
       $("#fullscreen-btn").on("click", function () {
           var iframe_href = $("#report_iframe")[0].contentWindow.location.href;
-          var reader_href = iframe_href.replace(
-              "{{ url_for("wodreport.report_raw", username=report.owner, category=report.category.name, name=report.name, subpath=subpath) }}",
-              "{{ url_for('wodreport.report_reader', report_id=report.id) }}"
-          );
+          var raw_url = "{{ url_for("wodreport.report_raw", username=report.owner, category=report.category.name, name=report.name, subpath=subpath) }}";
+          var replace_from = raw_url.substring(0, raw_url.lastIndexOf("/"));
+          var reader_url = "{{ url_for('wodreport.report_reader', report_id=report.id) }}";
+          var replace_to = reader_url.substring(0, reader_url.lastIndexOf("/"));
+          var reader_href = iframe_href.replace(replace_from, replace_to);
           var scroll_top = $("#report_iframe")[0].contentWindow.document.body.scrollTop;
           if (scroll_top > 0) {
               window.location.href = reader_href + "?scroll_top=" + scroll_top;
