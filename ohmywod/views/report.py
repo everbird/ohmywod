@@ -11,6 +11,7 @@ from flask import (
     render_template_string as rt_string,
     abort,
     current_app,
+    make_response,
     redirect,
     url_for,
     request,
@@ -58,7 +59,9 @@ def report_raw(username, category, name, subpath="index.html"):
     with open(fpath) as f:
         raw = f.read()
         raw = raw.replace('http:', 'https:')
-        return rt_string(raw)
+        resp = make_response(raw)
+        resp.mimetype = 'text/html'
+        return resp
 
 
 @report.route("/category/<category_id>")
