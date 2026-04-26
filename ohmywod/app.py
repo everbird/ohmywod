@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import click
-from flask import Flask, request, redirect, url_for
+from flask import Flask, request, redirect, url_for, Response
 from flask_admin.contrib import sqla
 from flask_ldap3_login import LDAP3LoginManager
 from flask_login import LoginManager
@@ -78,6 +78,12 @@ def configure_extensions(app):
             def is_accessible(self):
                 auth = request.authorization
                 return auth and check_auth(auth.username, auth.password)
+
+            def inaccessible_callback(self, name, **kwargs):
+                return Response(
+                    'Could not verify your access level for that URL.\n'
+                    'You have to login with proper credentials', 401,
+                    {'WWW-Authenticate': 'Basic realm="Login Required"'})
 
         return AuthModelView(model_class, db.session, *args, **kwargs)
 

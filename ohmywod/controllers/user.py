@@ -88,7 +88,7 @@ class UserController:
                     app_theme=None
                     ):
         ldap_user = self.get_ldap_user_by_username(username)
-        if display_name or email or password or reader_theme:
+        if display_name or email or password or reader_theme or app_theme:
             conn = ldap_manager.connection
             d = {}
             if display_name:
