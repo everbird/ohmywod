@@ -5,7 +5,8 @@ import os
 from pathlib import Path
 from zipfile import ZipFile
 
-from flask import Blueprint, redirect, request, abort, current_app
+from flask import Blueprint, redirect, request, abort, current_app, flash
+from werkzeug.utils import secure_filename
 from flask_login import current_user
 
 from ohmywod.controllers.report import ReportController
@@ -42,8 +43,7 @@ def process(category_id):
         return redirect(request.url)
 
     if fobj and allowed_file(fobj.filename):
-        #filename = secure_filename(fobj.filename)
-        filename = fobj.filename
+        filename = secure_filename(fobj.filename)
         uid = os.path.join(str(category.id), filename)
         dpath = Path(
             os.path.join(
@@ -62,7 +62,17 @@ def process(category_id):
             data_dir = current_app.config["DATA_DIR"]
             tpath = Path(data_dir) / category.owner / category.name / _filename
             tpath.mkdir(parents=True, exist_ok=True)
-            z.extractall(os.fspath(tpath))
+            
+            # Secure extraction to prevent Zip Slip
+            tpath_abs = os.path.abspath(os.fspath(tpath))
+            for member in z.infolist():
+                member_name = member.filename
+                if '..' in member_name or member_name.startswith('/'):
+                    continue
+                target_path = os.path.abspath(os.path.join(tpath_abs, member_name))
+                if not target_path.startswith(tpath_abs):
+                    continue
+                z.extract(member, os.fspath(tpath))
 
         exist_reports = [x for x in category.display_reports if x.name == _filename]
         if exist_reports:

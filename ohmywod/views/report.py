@@ -17,6 +17,7 @@ from flask import (
     request,
     jsonify
 )
+from werkzeug.utils import safe_join
 from flask_login import current_user, login_required
 from flask_wtf import FlaskForm
 from lxml import etree, html
@@ -49,9 +50,12 @@ def report_raw(username, category, name, subpath="index.html"):
     if not subpath.endswith(".html"):
         abort(404)
 
-    data_dir = Path(current_app.config["DATA_DIR"])
-    rpath = data_dir / username / category / name
-    fpath = rpath / subpath
+    data_dir = current_app.config["DATA_DIR"]
+    fpath_str = safe_join(data_dir, username, category, name, subpath)
+    if not fpath_str:
+        abort(404)
+
+    fpath = Path(fpath_str)
 
     if not fpath.exists():
         abort(404)
@@ -309,9 +313,12 @@ def report_reader(report_id, subpath="index.html"):
     rc = ReportController()
     report = rc.get_report(report_id)
 
-    data_dir = Path(current_app.config["DATA_DIR"])
-    rpath = data_dir / report.owner / report.category.name / report.name
-    fpath = rpath / subpath
+    data_dir = current_app.config["DATA_DIR"]
+    fpath_str = safe_join(data_dir, report.owner, report.category.name, report.name, subpath)
+    if not fpath_str:
+        abort(404)
+
+    fpath = Path(fpath_str)
 
     if not fpath.exists():
         abort(404)

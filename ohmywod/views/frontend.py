@@ -112,9 +112,12 @@ def logout():
 
 @frontend.route("/api/session/<key>", methods=["POST"])
 def server_session(key):
-    boolean_keys = {'sidebar_is_active'}
+    allowed_keys = {'sidebar_is_active'}
+    if key not in allowed_keys:
+        return 'forbidden', 403
+
     v = request.form.get(key)
-    if key in boolean_keys:
+    if key in allowed_keys:
         #FIXME: TIL: json boolean -> python string rather than boolean in Flask
         v = (v == 'true')
 
