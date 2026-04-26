@@ -206,7 +206,8 @@ def reorder_category(category_id):
 
     for rid, order in updates:
         r = rc.get_report(rid)
-        r.order = order
+        if r and r.category_id == category.id:
+            r.order = order
 
     db.session.commit()
 
