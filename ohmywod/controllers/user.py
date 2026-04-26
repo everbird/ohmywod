@@ -5,6 +5,7 @@ import json
 
 from ldap3 import HASHED_SALTED_SHA, SUBTREE, MODIFY_REPLACE
 from ldap3.utils.hashed import hashed
+from ldap3.utils.conv import escape_filter_chars
 
 from ohmywod.extensions import db, ldap_manager
 from ohmywod.models.user import User, LDAPUser
@@ -60,9 +61,10 @@ class UserController:
 
     def get_ldap_user_by_email(self, email):
         conn = ldap_manager.connection
+        escaped_email = escape_filter_chars(email)
         result = conn.search(
             "dc=everbird,dc=me",
-            "(&(objectClass=inetOrgPerson)(mail={}))".format(email),
+            "(&(objectClass=inetOrgPerson)(mail={}))".format(escaped_email),
             SUBTREE,
             attributes=['*']
         )
