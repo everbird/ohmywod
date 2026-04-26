@@ -21,6 +21,8 @@ from werkzeug.utils import safe_join
 from flask_login import current_user, login_required
 from flask_wtf import FlaskForm
 from lxml import etree, html
+from lxml.html.clean import Cleaner
+import re
 from wtforms import StringField, SubmitField, SelectField
 from wtforms.validators import DataRequired, ValidationError, Optional
 from wtforms.widgets import TextArea
@@ -32,6 +34,46 @@ from ohmywod.presenters.report import ReportPresenter
 
 
 report = Blueprint("wodreport", __name__)
+
+wod_cleaner = Cleaner(scripts=True, javascript=True, comments=False, style=False, links=False, meta=False, page_structure=False, safe_attrs_only=False)
+
+def sanitize_wod_report(body):
+    arg = r"('[^']*'|\"[^\"]*\"|\d+|this|true|false)"
+    args = fr"{arg}(\s*,\s*{arg})*"
+    safe_func = fr"^(return )?(o|dummy_jump|jump|st|cf|co|sd|ct)\(\s*({args})?\s*\);?$"
+    safe_on_pattern = re.compile(safe_func)
+
+    for el in body.iter():
+        for attr in list(el.attrib):
+            if attr.lower().startswith('on'):
+                val = el.attrib[attr]
+                
+                if attr.lower() == 'onmouseover':
+                    if val.startswith("return wodToolTip(this,'") and (val.endswith("');") or val.endswith("')")):
+                        html_content = val[24:-3] if val.endswith("');") else val[24:-2]
+                        html_content = html_content.replace("\\'", "'")
+                        try:
+                            frag = html.fromstring(f"<div>{html_content}</div>")
+                            frag = wod_cleaner.clean_html(frag)
+                            clean_content = etree.tostring(frag, encoding='unicode')[5:-6]
+                            clean_content = clean_content.replace("'", "\\'").replace("\n", "\\n").replace("\r", "")
+                            el.attrib['data-safe-onmouseover'] = f"return wodToolTip(this,'{clean_content}');"
+                        except Exception:
+                            pass
+                elif attr.lower() in ('onclick', 'onchange'):
+                    if safe_on_pattern.match(val):
+                        el.attrib[f'data-safe-{attr.lower()}'] = val
+
+    body = wod_cleaner.clean_html(body)
+
+    for el in body.iter():
+        for attr in list(el.attrib):
+            if attr.startswith('data-safe-'):
+                real_attr = attr.replace('data-safe-', '')
+                el.attrib[real_attr] = el.attrib[attr]
+                del el.attrib[attr]
+
+    return body
 
 
 @report.route("/")
@@ -329,6 +371,9 @@ def report_reader(report_id, subpath="index.html"):
         raw = f.read()
         tree = html.fromstring(raw)
         body = tree.xpath("body")[0]
+        
+        body = sanitize_wod_report(body)
+        
         report_html = etree.tostring(body, pretty_print=False, encoding='unicode')
         report_html = report_html.replace('<body>', '<div id="auto_extracted" style="width: 100vw;">')
         report_html = report_html.replace('</body>', '</div>')
