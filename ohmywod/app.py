@@ -63,6 +63,22 @@ def configure_app(app, config):
         app.config.from_object(config)
     app.config.from_envvar('APP_CONFIG', silent=True)
 
+    @app.context_processor
+    def inject_disk_usage():
+        from ohmywod.extensions import cache
+        import shutil
+        disk_info = cache.get("disk_info")
+        if disk_info is None:
+            total, used, free = shutil.disk_usage("/")
+            disk_info = {
+                'total': total,
+                'used': used,
+                'free': free,
+                'percent': round((used / total) * 100, 2)
+            }
+            cache.set("disk_info", disk_info, timeout=300)
+        return dict(disk_info=disk_info)
+
 
 def configure_extensions(app):
     db.init_app(app)

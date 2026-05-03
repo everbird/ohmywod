@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import os
+import shutil
 from pathlib import Path
 from zipfile import ZipFile
 
@@ -27,20 +28,24 @@ def process(category_id):
     rc = ReportController()
     category = rc.get_category(category_id)
     if not category:
-        abort(404)
+        return "上传失败：找不到指定的目录", 404
 
     if current_user.is_anonymous or current_user.username != category.owner:
-        abort(401)
+        return "上传失败：您没有权限上传到此目录", 401
+
+    total, used, free = shutil.disk_usage("/")
+    threshold = current_app.config.get('DISK_USAGE_THRESHOLD', 0.96)
+    if (used / total) >= threshold:
+        return f"上传失败：服务器磁盘使用率已达 {int(threshold * 100)}% 或更高，为保证稳定运行已暂停上传功能。", 400
 
     if 'filepond' not in request.files:
-        flash('No file part')
-        return redirect(request.url)
+        return "上传失败：请求中缺少文件内容", 400
+    
     fobj = request.files['filepond']
     # If the username does not select a file, the browser submits an
     # empty file without a filename.
     if fobj.filename == '':
-        flash('No selected file')
-        return redirect(request.url)
+        return "上传失败：未选择任何文件", 400
 
     if fobj and allowed_file(fobj.filename):
         filename = secure_filename(fobj.filename)
@@ -83,4 +88,4 @@ def process(category_id):
             rc.create_report(category.id, _filename, category.owner)
         return uid
 
-    abort(400)
+    return "上传失败：不支持的文件格式（仅支持 .zip 格式）", 400

@@ -30,6 +30,7 @@ class DefaultConfig(object):
     # --- Upload ---
     DATA_DIR = "/data/ohmywod/report"
     UPLOAD_DIR = "/data/ohmywod/upload"
+    DISK_USAGE_THRESHOLD = 0.96
 
 
     FLASK_ADMIN_SWATCH = "darkly"

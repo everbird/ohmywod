@@ -3,6 +3,7 @@
 #
 
 import os
+import shutil
 from pathlib import Path
 
 from flask import (
@@ -26,7 +27,7 @@ from wtforms.widgets import TextArea
 from ohmywod.controllers.feedback import FeedbackController
 from ohmywod.controllers.report import ReportController
 from ohmywod.controllers.user import UserController
-from ohmywod.extensions import ldap_manager
+from ohmywod.extensions import cache, ldap_manager
 
 
 frontend = Blueprint("frontend", __name__)
@@ -129,6 +130,11 @@ def server_session(key):
 def help_page():
     return redirect(url_for("frontend.landing_page"))
     # return rt("help.html")
+
+
+@frontend.route("/usage")
+def usage_page():
+    return rt("usage.html")
 
 
 class FeedbackForm(FlaskForm):

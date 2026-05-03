@@ -155,8 +155,12 @@
         allowRevert: false,
         allowRemove: false,
         server: {
-            process: '{{ url_for('upload.process', category_id=category.id) }}',
+            process: {
+                url: "{{ url_for('upload.process', category_id=category.id) }}",
+                onerror: (response) => response
+            }
         },
+        labelFileProcessingError: (error) => error.body || error.message || error
     })
 {% endif %}
   $(document).ready(function () {

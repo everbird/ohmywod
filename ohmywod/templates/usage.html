@@ -1,0 +1,32 @@
+{% extends "base_noadsense.html" %}
+
+{% block title %}Usage{% endblock %}
+
+{% block content %}
+<div class="m-3">
+  <div class="text-center mb-4">
+    <h2>使用情况 (Usage)</h2>
+  </div>
+
+   <div class="mb-4">
+      <ul class="list-group">
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+            Total
+            <span>{{ (disk_info.total / (1024**3)) | round(2) }} GB</span>
+        </li>
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+            Used
+            <span>{{ (disk_info.used / (1024**3)) | round(2) }} GB</span>
+        </li>
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+            Free
+            <span>{{ (disk_info.free / (1024**3)) | round(2) }} GB</span>
+        </li>
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+            Usage
+            <span>{{ disk_info.percent }} %</span>
+        </li>
+      </ul>
+   </div>
+</div>
+{% endblock %}

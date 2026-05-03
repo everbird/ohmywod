@@ -178,6 +178,11 @@
                             反馈 (Feedback)
                         </a>
                     </li>
+                    <li>
+                        <a href="{{ url_for('frontend.usage_page') }}" class="nav-link text-white">
+                            使用情况 (Usage: {{ disk_info.percent }}%)
+                        </a>
+                    </li>
                 </ul>
                 <div id="sidebar_ad" class="align-items-center mt-auto">
                     <hr>
