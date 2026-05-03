@@ -9,3 +9,4 @@ local_config.py
 supervisord.conf
 redis-cache.conf
 redis-store.conf
+.python-version

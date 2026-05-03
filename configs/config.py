@@ -20,3 +20,6 @@ except ImportError as e:
     else:
         # the ImportError is raised inside local_config
         raise
+
+if 'GUNICORN_BIN_PATH' not in locals():
+    GUNICORN_BIN_PATH = "{}/{}/venv/bin/gunicorn".format(VAR_PATH, APP_NAME)
