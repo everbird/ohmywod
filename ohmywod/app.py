@@ -106,6 +106,30 @@ def configure_app(app, config):
                     'percent': 0.0,
                     'available': False
                 }
+
+            # JuiceFS disk usage check for /mnt/jfs
+            jfs_path = "/mnt/jfs"
+            if os.path.exists(jfs_path):
+                try:
+                    _, j_used, _ = shutil.disk_usage(jfs_path)
+                    disk_info['jfs'] = {
+                        'used': j_used,
+                        'est_s3': j_used * 2,
+                        'available': True
+                    }
+                except Exception:
+                    disk_info['jfs'] = {
+                        'used': 0,
+                        'est_s3': 0,
+                        'available': False
+                    }
+            else:
+                disk_info['jfs'] = {
+                    'used': 0,
+                    'est_s3': 0,
+                    'available': False
+                }
+
             cache.set("disk_info", disk_info, timeout=300)
         return dict(disk_info=disk_info)
 
