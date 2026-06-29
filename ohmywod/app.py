@@ -67,6 +67,7 @@ def configure_app(app, config):
     def inject_disk_usage():
         from ohmywod.extensions import cache
         import shutil
+        import os
         disk_info = cache.get("disk_info")
         if disk_info is None:
             total, used, free = shutil.disk_usage("/")
@@ -76,6 +77,35 @@ def configure_app(app, config):
                 'free': free,
                 'percent': round((used / total) * 100, 2)
             }
+            
+            # Extra disk usage check for /mnt/test001
+            extra_path = "/mnt/test001"
+            if os.path.exists(extra_path):
+                try:
+                    e_total, e_used, e_free = shutil.disk_usage(extra_path)
+                    disk_info['extra'] = {
+                        'total': e_total,
+                        'used': e_used,
+                        'free': e_free,
+                        'percent': round((e_used / e_total) * 100, 2),
+                        'available': True
+                    }
+                except Exception:
+                    disk_info['extra'] = {
+                        'total': 0,
+                        'used': 0,
+                        'free': 0,
+                        'percent': 0.0,
+                        'available': False
+                    }
+            else:
+                disk_info['extra'] = {
+                    'total': 0,
+                    'used': 0,
+                    'free': 0,
+                    'percent': 0.0,
+                    'available': False
+                }
             cache.set("disk_info", disk_info, timeout=300)
         return dict(disk_info=disk_info)
 

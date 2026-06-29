@@ -5,28 +5,101 @@
 {% block content %}
 <div class="m-3">
   <div class="text-center mb-4">
-    <h2>使用情况 (Usage)</h2>
+    <h2>系统存储使用情况 (Storage Usage)</h2>
   </div>
 
-   <div class="mb-4">
-      <ul class="list-group">
-        <li class="list-group-item d-flex justify-content-between align-items-center">
-            Total
-            <span>{{ (disk_info.total / (1024**3)) | round(2) }} GB</span>
-        </li>
-        <li class="list-group-item d-flex justify-content-between align-items-center">
-            Used
-            <span>{{ (disk_info.used / (1024**3)) | round(2) }} GB</span>
-        </li>
-        <li class="list-group-item d-flex justify-content-between align-items-center">
-            Free
-            <span>{{ (disk_info.free / (1024**3)) | round(2) }} GB</span>
-        </li>
-        <li class="list-group-item d-flex justify-content-between align-items-center">
-            Usage
-            <span>{{ disk_info.percent }} %</span>
-        </li>
-      </ul>
-   </div>
+  <div class="row">
+    <!-- Main System Storage -->
+    <div class="col-md-6 mb-4">
+      <div class="card shadow-sm border-0">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center py-3">
+          <h5 class="mb-0"><i class="fa-solid fa-server me-2"></i>系统主存储 (System /)</h5>
+          <span class="badge bg-light text-primary">系统 & 上传</span>
+        </div>
+        <div class="card-body">
+          <div class="mb-4">
+            <h6 class="text-muted mb-2">空间使用率 (Usage Percentage)</h6>
+            <div class="progress" style="height: 24px;">
+              {% set pct = disk_info.percent %}
+              {% if pct < 70 %}
+                {% set progress_class = "bg-success" %}
+              {% elif pct < 90 %}
+                {% set progress_class = "bg-warning" %}
+              {% else %}
+                {% set progress_class = "bg-danger" %}
+              {% endif %}
+              <div class="progress-bar progress-bar-striped progress-bar-animated {{ progress_class }}" role="progressbar" style="width: {{ pct }}%;" aria-valuenow="{{ pct }}" aria-valuemin="0" aria-valuemax="100">
+                {{ pct }}%
+              </div>
+            </div>
+          </div>
+          <ul class="list-group list-group-flush">
+            <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+              <span>总大小 (Total)</span>
+              <strong>{{ (disk_info.total / (1024**3)) | round(2) }} GB</strong>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+              <span>已使用 (Used)</span>
+              <strong class="text-secondary">{{ (disk_info.used / (1024**3)) | round(2) }} GB</strong>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+              <span>剩余空间 (Free)</span>
+              <strong class="text-success">{{ (disk_info.free / (1024**3)) | round(2) }} GB</strong>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Extra Storage -->
+    <div class="col-md-6 mb-4">
+      <div class="card shadow-sm border-0">
+        <div class="card-header bg-info text-white d-flex justify-content-between align-items-center py-3">
+          <h5 class="mb-0"><i class="fa-solid fa-hard-drive me-2"></i>额外挂载存储 (/mnt/test001)</h5>
+          <span class="badge bg-light text-info">归档 & 报表</span>
+        </div>
+        <div class="card-body">
+          {% if disk_info.extra and disk_info.extra.available %}
+            <div class="mb-4">
+              <h6 class="text-muted mb-2">空间使用率 (Usage Percentage)</h6>
+              <div class="progress" style="height: 24px;">
+                {% set epct = disk_info.extra.percent %}
+                {% if epct < 70 %}
+                  {% set e_progress_class = "bg-success" %}
+                {% elif epct < 90 %}
+                  {% set e_progress_class = "bg-warning" %}
+                {% else %}
+                  {% set e_progress_class = "bg-danger" %}
+                {% endif %}
+                <div class="progress-bar progress-bar-striped progress-bar-animated {{ e_progress_class }}" role="progressbar" style="width: {{ epct }}%;" aria-valuenow="{{ epct }}" aria-valuemin="0" aria-valuemax="100">
+                  {{ epct }}%
+                </div>
+              </div>
+            </div>
+            <ul class="list-group list-group-flush">
+              <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                <span>总大小 (Total)</span>
+                <strong>{{ (disk_info.extra.total / (1024**3)) | round(2) }} GB</strong>
+              </li>
+              <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                <span>已使用 (Used)</span>
+                <strong class="text-secondary">{{ (disk_info.extra.used / (1024**3)) | round(2) }} GB</strong>
+              </li>
+              <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                <span>剩余空间 (Free)</span>
+                <strong class="text-success">{{ (disk_info.extra.free / (1024**3)) | round(2) }} GB</strong>
+              </li>
+            </ul>
+          {% else %}
+            <div class="text-center py-5">
+              <i class="fa-solid fa-triangle-exclamation text-warning fa-3x mb-3"></i>
+              <h6 class="text-secondary">未检测到额外存储挂载 (/mnt/test001)</h6>
+              <p class="text-muted small mb-0">该挂载路径可能仅在特定存储节点或生产环境下启用。</p>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 {% endblock %}
