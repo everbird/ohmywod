@@ -101,7 +101,7 @@
 /* Title truncation for mobile viewports */
 .text-truncate-title {
     display: inline-block;
-    max-width: 320px;
+    max-width: 60vw;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -109,12 +109,12 @@
 }
 @media (max-width: 768px) {
     .text-truncate-title {
-        max-width: 180px;
+        max-width: 50vw;
     }
 }
 @media (max-width: 576px) {
     .text-truncate-title {
-        max-width: 120px;
+        max-width: 40vw;
     }
     .stat-badge {
         padding: 0;
