@@ -40,18 +40,19 @@
 <table class="table table-striped table-dark">
     <thead>
         <tr>
-            <th scope="col">Order</th>
-            <th scope="col">Id</th>
+            <th scope="col" style="width: 50px;"></th>
+            <th scope="col" style="width: 80px;">Id</th>
             <th scope="col">Name</th>
             <th scope="col">Description</th>
         </tr>
     </thead>
-    <tbody>
+    <tbody id="sortable-tbody">
     {% for r in reports %}
-        <tr>
-          <th scope="row">
-            <input name="order-{{ r.id }}" type="text" size="3" value="{{ r.order|default("", True) }}"></input>
-          </th>
+        <tr draggable="true" class="draggable-row" style="cursor: grab;">
+            <td class="text-center">
+                <i class="fa-solid fa-grip-vertical text-muted"></i>
+                <input name="order-{{ r.id }}" type="hidden" value="{{ r.order|default("", True) }}"></input>
+            </td>
             <th scope="row">{{ r.id }}</th>
             <td><a href="{{ url_for('wodreport.view_report', report_id=r.id) }}">{{ r.title }}</a></td>
             <td>{{ r.description | default("-", True) }}</td>
@@ -65,4 +66,66 @@
 
 {% endif %}
 
+{% endblock %}
+
+{% block footer %}
+    {{ super() }}
+    <script>
+      $(document).ready(function () {
+          var draggedRow = null;
+
+          $('.draggable-row').on('dragstart', function(e) {
+              draggedRow = this;
+              $(this).css('opacity', '0.5');
+              e.originalEvent.dataTransfer.effectAllowed = 'move';
+              e.originalEvent.dataTransfer.setData('text/html', this.innerHTML);
+          });
+
+          $('.draggable-row').on('dragend', function() {
+              $(this).css('opacity', '1.0');
+              $('.draggable-row').css('border-top', 'none').css('border-bottom', 'none');
+              updateOrderInputs();
+          });
+
+          $('.draggable-row').on('dragover', function(e) {
+              e.preventDefault();
+              e.originalEvent.dataTransfer.dropEffect = 'move';
+              
+              var targetRow = this;
+              if (targetRow !== draggedRow) {
+                  var rect = targetRow.getBoundingClientRect();
+                  var next = (e.originalEvent.clientY - rect.top) / (rect.bottom - rect.top) > 0.5;
+                  
+                  $('.draggable-row').css('border-top', 'none').css('border-bottom', 'none');
+                  if (next) {
+                      $(targetRow).css('border-bottom', '2px solid var(--bs-primary, #0d6efd)');
+                  } else {
+                      $(targetRow).css('border-top', '2px solid var(--bs-primary, #0d6efd)');
+                  }
+              }
+          });
+
+          $('.draggable-row').on('drop', function(e) {
+              e.preventDefault();
+              var targetRow = this;
+              if (targetRow !== draggedRow) {
+                  var rect = targetRow.getBoundingClientRect();
+                  var next = (e.originalEvent.clientY - rect.top) / (rect.bottom - rect.top) > 0.5;
+                  
+                  if (next) {
+                      targetRow.parentNode.insertBefore(draggedRow, targetRow.nextSibling);
+                  } else {
+                      targetRow.parentNode.insertBefore(draggedRow, targetRow);
+                  }
+              }
+              $('.draggable-row').css('border-top', 'none').css('border-bottom', 'none');
+          });
+
+          function updateOrderInputs() {
+              $('.draggable-row').each(function(index) {
+                  $(this).find('input[type="hidden"]').val(index + 1);
+              });
+          }
+      });
+    </script>
 {% endblock %}

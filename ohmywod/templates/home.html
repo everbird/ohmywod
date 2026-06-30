@@ -16,20 +16,20 @@
       <table class="modern-table">
         <thead>
           <tr>
-            <th scope="col" style="width: 80px;">Id</th>
+            <th scope="col" style="width: 80px;" class="d-none d-md-table-cell">Id</th>
             <th scope="col">Name</th>
             <th scope="col" style="width: 150px;">Owner</th>
             <th scope="col" style="width: 220px;">Stats</th>
-            <th scope="col">Description</th>
-            <th scope="col" style="width: 180px;">收藏时间</th>
+            <th scope="col" class="d-none d-lg-table-cell">Description</th>
+            <th scope="col" style="width: 180px;" class="d-none d-md-table-cell">收藏时间</th>
           </tr>
         </thead>
         <tbody>
           {% for r in favor_reports[:5] %}
             <tr>
-              <td>{{ r.id }}</td>
+              <td class="d-none d-md-table-cell">{{ r.id }}</td>
               <td>
-                <a href="{{ url_for('wodreport.view_report', report_id=r.id) }}" class="fw-bold text-decoration-none">{{ r.title }}</a>
+                <a href="{{ url_for('wodreport.view_report', report_id=r.id) }}" class="fw-bold text-decoration-none text-truncate-title">{{ r.title }}</a>
               </td>
               <td>
                 <a href="{{ url_for('wodreport.user_categories', username=r.owner) }}" class="text-info text-decoration-none"><i class="fa-solid fa-user me-1"></i>{{ r.owner }}</a>
@@ -42,9 +42,9 @@
                   <span class="stat-badge"><i class="fa-regular fa-star"></i> {{ p.favors }}</span>
                 </div>
               </td>
-              <td class="text-secondary">{{ r.description | default("-", True) | truncate(60) }}</td>
+              <td class="text-secondary d-none d-lg-table-cell">{{ r.description | default("-", True) | truncate(60) }}</td>
               {% set favor = r.get_favor(current_user.username) %}
-              <td class="text-secondary">{{ favor.updated_at.strftime('%Y-%m-%d %H:%M') if favor and favor.updated_at else '' }}</td>
+              <td class="text-secondary d-none d-md-table-cell">{{ favor.updated_at.strftime('%Y-%m-%d %H:%M') if favor and favor.updated_at else '' }}</td>
             </tr>
           {% endfor %}
         </tbody>
@@ -64,23 +64,23 @@
       <table class="modern-table">
         <thead>
           <tr>
-            <th scope="col" style="width: 80px;">Id</th>
+            <th scope="col" style="width: 80px;" class="d-none d-md-table-cell">Id</th>
             <th scope="col">Name</th>
             <th scope="col" style="width: 120px;">Length</th>
-            <th scope="col">Description</th>
+            <th scope="col" class="d-none d-lg-table-cell">Description</th>
           </tr>
         </thead>
         <tbody>
           {% for c in categories %}
             <tr>
-              <td>{{ c.id }}</td>
+              <td class="d-none d-md-table-cell">{{ c.id }}</td>
               <td>
-                <a href="{{ url_for('wodreport.view_category', category_id=c.id) }}" class="fw-bold text-decoration-none">{{ c.title }}</a>
+                <a href="{{ url_for('wodreport.view_category', category_id=c.id) }}" class="fw-bold text-decoration-none text-truncate-title">{{ c.title }}</a>
               </td>
               <td>
                 <span class="badge bg-secondary">{{ c.display_reports_count }} 战报</span>
               </td>
-              <td class="text-secondary">{{ c.description | default("-", True) | truncate(60) }}</td>
+              <td class="text-secondary d-none d-lg-table-cell">{{ c.description | default("-", True) | truncate(60) }}</td>
             </tr>
           {% endfor %}
         </tbody>
