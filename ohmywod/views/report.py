@@ -114,10 +114,11 @@ def report_raw(username, category, name, subpath="index.html"):
     except OSError as e:
         current_app.logger.error(f"Failed to read path {fpath_str}: {e}")
         abort(503, description="Storage service is temporarily unavailable.")
-        raw = raw.replace('http:', 'https:')
-        resp = make_response(raw)
-        resp.mimetype = 'text/html'
-        return resp
+
+    raw = raw.replace('http:', 'https:')
+    resp = make_response(raw)
+    resp.mimetype = 'text/html'
+    return resp
 
 
 @report.route("/category/<category_id>")
