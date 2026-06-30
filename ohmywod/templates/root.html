@@ -23,31 +23,35 @@
 </nav>
 
 {% if categories %}
-<div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 my-3">
-  {% for category in categories %}
-    <div class="col">
-      <div class="modern-card">
-        <div class="modern-card-body">
-          <div class="modern-card-title">
-            <a href="{{ url_for('wodreport.view_category', category_id=category.id) }}">{{ category.title }}</a>
-          </div>
-          <div class="modern-card-desc">
-            {{ category.description | default("暂无描述", True) }}
-          </div>
-          <div class="modern-card-footer">
-            <span>
-              <i class="fa-solid fa-file-invoice me-1"></i>
-              {{ category.display_reports_count }} 战报
-            </span>
-            <span>
-              <i class="fa-solid fa-user me-1"></i>
-              <a href="{{ url_for('wodreport.user_categories', username=category.owner) }}" class="text-secondary text-decoration-none">{{ category.owner }}</a>
-            </span>
-          </div>
-        </div>
-      </div>
-    </div>
-  {% endfor %}
+<div class="modern-table-responsive my-3">
+  <table class="modern-table">
+    <thead>
+      <tr>
+        <th scope="col" style="width: 80px;">Id</th>
+        <th scope="col">Name</th>
+        <th scope="col" style="width: 120px;">Length</th>
+        <th scope="col" style="width: 150px;">Owner</th>
+        <th scope="col">Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for category in categories %}
+        <tr>
+          <td>{{ category.id }}</td>
+          <td>
+            <a href="{{ url_for('wodreport.view_category', category_id=category.id) }}" class="fw-bold text-decoration-none">{{ category.title }}</a>
+          </td>
+          <td>
+            <span class="badge bg-secondary">{{ category.display_reports_count }} 战报</span>
+          </td>
+          <td>
+            <a href="{{ url_for('wodreport.user_categories', username=category.owner) }}" class="text-info text-decoration-none"><i class="fa-solid fa-user me-1"></i>{{ category.owner }}</a>
+          </td>
+          <td class="text-secondary">{{ category.description | default("-", True) | truncate(60) }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
 </div>
 <div class="d-flex justify-content-center my-4">
   {{ pagination.links }}

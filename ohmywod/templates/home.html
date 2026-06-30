@@ -12,35 +12,43 @@
     <div class="m-3">
     <h2>我的收藏（最近5个）：（<a href="{{ url_for('wodreport.favorite_reports') }}">查看全部</a>）</h2>
     {% if favor_reports %}
-    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 my-3">
-      {% for r in favor_reports[:5] %}
-        <div class="col">
-          <div class="modern-card">
-            <div class="modern-card-body">
-              <div class="modern-card-title">
-                <a href="{{ url_for('wodreport.view_report', report_id=r.id) }}">{{ r.title }}</a>
-              </div>
-              <div class="modern-card-desc">
-                {{ r.description | default("暂无描述", True) }}
-              </div>
-              <div class="mb-3 d-flex gap-2 flex-wrap">
-                {% set p = r.presenter %}
-                <span class="stat-badge"><i class="fa-regular fa-eye"></i> {{ p.views }}</span>
-                <span class="stat-badge"><i class="fa-regular fa-thumbs-up"></i> {{ p.likes }}</span>
-                <span class="stat-badge"><i class="fa-regular fa-star"></i> {{ p.favors }}</span>
-              </div>
-              <div class="modern-card-footer">
-                <span>
-                  <i class="fa-solid fa-user me-1"></i>
-                  <a href="{{ url_for('wodreport.user_categories', username=r.owner) }}" class="text-secondary text-decoration-none">{{ r.owner }}</a>
-                </span>
-                {% set favor = r.get_favor(current_user.username) %}
-                <span><i class="fa-regular fa-clock me-1"></i>{{ favor.updated_at.strftime('%Y-%m-%d') if favor and favor.updated_at else '' }}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      {% endfor %}
+    <div class="modern-table-responsive my-3">
+      <table class="modern-table">
+        <thead>
+          <tr>
+            <th scope="col" style="width: 80px;">Id</th>
+            <th scope="col">Name</th>
+            <th scope="col" style="width: 150px;">Owner</th>
+            <th scope="col" style="width: 220px;">Stats</th>
+            <th scope="col">Description</th>
+            <th scope="col" style="width: 180px;">收藏时间</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in favor_reports[:5] %}
+            <tr>
+              <td>{{ r.id }}</td>
+              <td>
+                <a href="{{ url_for('wodreport.view_report', report_id=r.id) }}" class="fw-bold text-decoration-none">{{ r.title }}</a>
+              </td>
+              <td>
+                <a href="{{ url_for('wodreport.user_categories', username=r.owner) }}" class="text-info text-decoration-none"><i class="fa-solid fa-user me-1"></i>{{ r.owner }}</a>
+              </td>
+              <td>
+                <div class="d-flex gap-1">
+                  {% set p = r.presenter %}
+                  <span class="stat-badge"><i class="fa-regular fa-eye"></i> {{ p.views }}</span>
+                  <span class="stat-badge"><i class="fa-regular fa-thumbs-up"></i> {{ p.likes }}</span>
+                  <span class="stat-badge"><i class="fa-regular fa-star"></i> {{ p.favors }}</span>
+                </div>
+              </td>
+              <td class="text-secondary">{{ r.description | default("-", True) | truncate(60) }}</td>
+              {% set favor = r.get_favor(current_user.username) %}
+              <td class="text-secondary">{{ favor.updated_at.strftime('%Y-%m-%d %H:%M') if favor and favor.updated_at else '' }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
     </div>
     {% else %}
     <p class="text-secondary">还没有收藏任何战报</p>
@@ -52,28 +60,31 @@
 
     <div class="m-3">
     <h2>我创建的目录：</h2>
-    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 my-3">
-      {% for c in categories %}
-        <div class="col">
-          <div class="modern-card">
-            <div class="modern-card-body">
-              <div class="modern-card-title">
-                <a href="{{ url_for('wodreport.view_category', category_id=c.id) }}">{{ c.title }}</a>
-              </div>
-              <div class="modern-card-desc">
-                {{ c.description | default("暂无描述", True) }}
-              </div>
-              <div class="modern-card-footer">
-                <span>
-                  <i class="fa-solid fa-file-invoice me-1"></i>
-                  {{ c.display_reports_count }} 战报
-                </span>
-                <span>ID: {{ c.id }}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      {% endfor %}
+    <div class="modern-table-responsive my-3">
+      <table class="modern-table">
+        <thead>
+          <tr>
+            <th scope="col" style="width: 80px;">Id</th>
+            <th scope="col">Name</th>
+            <th scope="col" style="width: 120px;">Length</th>
+            <th scope="col">Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for c in categories %}
+            <tr>
+              <td>{{ c.id }}</td>
+              <td>
+                <a href="{{ url_for('wodreport.view_category', category_id=c.id) }}" class="fw-bold text-decoration-none">{{ c.title }}</a>
+              </td>
+              <td>
+                <span class="badge bg-secondary">{{ c.display_reports_count }} 战报</span>
+              </td>
+              <td class="text-secondary">{{ c.description | default("-", True) | truncate(60) }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
     </div>
     </div>
 
