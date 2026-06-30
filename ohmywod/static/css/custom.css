@@ -177,3 +177,116 @@
     transform: none !important;
     box-shadow: none !important;
 }
+
+/* Modern premium card design (re-introduced for grid card view mode) */
+.modern-card {
+    border: 1px solid var(--bs-border-color-translucent, rgba(255, 255, 255, 0.1));
+    border-radius: 12px;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    background-color: var(--bs-card-bg, rgba(255, 255, 255, 0.05));
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+.modern-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+    border-color: var(--bs-primary, #0d6efd);
+}
+.modern-card-body {
+    padding: 1.25rem;
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+}
+.modern-card-title {
+    font-size: 1.15rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    line-height: 1.3;
+}
+.modern-card-title a {
+    color: var(--bs-heading-color, inherit);
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+.modern-card-title a:hover {
+    color: var(--bs-primary, #0d6efd);
+}
+.modern-card-desc {
+    font-size: 0.9rem;
+    color: var(--bs-secondary-color, #8a94a6);
+    margin-bottom: 1rem;
+    flex-grow: 1;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+.modern-card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.8rem;
+    color: var(--bs-secondary-color, #8a94a6);
+    border-top: 1px solid var(--bs-border-color-translucent, rgba(255, 255, 255, 0.08));
+    padding-top: 0.75rem;
+    margin-top: auto;
+}
+
+/* Force standard pill badges in card grid layout */
+.layout-card-view .stat-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.25rem 0.5rem !important;
+    border-radius: 6px !important;
+    background-color: var(--bs-secondary-bg, rgba(255, 255, 255, 0.1)) !important;
+    color: var(--bs-body-color, #fff) !important;
+    font-size: 0.75rem !important;
+    font-weight: 500 !important;
+}
+
+/* Responsive visibility default rules */
+@media (min-width: 768px) {
+    .layout-card-view { display: none; }
+    .layout-list-view { display: block; }
+}
+@media (max-width: 767.98px) {
+    .layout-card-view { display: block; }
+    .layout-list-view { display: none; }
+}
+
+/* User preference overrides */
+html.layout-pref-list .layout-card-view, body.layout-pref-list .layout-card-view { display: none !important; }
+html.layout-pref-list .layout-list-view, body.layout-pref-list .layout-list-view { display: block !important; }
+
+html.layout-pref-card .layout-card-view, body.layout-pref-card .layout-card-view { display: block !important; }
+html.layout-pref-card .layout-list-view, body.layout-pref-card .layout-list-view { display: none !important; }
+
+/* Styles for toggle buttons */
+.layout-toggle-container {
+    display: inline-flex;
+    border: 1px solid var(--bs-border-color-translucent, rgba(255, 255, 255, 0.1));
+    border-radius: 8px;
+    overflow: hidden;
+    padding: 2px;
+    background-color: var(--bs-tertiary-bg, rgba(255, 255, 255, 0.02));
+}
+.layout-toggle-container .btn {
+    border: none;
+    border-radius: 6px !important;
+    color: var(--bs-secondary-color, #8a94a6);
+    padding: 0.25rem 0.5rem;
+    transition: all 0.2s ease;
+}
+.layout-toggle-container .btn:hover {
+    color: var(--bs-primary, #0d6efd);
+    background-color: var(--bs-secondary-bg, rgba(255, 255, 255, 0.05));
+}
+.layout-toggle-container .btn.active {
+    background-color: var(--bs-primary, #0d6efd);
+    color: #fff !important;
+    box-shadow: 0 2px 6px rgba(13, 110, 253, 0.3);
+}

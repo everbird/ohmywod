@@ -7,6 +7,17 @@
         <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css' if current_user.is_anonymous else current_user.theme_css )}}">
         <link rel="stylesheet" href="{{ url_for('static', filename='css/font-awesome-6.2.0-all.min.css' )}}">
         <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css' )}}">
+        <script>
+            // Apply layout preference immediately to avoid flash of unstyled content
+            (function() {
+                var pref = localStorage.getItem('ohmywod-layout-pref');
+                if (pref === 'list') {
+                    document.documentElement.classList.add('layout-pref-list');
+                } else if (pref === 'card') {
+                    document.documentElement.classList.add('layout-pref-card');
+                }
+            })();
+        </script>
         <title>{% block title %}{% endblock %} - OhMyWoD</title>
         <style type="text/css">
             .love {
@@ -347,6 +358,36 @@
                             ;    
                         });
 
+                        // Global layout view toggle functionality
+                        $(document).ready(function() {
+                            var pref = localStorage.getItem('ohmywod-layout-pref');
+                            
+                            function updateActiveButtons(currentPref) {
+                                if (!currentPref) {
+                                    currentPref = window.innerWidth >= 768 ? 'list' : 'card';
+                                }
+                                $('.layout-toggle-container').each(function() {
+                                    $(this).find('.layout-btn-list').toggleClass('active', currentPref === 'list');
+                                    $(this).find('.layout-btn-card').toggleClass('active', currentPref === 'card');
+                                });
+                            }
+                            
+                            updateActiveButtons(pref);
+                            
+                            $(document).on('click', '.layout-toggle-container .layout-btn-list', function(e) {
+                                e.preventDefault();
+                                $('html').removeClass('layout-pref-card').addClass('layout-pref-list');
+                                localStorage.setItem('ohmywod-layout-pref', 'list');
+                                updateActiveButtons('list');
+                            });
+
+                            $(document).on('click', '.layout-toggle-container .layout-btn-card', function(e) {
+                                e.preventDefault();
+                                $('html').removeClass('layout-pref-list').addClass('layout-pref-card');
+                                localStorage.setItem('ohmywod-layout-pref', 'card');
+                                updateActiveButtons('card');
+                            });
+                        });
                     </script>
                     {% endblock %}
                 </div>
