@@ -6,6 +6,7 @@
         <link rel="shortcut icon" href="{{ url_for('static', filename='img/favicon.ico') }}">
         <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css' if current_user.is_anonymous else current_user.theme_css )}}">
         <link rel="stylesheet" href="{{ url_for('static', filename='css/font-awesome-6.2.0-all.min.css' )}}">
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css' )}}">
         <title>{% block title %}{% endblock %} - OhMyWoD</title>
         <style type="text/css">
             .love {
@@ -114,7 +115,6 @@
                 #navbar.active {
                     margin-left: 335px;
                     transition: all 0.6s cubic-bezier(0.945, 0.020, 0.270, 0.665);
-                }
             }
 
         </style>
