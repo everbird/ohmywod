@@ -374,12 +374,8 @@ def report_reader(report_id, subpath="index.html"):
 
     rc.incr_reader_views(report.id)
     rc.incr_views(report.id)
-    try:
-        with fpath.open() as f:
-            raw = f.read()
-    except OSError as e:
-        current_app.logger.error(f"Failed to read path {fpath_str}: {e}")
-        abort(503, description="Storage service is temporarily unavailable.")
+    with fpath.open() as f:
+        raw = f.read()
         tree = html.fromstring(raw)
         body = tree.xpath("body")[0]
         
@@ -398,8 +394,7 @@ def report_reader(report_id, subpath="index.html"):
             report=report,
             subpath=subpath
         )
-    report_presenter = ReportPresenter(report)
-    return rt("report_details.html", report=report, details=report.details, subpath="index.html", report_presenter=report_presenter)
+    return rt("report_details.html", report=report, subpath="index.html")
 
 
 @report.route("/all")
