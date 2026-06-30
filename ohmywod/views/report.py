@@ -15,7 +15,8 @@ from flask import (
     redirect,
     url_for,
     request,
-    jsonify
+    jsonify,
+    flash
 )
 from werkzeug.utils import safe_join
 from flask_login import current_user, login_required
@@ -544,18 +545,23 @@ def user_categories(username):
 
 @report.route("search")
 def search():
-    args = request.args
-    q = args.get("q") or ""
+    # Detect if 'q' parameter is present in the query string
+    q = request.args.get("q")
     reports = []
-    rc = ReportController()
-    reports = rc.search(q)
-
+    total = 0
     page, per_page, offset = get_page_args(
         page_parameter='page',
         per_page_parameter='per_page'
     )
-    total = len(reports)
-    reports = reports[offset:offset+per_page]
+
+    if q is not None:
+        q_stripped = q.strip()
+        if len(q_stripped) < 2:
+            flash("搜索关键字过短，请至少输入 2 个字符。", "warning")
+        else:
+            rc = ReportController()
+            reports, total = rc.search(q_stripped, offset=offset, limit=per_page)
+
     pagination = Pagination(
         page=page,
         per_page=per_page,
@@ -564,7 +570,7 @@ def search():
     )
     return rt(
         "search.html",
-        q=q,
+        q=q or "",
         reports=reports,
         pagination=pagination,
         page=page,

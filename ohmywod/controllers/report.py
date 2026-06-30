@@ -84,11 +84,18 @@ class ReportController:
         if not rids:
             return []
 
-        ordering = case(
-            {_id: index for index, _id in enumerate(rids)},
-            value=Report.id
-        )
-        rs = Report.query.filter(Report.id.in_(rids)).order_by(ordering).all()
+        # SQLite has a limit of 999 SQL variables per query.
+        # We chunk the rids to avoid the "too many SQL variables" error.
+        chunk_size = 900
+        rs = []
+        for i in range(0, len(rids), chunk_size):
+            chunk = rids[i:i + chunk_size]
+            ordering = case(
+                {_id: index for index, _id in enumerate(chunk)},
+                value=Report.id
+            )
+            chunk_rs = Report.query.filter(Report.id.in_(chunk)).order_by(ordering).all()
+            rs.extend(chunk_rs)
         return rs
 
     def get_category_by_name_and_username(self, name, username, show_deleted=False):
@@ -208,17 +215,21 @@ class ReportController:
             rs = [x for x in rs if not x.is_deleted]
         return rs
 
-    def search(self, q, show_deleted=False):
-        sql = text('''
-        SELECT id
-        FROM report
-        WHERE (description LIKE :q
-          or name LIKE :q
-          or display_name LIKE :q)
-        ''')
-        c = db.engine.execute(sql, q="%{}%".format(q))
-        rids = [x[0] for x in c.fetchall()]
-        rs = self.get_reports(rids)
+    def search(self, q, offset=None, limit=None, show_deleted=False):
+        query = Report.query.filter(
+            db.or_(
+                Report.description.like(f"%{q}%"),
+                Report.name.like(f"%{q}%"),
+                Report.display_name.like(f"%{q}%")
+            )
+        )
         if not show_deleted:
-            rs = [x for x in rs if not x.is_deleted]
-        return rs
+            query = query.filter(Report.status == None)
+
+        total = query.count()
+        if offset is not None:
+            query = query.offset(offset)
+        if limit is not None:
+            query = query.limit(limit)
+
+        return query.all(), total
