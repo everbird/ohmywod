@@ -108,3 +108,12 @@ class UserController:
                 d['employeeNumber'] = [(MODIFY_REPLACE, [str(app_theme)])]
 
             conn.modify(ldap_user.dn, d)
+
+            db_user = self.get_db_user(username)
+            if db_user:
+                if display_name:
+                    db_user.display_name = display_name
+                if email:
+                    db_user.email = email
+                db.session.add(db_user)
+                db.session.commit()

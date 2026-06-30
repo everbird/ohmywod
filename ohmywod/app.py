@@ -109,21 +109,21 @@ def configure_app(app, config):
 
             # JuiceFS disk usage check for /mnt/jfs
             jfs_path = "/mnt/jfs"
-            if os.path.exists(jfs_path):
-                try:
+            try:
+                if os.path.exists(jfs_path):
                     _, j_used, _ = shutil.disk_usage(jfs_path)
                     disk_info['jfs'] = {
                         'used': j_used,
                         'est_s3': j_used * 2,
                         'available': True
                     }
-                except Exception:
+                else:
                     disk_info['jfs'] = {
                         'used': 0,
                         'est_s3': 0,
                         'available': False
                     }
-            else:
+            except Exception:
                 disk_info['jfs'] = {
                     'used': 0,
                     'est_s3': 0,

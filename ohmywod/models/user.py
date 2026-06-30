@@ -30,7 +30,24 @@ class LDAPUser(UserMixin):
 
     @property
     def db_user(self):
-        return User.query.filter_by(username=self.username).first()
+        user = User.query.filter_by(username=self.username).first()
+        if not user:
+            email = self.data.get('mail')
+            if isinstance(email, list):
+                email = email[0] if email else ''
+            elif not email:
+                email = ''
+            
+            display_name = self.data.get('displayName')
+            if isinstance(display_name, list):
+                display_name = display_name[0] if display_name else self.username
+            elif not display_name:
+                display_name = self.username
+            
+            user = User(username=self.username, display_name=display_name, email=email)
+            db.session.add(user)
+            db.session.commit()
+        return user
 
     @property
     def display_name(self):

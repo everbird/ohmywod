@@ -100,11 +100,19 @@ def report_raw(username, category, name, subpath="index.html"):
 
     fpath = Path(fpath_str)
 
-    if not fpath.exists():
-        abort(404)
+    try:
+        if not fpath.exists():
+            abort(404)
+    except OSError as e:
+        current_app.logger.error(f"Failed to access path {fpath_str}: {e}")
+        abort(503, description="Storage service is temporarily unavailable.")
 
-    with open(fpath) as f:
-        raw = f.read()
+    try:
+        with open(fpath) as f:
+            raw = f.read()
+    except OSError as e:
+        current_app.logger.error(f"Failed to read path {fpath_str}: {e}")
+        abort(503, description="Storage service is temporarily unavailable.")
         raw = raw.replace('http:', 'https:')
         resp = make_response(raw)
         resp.mimetype = 'text/html'
@@ -364,13 +372,21 @@ def report_reader(report_id, subpath="index.html"):
 
     fpath = Path(fpath_str)
 
-    if not fpath.exists():
-        abort(404)
+    try:
+        if not fpath.exists():
+            abort(404)
+    except OSError as e:
+        current_app.logger.error(f"Failed to access path {fpath_str}: {e}")
+        abort(503, description="Storage service is temporarily unavailable.")
 
     rc.incr_reader_views(report.id)
     rc.incr_views(report.id)
-    with fpath.open() as f:
-        raw = f.read()
+    try:
+        with fpath.open() as f:
+            raw = f.read()
+    except OSError as e:
+        current_app.logger.error(f"Failed to read path {fpath_str}: {e}")
+        abort(503, description="Storage service is temporarily unavailable.")
         tree = html.fromstring(raw)
         body = tree.xpath("body")[0]
         
