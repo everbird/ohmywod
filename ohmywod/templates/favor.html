@@ -28,7 +28,7 @@
             <a href="{{ url_for('wodreport.view_report', report_id=r.id) }}" class="fw-bold text-decoration-none text-truncate-title">{{ r.title }}</a>
           </td>
           <td>
-            <a href="{{ url_for('wodreport.user_categories', username=r.owner) }}" class="text-info text-decoration-none"><i class="fa-solid fa-user me-1"></i>{{ r.owner }}</a>
+            <a href="{{ url_for('wodreport.user_categories', username=r.owner) }}" class="text-info text-decoration-none">{{ r.owner }}</a>
           </td>
           <td>
             <div class="d-flex gap-1">

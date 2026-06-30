@@ -45,7 +45,7 @@
             <span class="badge bg-secondary">{{ category.display_reports_count }} 战报</span>
           </td>
           <td>
-            <a href="{{ url_for('wodreport.user_categories', username=category.owner) }}" class="text-info text-decoration-none"><i class="fa-solid fa-user me-1"></i>{{ category.owner }}</a>
+            <a href="{{ url_for('wodreport.user_categories', username=category.owner) }}" class="text-info text-decoration-none">{{ category.owner }}</a>
           </td>
           <td class="text-secondary d-none d-lg-table-cell">{{ category.description | default("-", True) | truncate(60) }}</td>
         </tr>
