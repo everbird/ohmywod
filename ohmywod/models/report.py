@@ -123,45 +123,7 @@ class ReportCategory(db.Model):
         return self.display_name
 
 
-    @property
-    def sorted_reports(self):
-        rs = self.display_reports
-        d = {
-            "customized": "sorted_reports_by_customized_order",
-            "ctime": "sorted_reports_by_ctime",
-            "name": "sorted_reports_by_name",
-        }
 
-        order_by = self.order_by.replace("reversed_", "") if self.order_by else "ctime"
-        attr = d.get(order_by)
-        if attr:
-            rs = getattr(self, attr)
-
-        reversed = False
-        if self.order_by and self.order_by.startswith("reversed_"):
-            reversed = True
-
-        return rs[::-1] if reversed else rs
-
-
-    @property
-    def sorted_reports_by_customized_order(self):
-        def _fkey(r):
-            o1 = -r.order if r.order else -float("inf")
-            o2 = r.created_at
-            o3 = r.name
-            o4 = r.id
-            return (o1, o2, o3, o4)
-
-        return sorted(self.display_reports, key=_fkey, reverse=True)
-
-    @property
-    def sorted_reports_by_ctime(self):
-        return sorted(self.display_reports, key=lambda x: x.created_at)
-
-    @property
-    def sorted_reports_by_name(self):
-        return sorted(self.display_reports, key=lambda x: x.name)
 
     @property
     def description_rendered(self):

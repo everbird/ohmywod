@@ -30,6 +30,7 @@ from wtforms.widgets import TextArea
 
 from ohmywod.controllers.report import ReportController
 from ohmywod.extensions import db, Pagination, get_page_args
+from ohmywod.utils import paginate
 from ohmywod.models.report import ReportDetails
 from ohmywod.presenters.report import ReportPresenter
 
@@ -126,20 +127,9 @@ def view_category(category_id):
     if not category:
         abort(404)
 
-    page, per_page, offset = get_page_args(
-        page_parameter='page',
-        per_page_parameter='per_page'
-    )
-    reports, total = rc.get_category_reports(
-        category,
-        offset=offset,
-        limit=per_page
-    )
-    pagination = Pagination(
-        page=page,
-        per_page=per_page,
-        total=total,
-        css_framework='bootstrap5'
+    reports, pagination, page, per_page, total = paginate(
+        rc.get_category_reports,
+        category
     )
     return rt(
         "category.html",
@@ -205,7 +195,6 @@ def reorder_category(category_id):
     if current_user.username != category.owner:
         abort(403)
 
-
     updates = []
     d = request.form
     for k, v in d.items():
@@ -222,7 +211,8 @@ def reorder_category(category_id):
 
     db.session.commit()
 
-    return rt("reorder_category.html", category=category)
+    reports, _ = rc.get_category_reports(category)
+    return rt("reorder_category.html", category=category, reports=reports)
 
 
 @report.route("/category/<category_id>/delete", methods=["POST"])
@@ -413,17 +403,7 @@ def report_reader(report_id, subpath="index.html"):
 @report.route("/all")
 def report_page():
     rc = ReportController()
-    page, per_page, offset = get_page_args(
-        page_parameter='page',
-        per_page_parameter='per_page'
-    )
-    categories, total = rc.get_all_categories(offset=offset, limit=per_page)
-    pagination = Pagination(
-        page=page,
-        per_page=per_page,
-        total=total,
-        css_framework='bootstrap5'
-    )
+    categories, pagination, page, per_page, total = paginate(rc.get_all_categories)
     return rt(
         "root.html",
         categories=categories,
@@ -530,20 +510,9 @@ def ajax_cancel_favorite(report_id):
 def favorite_reports():
     username = current_user.username
     rc = ReportController()
-    page, per_page, offset = get_page_args(
-        page_parameter='page',
-        per_page_parameter='per_page'
-    )
-    reports, total = rc.get_favorite_reports(
-        username,
-        offset=offset,
-        limit=per_page
-    )
-    pagination = Pagination(
-        page=page,
-        per_page=per_page,
-        total=total,
-        css_framework='bootstrap5'
+    reports, pagination, page, per_page, total = paginate(
+        rc.get_favorite_reports,
+        username
     )
     return rt(
         "favor.html",
@@ -576,16 +545,23 @@ def search():
         q_stripped = q.strip()
         if len(q_stripped) < 2:
             flash("搜索关键字过短，请至少输入 2 个字符。", "warning")
+            pagination = Pagination(
+                page=page,
+                per_page=per_page,
+                total=0,
+                css_framework='bootstrap5'
+            )
         else:
             rc = ReportController()
-            reports, total = rc.search(q_stripped, offset=offset, limit=per_page)
+            reports, pagination, page, per_page, total = paginate(rc.search, q_stripped)
+    else:
+        pagination = Pagination(
+            page=page,
+            per_page=per_page,
+            total=0,
+            css_framework='bootstrap5'
+        )
 
-    pagination = Pagination(
-        page=page,
-        per_page=per_page,
-        total=total,
-        css_framework='bootstrap5'
-    )
     return rt(
         "search.html",
         q=q or "",
