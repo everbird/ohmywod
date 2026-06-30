@@ -82,7 +82,7 @@ def sanitize_wod_report(body):
 def home():
     rc = ReportController()
     categories = rc.get_cateogories_by_user(current_user.username)
-    favor_reports = rc.get_favorite_reports(current_user.username)
+    favor_reports, _ = rc.get_favorite_reports(current_user.username, limit=5)
     return rt("home.html", categories=categories, favor_reports=favor_reports)
 
 
@@ -130,9 +130,11 @@ def view_category(category_id):
         page_parameter='page',
         per_page_parameter='per_page'
     )
-    sorted_reports = category.sorted_reports
-    total = len(sorted_reports)
-    reports = sorted_reports[offset:offset+per_page]
+    reports, total = rc.get_category_reports(
+        category,
+        offset=offset,
+        limit=per_page
+    )
     pagination = Pagination(
         page=page,
         per_page=per_page,
@@ -415,9 +417,7 @@ def report_page():
         page_parameter='page',
         per_page_parameter='per_page'
     )
-    all_categories = rc.get_all_categories()
-    total = len(all_categories)
-    categories = all_categories[offset:offset+per_page]
+    categories, total = rc.get_all_categories(offset=offset, limit=per_page)
     pagination = Pagination(
         page=page,
         per_page=per_page,
@@ -530,13 +530,15 @@ def ajax_cancel_favorite(report_id):
 def favorite_reports():
     username = current_user.username
     rc = ReportController()
-    favor_reports = rc.get_favorite_reports(current_user.username)
     page, per_page, offset = get_page_args(
         page_parameter='page',
         per_page_parameter='per_page'
     )
-    total = len(favor_reports)
-    reports = favor_reports[offset:offset+per_page]
+    reports, total = rc.get_favorite_reports(
+        username,
+        offset=offset,
+        limit=per_page
+    )
     pagination = Pagination(
         page=page,
         per_page=per_page,

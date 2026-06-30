@@ -89,6 +89,9 @@ class Report(db.Model):
         return ReportPresenter(self)
 
     def get_favor(self, username, status=0):
+        if hasattr(self, '_prefetched_favor') and self._prefetched_favor is not None:
+            if self._prefetched_favor.username == username and self._prefetched_favor.status == status:
+                return self._prefetched_favor
         from ohmywod.controllers.report import ReportController
         rc = ReportController()
         return rc.get_favor(username, self.id, status=status)
@@ -171,6 +174,10 @@ class ReportCategory(db.Model):
     @property
     def display_reports(self):
         return [x for x in self.reports if not x.is_deleted]
+
+    @property
+    def display_reports_count(self):
+        return Report.query.filter(Report.category_id == self.id, Report.status == None).count()
 
 
 class ReportDetails(db.Model):

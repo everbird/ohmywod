@@ -11,16 +11,22 @@ class ReportPresenter:
 
     @property
     def views(self):
+        if hasattr(self.report, '_prefetched_views'):
+            return self.report._prefetched_views
         r = self.rc.get_views(self.report.id)
         return int(r) if r else 0
 
     @property
     def likes(self):
+        if hasattr(self.report, '_prefetched_likes'):
+            return self.report._prefetched_likes
         r = self.rc.get_likes_cnt(self.report.id)
         return int(r) if r else 0
 
     @property
     def favors(self):
+        if hasattr(self.report, '_prefetched_favors'):
+            return self.report._prefetched_favors
         r = self.rc.get_favors(self.report.id)
         return int(r) if r else 0
 
