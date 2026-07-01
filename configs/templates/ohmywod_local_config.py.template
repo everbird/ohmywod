@@ -5,6 +5,12 @@ class DefaultConfig(object):
     # Need to replace it before deployment
     SECRET_KEY = "<secret:secret_key>"
 
+    # --- LDAP Mock (For local development) ---
+    LDAP_MOCK = True
+
+    # --- Redis Mock (For local development) ---
+    REDIS_MOCK = False
+
     # --- SQLAlchemy ---
     SQLALCHEMY_DATABASE_URI = "sqlite:///ohmywod_d.sqlite"
     SQLALCHEMY_ECHO = False

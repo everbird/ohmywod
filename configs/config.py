@@ -10,6 +10,7 @@ REDIS_STORE_PORT = 6379
 REDIS_CACHE_HOST = "localhost"
 REDIS_CACHE_PORT = 7379
 REDIS_BIN_PATH = "/usr/bin/redis-server"
+GUNICORN_EXTRA_ARGS = ""
 
 
 try:

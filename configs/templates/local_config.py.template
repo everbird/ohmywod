@@ -5,9 +5,11 @@ PORT = '8013'
 APP_NAME = "ohmywod"
 VAR_PATH = "/tmp/var"
 DATA_PATH = "/tmp/data"
+from pathlib import Path
 REDIS_STORE_HOST = "localhost"
 REDIS_STORE_PORT = 6379
-REDIS_STORE_HOST = "localhost"
+REDIS_CACHE_HOST = "localhost"
 REDIS_CACHE_PORT = 7379
-REDIS_BIN_PATH = "/usr/local/bin/redis-server"
-GUNICORN_BIN_PATH = "{}/{}/venv/bin/gunicorn".format(VAR_PATH, APP_NAME)
+REDIS_BIN_PATH = "/usr/bin/redis-server"
+GUNICORN_BIN_PATH = str(Path(__file__).resolve().parent.parent / ".venv" / "bin" / "gunicorn")
+GUNICORN_EXTRA_ARGS = "--reload"

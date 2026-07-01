@@ -138,7 +138,17 @@ def configure_extensions(app):
     db.init_app(app)
     login_manager.init_app(app)
     ldap_manager.init_app(app)
+
+    if app.config.get('LDAP_MOCK', False):
+        from ohmywod.ldap_mock import init_mock_ldap
+        init_mock_ldap(ldap_manager, app)
+
     redis.init_app(app)
+
+    if app.config.get('REDIS_MOCK', False):
+        from ohmywod.ldap_mock import init_mock_redis
+        init_mock_redis(redis)
+
     cache.init_app(app)
 
     def _make_model_view(model_class, *args, **kwargs):
