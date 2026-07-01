@@ -53,8 +53,17 @@ def sanitize_wod_report(body):
                 val = el.attrib[attr]
                 
                 if attr.lower() == 'onmouseover':
-                    if val.startswith("return wodToolTip(this,'") and (val.endswith("');") or val.endswith("')")):
-                        html_content = val[24:-3] if val.endswith("');") else val[24:-2]
+                    is_valid = False
+                    prefix_len = 0
+                    if val.startswith("return wodToolTip(this,'"):
+                        is_valid = True
+                        prefix_len = 24
+                    elif val.startswith("wodToolTip(this,'"):
+                        is_valid = True
+                        prefix_len = 17
+                    
+                    if is_valid and (val.endswith("');") or val.endswith("')")):
+                        html_content = val[prefix_len:-3] if val.endswith("');") else val[prefix_len:-2]
                         html_content = html_content.replace("\\'", "'")
                         try:
                             frag = html.fromstring(f"<div>{html_content}</div>")
