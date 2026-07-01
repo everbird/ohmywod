@@ -116,11 +116,11 @@
     <table class="modern-table">
       <thead>
         <tr>
-          <th scope="col" style="width: 80px;" class="d-none d-md-table-cell">Id</th>
-          <th scope="col">Name</th>
-          <th scope="col" style="width: 220px;">Stats</th>
-          <th scope="col" style="width: 150px;">Owner</th>
-          <th scope="col" class="d-none d-lg-table-cell">Description</th>
+          <th scope="col" style="width: 60px;" class="d-none d-md-table-cell">Id</th>
+          <th scope="col" style="min-width: 150px;">Name</th>
+          <th scope="col" style="width: 160px;">Stats</th>
+          <th scope="col" style="width: 110px;">Owner</th>
+          <th scope="col" style="min-width: 200px;" class="d-none d-lg-table-cell">Description</th>
         </tr>
       </thead>
       <tbody>
@@ -128,7 +128,7 @@
           <tr>
             <td class="d-none d-md-table-cell">{{ r.id }}</td>
             <td>
-              <a href="{{ url_for('wodreport.view_report', report_id=r.id) }}" class="fw-bold text-decoration-none text-truncate-title">{{ r.title }}</a>
+              <a href="{{ url_for('wodreport.view_report', report_id=r.id) }}" class="fw-bold text-decoration-none text-truncate-title" title="{{ r.title }}">{{ r.title }}</a>
             </td>
             <td>
               <div class="d-flex gap-1">
@@ -141,7 +141,7 @@
             <td>
               <a href="{{ url_for('wodreport.user_categories', username=category.owner) }}" class="text-info text-decoration-none">{{ category.owner }}</a>
             </td>
-            <td class="text-secondary d-none d-lg-table-cell">{{ r.description | default("-", True) | truncate(60) }}</td>
+            <td class="text-secondary d-none d-lg-table-cell" {% if r.description %}title="{{ r.description }}"{% endif %}>{{ r.description | default("-", True) | truncate(144) }}</td>
           </tr>
         {% endfor %}
       </tbody>

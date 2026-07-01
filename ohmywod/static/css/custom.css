@@ -101,7 +101,7 @@
 /* Title truncation for mobile viewports */
 .text-truncate-title {
     display: inline-block;
-    max-width: 60vw;
+    max-width: 25vw;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
