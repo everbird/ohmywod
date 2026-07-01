@@ -37,13 +37,15 @@ from ohmywod.presenters.report import ReportPresenter
 
 report = Blueprint("wodreport", __name__)
 
-wod_cleaner = Cleaner(scripts=True, javascript=True, comments=False, style=False, links=False, meta=False, page_structure=False, safe_attrs_only=False)
+wod_cleaner = Cleaner(scripts=True, javascript=True, comments=False, style=False, links=False, meta=False, page_structure=False, safe_attrs_only=False, forms=False)
 
 def sanitize_wod_report(body):
     arg = r"('[^']*'|\"[^\"]*\"|\d+|this|true|false)"
     args = fr"{arg}(\s*,\s*{arg})*"
     safe_func = fr"^(return )?(o|dummy_jump|jump|st|cf|co|sd|ct)\(\s*({args})?\s*\);?$"
+    safe_redirect = r"^(window\.)?document\.location\.href\s*=\s*('[a-zA-Z0-9_/ \.-]+'|\"[a-zA-Z0-9_/ \.-]+\");?$"
     safe_on_pattern = re.compile(safe_func)
+    safe_redirect_pattern = re.compile(safe_redirect)
 
     for el in body.iter():
         for attr in list(el.attrib):
@@ -63,7 +65,7 @@ def sanitize_wod_report(body):
                         except Exception:
                             pass
                 elif attr.lower() in ('onclick', 'onchange'):
-                    if safe_on_pattern.match(val):
+                    if safe_on_pattern.match(val) or safe_redirect_pattern.match(val):
                         el.attrib[f'data-safe-{attr.lower()}'] = val
 
     body = wod_cleaner.clean_html(body)
