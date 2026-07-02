@@ -2,61 +2,79 @@
 
 {% block title %}战报 - {{ category.title }} - 调整顺序{% endblock %}
 
-{% block head %}
-    {{ super() }}
-<link href="https://unpkg.com/filepond@^4/dist/filepond.css" rel="stylesheet" />
-{% endblock %}
-
 {% block content %}
-<nav id="report-breadcrumb" aria-label="breadcrumb">
-  <ol class="breadcrumb">
-      <li class="breadcrumb-item">
-         <a href="/r/">目录</a>
-      </li>
-      <li class="breadcrumb-item active text-truncate" aria-current="page">
-          {{ category.title}}
-      </li>
-  </ol>
-</nav>
-<div id="description" class="m-3">
-    {{ category.description }}
-</div>
-{% if reports %}
-<form action="{{ url_for('wodreport.reorder_category', category_id=category.id)}}" method="POST">
-  <div class="m-3">
-    <input class="btn btn-primary" type="submit" value="保存顺序"></input>
-    <a class="btn btn-secondary" href="{{ url_for('wodreport.view_category', category_id=category.id) }}">取消</a>
+<div class="page-stack reorder-page">
+  <div class="page-toolbar">
+    <nav id="report-breadcrumb" aria-label="breadcrumb" class="mb-0">
+      <ol class="breadcrumb mb-0">
+        <li class="breadcrumb-item"><a href="/r/">目录</a></li>
+        <li class="breadcrumb-item"><a href="{{ url_for('wodreport.view_category', category_id=category.id) }}">{{ category.title }}</a></li>
+        <li class="breadcrumb-item active" aria-current="page">调整顺序</li>
+      </ol>
+    </nav>
   </div>
-<div class="table-responsive">
-<table class="table table-striped table-dark">
-    <thead>
-        <tr>
-            <th scope="col" style="width: 50px;"></th>
-            <th scope="col" style="width: 80px;">Id</th>
-            <th scope="col">名称</th>
-            <th scope="col">说明</th>
-        </tr>
-    </thead>
-    <tbody id="sortable-tbody">
-    {% for r in reports %}
-        <tr draggable="true" class="draggable-row" style="cursor: grab;">
-            <td class="text-center">
-                <i class="fa-solid fa-grip-vertical text-muted"></i>
-                <input name="order-{{ r.id }}" type="hidden" value="{{ r.order|default("", True) }}"></input>
+
+  <div class="page-hero reorder-hero">
+    <div>
+      <p class="page-eyebrow">目录管理</p>
+      <h1 class="page-title">调整 {{ category.title }} 的战报顺序</h1>
+      <p class="page-subtitle">拖动行首的把手来重排战报，完成后保存顺序。</p>
+      {% if category.description %}
+      <div class="reorder-description">{{ category.description }}</div>
+      {% endif %}
+    </div>
+    <div class="page-actions">
+      <a class="btn btn-soft" href="{{ url_for('wodreport.view_category', category_id=category.id) }}"><i class="fa-solid fa-arrow-left me-1"></i>取消</a>
+    </div>
+  </div>
+
+  {% if reports %}
+  <form action="{{ url_for('wodreport.reorder_category', category_id=category.id)}}" method="POST" class="content-section reorder-form">
+    <div class="section-header reorder-section-header">
+      <div>
+        <h2 class="section-title">战报列表</h2>
+        <p class="section-subtitle">共 {{ reports | length }} 个战报。拖动后会自动更新顺序值。</p>
+      </div>
+      <div class="form-actions reorder-actions">
+        <a class="btn btn-soft" href="{{ url_for('wodreport.view_category', category_id=category.id) }}">取消</a>
+        <button class="btn btn-primary" type="submit"><i class="fa-solid fa-floppy-disk me-1"></i>保存顺序</button>
+      </div>
+    </div>
+
+    <div class="modern-table-responsive reorder-table-shell">
+      <table class="modern-table reorder-table">
+        <thead>
+          <tr>
+            <th scope="col" style="width: 56px;"><span class="visually-hidden">拖动</span></th>
+            <th scope="col" style="width: 80px;" class="d-none d-md-table-cell">编号</th>
+            <th scope="col" style="min-width: 180px;">名称</th>
+            <th scope="col" style="min-width: 220px;" class="d-none d-lg-table-cell">说明</th>
+          </tr>
+        </thead>
+        <tbody id="sortable-tbody">
+        {% for r in reports %}
+          <tr draggable="true" class="draggable-row reorder-row">
+            <td class="text-center reorder-handle-cell">
+              <i class="fa-solid fa-grip-vertical reorder-handle" aria-hidden="true"></i>
+              <input name="order-{{ r.id }}" type="hidden" value="{{ r.order|default("", True) }}"></input>
             </td>
-            <th scope="row">{{ r.id }}</th>
-            <td><a href="{{ url_for('wodreport.view_report', report_id=r.id) }}">{{ r.title }}</a></td>
-            <td>{{ r.description | default("-", True) }}</td>
-        </tr>
-    {% endfor %}
-    </tbody>
-</table>
+            <td class="d-none d-md-table-cell">{{ r.id }}</td>
+            <td><a href="{{ url_for('wodreport.view_report', report_id=r.id) }}" class="fw-bold text-decoration-none text-truncate-title" title="{{ r.title }}">{{ r.title }}</a></td>
+            <td class="text-secondary d-none d-lg-table-cell" {% if r.description %}title="{{ r.description }}"{% endif %}>{{ r.description | default("-", True) | truncate(144) }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </form>
+  {% else %}
+  <div class="empty-state">
+    <div class="empty-state-icon"><i class="fa-solid fa-arrow-up-wide-short"></i></div>
+    <div class="empty-state-title">没有可排序的战报</div>
+    <div class="empty-state-desc">该目录暂时还没有战报。</div>
+  </div>
+  {% endif %}
 </div>
-</form>
-{% else %}
-
-{% endif %}
-
 {% endblock %}
 
 {% block footer %}
