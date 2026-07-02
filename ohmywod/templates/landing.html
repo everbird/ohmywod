@@ -3,90 +3,66 @@
 {% block title %}战报 - 简介{% endblock %}
 
 {% block content %}
-<div class="m-3">
-    <h2 id="what">这是什么？</h2>
-    <p>简单来说，这是 WoD（<a href="https://world-of-dungeons.org" target="_blank">world-of-dungeons.org</a> 一个类似跑团的网页游戏） 战报分享网站，注册登录后你可以创建战报目录，在其中上传 WoD 战报，这样别人（就算不登录）可以查看你分享的战报（例如：<a href="{{ url_for('wodreport.view_report', report_id=126) }}" target="_blank">这个战报</a>）。
-    </p>
-    <br>
+<div class="page-stack info-page landing-page">
+  <div class="page-hero info-hero">
+    <div>
+      <p class="page-eyebrow">OhMyWoD</p>
+      <h1 class="page-title">WoD 战报分享与阅读</h1>
+      <p class="page-subtitle">创建目录、上传战报、分享链接，让 WoD 战报更容易保存、查找和阅读。</p>
+    </div>
+    <div class="page-actions">
+      <a class="btn btn-primary" href="{{ url_for('wodreport.home') }}"><i class="fa-solid fa-folder-open me-1"></i>进入我的主页</a>
+      <a class="btn btn-soft" href="{{ url_for('wodreport.report_page') }}">浏览全部战报</a>
+    </div>
+  </div>
 
-    <h2 id="get_started">怎么使用？</h2>
-    <p>
-    若要上传战报，首先你需要准备好导出的战报 zip 文件。关于如何导出战报，请参看<a href="#how_to_export_reports">如何导出战报</a>。
-    </p>
-    <p>
-    然后，登录本网站后，从 <a href="{{ url_for('wodreport.home') }}">我的主页</a> 进入一个你已建立的目录，或新建一个。在目录页面上方显示 "拖放文件或浏览"的区域，可以点击后在弹出窗口选择一个或多个战报 zip 文件，或者直接将需要上传的战报 zip 文件拖拽到该区域。你会看到每个文件上传的进度，上传过程中请不要打断或刷新页面。等全部上传完成后，刷新该页面，即可看到新上传的战报。
-    </p>
-    <p>
-    上传的所有战报都可以在 <a href="{{ url_for('wodreport.report_page') }}">浏览战报 (All Reports)</a> 页面找到。 对于任何人，只要点击相应战报名字，或者直接访问战报相应的超链接地址，你会进入战报页面（例如：<a href="{{ url_for('wodreport.view_report', report_id=126) }}" target="_blank">这个战报</a>）。这里默认中间区会显示你所上传战报的“原始版” 标签页（即战报 zip 解压出的原始 html 文件），这里的战报是可以像平时在 WoD 游戏中一样浏览的（不过更推荐使用“加强版”战报浏览器，下面会说）；你可以点击“元数据”标签页查看该战报的更多元数据；如果需要修改战报名称或其他元信息，战报上传者可以点击“元数据”标签内的“Edit”按钮。
-    </p>
-    <p>
-    你在战报页面右上角会看到一个“查看战报加强版”按钮，这里可以进入“加强版”战报浏览器（例如：<a href="{{ url_for('wodreport.report_reader', report_id=126) }}" target="_blank">这个战报（加强版）</a>）；在“加强版”战报浏览器里同样显示的是此战报的内容，不过针对移动设备的浮窗显示和大小等做了一些支持，并在原始 html 上加了一点新功能，具体请见“<a href="#features">有什么特点？</a>”的“战报浏览器”部分
-    </p>
-    <br>
+  <section class="content-section info-section" id="what">
+    <div class="section-header">
+      <h2 class="section-title">这是什么？</h2>
+    </div>
+    <p>这是一个面向 <a href="https://world-of-dungeons.org" target="_blank">World of Dungeons</a> 的战报分享站点。登录后可以创建目录并上传导出的战报 zip，其他人不登录也可以通过链接查看你分享的战报。</p>
+  </section>
 
-    <h2 id="features">有什么特点？</h2>
-    <p>
-    <ul>
-        <li>
-        任何人都可以随时查看战报（无须像查看使用 百度云 分享的战报那样下载->解压->打开）
-        </li>
-        <li>
-        不用担心战报被清掉（WoD 仅保留1周内战报）
-        </li>
-        <li>
-        查看战报的速度一般会比 WoD 中快不少，具体要看战报的大小
-        </li>
-        <li>
-        可以通过分类目录、排序、添加简介，修改元信息等方式更细致的管理战报。
-        </li>
-        <li>
-        “加强版”战报浏览器：
-        <ul>
-            <li>
-            对移动设备优化，所有移动端浏览器可显示浮动窗口；WoD 默认只有在少数浏览器可正常显示，且会弹窗
-            </li>
-            <li>
-            锚点⚓，可以复制此位置的超链接，分享给别人该超链接可以直接跳转到此位置，而不是再用滚动条从最顶端滚到该位置️）
-            </li>
-            <li>
-            战报皮肤可在用户设置里更换（例如常用的 Office，WoD Alternative 等等）
-            </li>
-        </ul>
-        </li>
+  <section class="content-section info-section" id="get_started">
+    <div class="section-header">
+      <h2 class="section-title">怎么使用？</h2>
+    </div>
+    <div class="info-steps">
+      <div class="info-step"><span>1</span><p>准备好 WoD 导出的战报 zip 文件。</p></div>
+      <div class="info-step"><span>2</span><p>登录后进入 <a href="{{ url_for('wodreport.home') }}">我的主页</a>，创建或打开一个目录。</p></div>
+      <div class="info-step"><span>3</span><p>在目录页的上传区域拖放 zip 文件，或点击选择文件上传。</p></div>
+      <div class="info-step"><span>4</span><p>上传完成后刷新目录页，即可查看或分享新战报。</p></div>
+    </div>
+  </section>
+
+  <section class="content-section info-section" id="features">
+    <div class="section-header">
+      <h2 class="section-title">有什么特点？</h2>
+    </div>
+    <div class="info-grid">
+      <div class="info-panel"><i class="fa-solid fa-link"></i><h3>直接分享</h3><p>通过链接查看战报，无需下载、解压和手动打开 HTML。</p></div>
+      <div class="info-panel"><i class="fa-solid fa-box-archive"></i><h3>长期保存</h3><p>将战报按目录整理，避免因 WoD 保留期限而丢失。</p></div>
+      <div class="info-panel"><i class="fa-solid fa-mobile-screen"></i><h3>增强阅读</h3><p>战报加强版针对移动端和浮窗显示做了优化。</p></div>
+      <div class="info-panel"><i class="fa-solid fa-compass"></i><h3>锚点定位</h3><p>复制战报中的位置链接，分享后可直接跳到对应段落。</p></div>
+    </div>
+  </section>
+
+  <section class="content-section info-section" id="how_to_export_reports">
+    <div class="section-header"><h2 class="section-title">如何导出战报？</h2></div>
+    <ul class="info-list">
+      <li>通过 GreaseMonkey 或 TamperMonkey 安装 <a target="_blank" href="{{ url_for('static', filename='js/extra_statistics.user.js') }}">Extra Statistics</a> 战报导出插件。</li>
+      <li>在 WoD 战报列表中选择需要保存的统计方式，然后点击导出战报。</li>
+      <li>导出完成后会得到一个 zip 文件，上传这个文件即可。</li>
     </ul>
-    </p>
-    <br>
+  </section>
 
-    <h2 id="how_to_export_reports">如何在 WoD 中导出战报？</h2>
-    <p>
-        <ul>
-            <li>通过 GreaseMonkey 或 TamperMonkey 安装 <a target="_blank" href="{{ url_for('static', filename='js/extra_statistics.user.js') }}">Extra Statistics</a>  战报额外统计信息与导出插件（此链接为本人修改过的版本，可以正常导出满 60 回合的战报，而不是像其他版本报错失败）。具体插件安装说明，请移步 WoD 站内论坛帖子 [post:15879910] 或 [post:15989303] 查看</li>
-            <li>进到战报列表，会见到几个按键，以及一堆统计方式的复选框. 选好要保存的，点击导出战报</li>
-            <li>导出结束后会生成一个 zip 文件，选择保存文件位置即可</li>
-        </ul>
-    </p>
-    <br>
-
-    <h2 id="feedback">如何反馈？</h2>
-    <p>
-    <ul>
-        <li>在 <a href="{{ url_for('frontend.feedback_page') }}">反馈</a> 提交反馈</li>
-        <li>WoD 论坛：[post:16014199] （请将此复制到 WoD 的快捷跳转框打开）</li>
-        <li>email: everbird.zz+ohmywod@gmail.com</li>
-        <li>QQ群: OhMyWoD战报网（42998460）</li>
-    </ul>
-    </p>
-    <br>
-
-    <h2 id="donate">投喂作者？</h2>
-    <p>如果你觉得这个网站做得还行，想贡献一份力量让它继续维持下去，可以用以下方式支持作者：</p>
-    <p>
-    <ul>
-        <li>通过微信打赏 <br><img class="rounded img-fluid" src="{{ url_for('static', filename='img/wechat-reward-code.jpg') }}"></li>
-        <li>偶尔点点网站左下角的广告，广告由 Google Adsense 自动投放。</li>
-        <li>如果你会写代码，欢迎给 <a href="https://github.com/everbird/ohmywod" target="_blank">OhMyWod </a> 添砖加瓦。</li>
-    </ul>
-    </p>
-    <p>用爱发电不易，感谢你的支持。</p>
+  <section class="content-section info-section" id="feedback">
+    <div class="section-header"><h2 class="section-title">反馈与支持</h2></div>
+    <div class="info-grid compact">
+      <div class="info-panel"><i class="fa-solid fa-message"></i><h3>提交反馈</h3><p><a href="{{ url_for('frontend.feedback_page') }}">在这里提交反馈</a>，或通过 WoD 论坛 [post:16014199] 联系。</p></div>
+      <div class="info-panel"><i class="fa-solid fa-envelope"></i><h3>联系方式</h3><p>email: everbird.zz+ohmywod@gmail.com<br>QQ群: OhMyWoD战报网（42998460）</p></div>
+      <div class="info-panel"><i class="fa-solid fa-heart"></i><h3>支持作者</h3><p>如果你想让站点继续维持，可以点击广告或参与 <a href="https://github.com/everbird/ohmywod" target="_blank">GitHub</a> 开发。</p></div>
+    </div>
+  </section>
 </div>
 {% endblock %}

@@ -1,145 +1,82 @@
 {% extends "base_noadsense.html" %}
 
-{% block title %}Usage{% endblock %}
+{% block title %}系统存储使用情况{% endblock %}
+
+{% macro usage_bar(percent) -%}
+  {% set pct = percent | default(0, true) %}
+  {% if pct < 70 %}{% set progress_class = "bg-success" %}{% elif pct < 90 %}{% set progress_class = "bg-warning" %}{% else %}{% set progress_class = "bg-danger" %}{% endif %}
+  <div class="usage-progress" aria-label="空间使用率 {{ pct }}%">
+    <div class="progress-bar {{ progress_class }}" role="progressbar" style="width: {{ pct }}%;" aria-valuenow="{{ pct }}" aria-valuemin="0" aria-valuemax="100">{{ pct }}%</div>
+  </div>
+{%- endmacro %}
 
 {% block content %}
-<div class="m-3">
-  <div class="text-center mb-4">
-    <h2>系统存储使用情况 (Storage Usage)</h2>
+<div class="page-stack usage-page">
+  <div class="page-hero">
+    <div>
+      <p class="page-eyebrow">系统状态</p>
+      <h1 class="page-title">存储使用情况</h1>
+      <p class="page-subtitle">查看主存储、额外挂载和 JuiceFS 的当前状态。</p>
+    </div>
   </div>
 
-  <div class="row">
-    <!-- Main System Storage -->
-    <div class="col-md-4 mb-4">
-      <div class="card shadow-sm border-0">
-        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center py-3">
-          <h5 class="mb-0"><i class="fa-solid fa-server me-2"></i>系统主存储 (System /)</h5>
-          <span class="badge bg-light text-primary">系统 & 上传</span>
-        </div>
-        <div class="card-body">
-          <div class="mb-4">
-            <h6 class="text-muted mb-2">空间使用率 (Usage Percentage)</h6>
-            <div class="progress" style="height: 24px;">
-              {% set pct = disk_info.percent %}
-              {% if pct < 70 %}
-                {% set progress_class = "bg-success" %}
-              {% elif pct < 90 %}
-                {% set progress_class = "bg-warning" %}
-              {% else %}
-                {% set progress_class = "bg-danger" %}
-              {% endif %}
-              <div class="progress-bar progress-bar-striped progress-bar-animated {{ progress_class }}" role="progressbar" style="width: {{ pct }}%;" aria-valuenow="{{ pct }}" aria-valuemin="0" aria-valuemax="100">
-                {{ pct }}%
-              </div>
-            </div>
-          </div>
-          <ul class="list-group list-group-flush">
-            <li class="list-group-item d-flex justify-content-between align-items-center px-0">
-              <span>总大小 (Total)</span>
-              <strong>{{ (disk_info.total / (1024**3)) | round(2) }} GB</strong>
-            </li>
-            <li class="list-group-item d-flex justify-content-between align-items-center px-0">
-              <span>已使用 (Used)</span>
-              <strong class="text-secondary">{{ (disk_info.used / (1024**3)) | round(2) }} GB</strong>
-            </li>
-            <li class="list-group-item d-flex justify-content-between align-items-center px-0">
-              <span>剩余空间 (Free)</span>
-              <strong class="text-success">{{ (disk_info.free / (1024**3)) | round(2) }} GB</strong>
-            </li>
-          </ul>
-        </div>
+  <div class="usage-grid">
+    <section class="content-section usage-card">
+      <div class="usage-card-header">
+        <div><i class="fa-solid fa-server"></i><h2 class="section-title">系统主存储</h2></div>
+        <span class="badge bg-primary">/</span>
       </div>
-    </div>
+      <p class="section-subtitle">系统与上传目录的主要存储空间。</p>
+      {{ usage_bar(disk_info.percent) }}
+      <dl class="usage-metrics">
+        <dt>总大小</dt><dd>{{ (disk_info.total / (1024**3)) | round(2) }} GB</dd>
+        <dt>已使用</dt><dd>{{ (disk_info.used / (1024**3)) | round(2) }} GB</dd>
+        <dt>剩余空间</dt><dd>{{ (disk_info.free / (1024**3)) | round(2) }} GB</dd>
+      </dl>
+    </section>
 
-    <!-- Extra Storage -->
-    <div class="col-md-4 mb-4">
-      <div class="card shadow-sm border-0">
-        <div class="card-header bg-info text-white d-flex justify-content-between align-items-center py-3">
-          <h5 class="mb-0"><i class="fa-solid fa-hard-drive me-2"></i>额外挂载存储 (/mnt/test001)</h5>
-          <span class="badge bg-light text-info">归档 & 报表</span>
-        </div>
-        <div class="card-body">
-          {% if disk_info.extra and disk_info.extra.available %}
-            <div class="mb-4">
-              <h6 class="text-muted mb-2">空间使用率 (Usage Percentage)</h6>
-              <div class="progress" style="height: 24px;">
-                {% set epct = disk_info.extra.percent %}
-                {% if epct < 70 %}
-                  {% set e_progress_class = "bg-success" %}
-                {% elif epct < 90 %}
-                  {% set e_progress_class = "bg-warning" %}
-                {% else %}
-                  {% set e_progress_class = "bg-danger" %}
-                {% endif %}
-                <div class="progress-bar progress-bar-striped progress-bar-animated {{ e_progress_class }}" role="progressbar" style="width: {{ epct }}%;" aria-valuenow="{{ epct }}" aria-valuemin="0" aria-valuemax="100">
-                  {{ epct }}%
-                </div>
-              </div>
-            </div>
-            <ul class="list-group list-group-flush">
-              <li class="list-group-item d-flex justify-content-between align-items-center px-0">
-                <span>总大小 (Total)</span>
-                <strong>{{ (disk_info.extra.total / (1024**3)) | round(2) }} GB</strong>
-              </li>
-              <li class="list-group-item d-flex justify-content-between align-items-center px-0">
-                <span>已使用 (Used)</span>
-                <strong class="text-secondary">{{ (disk_info.extra.used / (1024**3)) | round(2) }} GB</strong>
-              </li>
-              <li class="list-group-item d-flex justify-content-between align-items-center px-0">
-                <span>剩余空间 (Free)</span>
-                <strong class="text-success">{{ (disk_info.extra.free / (1024**3)) | round(2) }} GB</strong>
-              </li>
-            </ul>
-          {% else %}
-            <div class="text-center py-5">
-              <i class="fa-solid fa-triangle-exclamation text-warning fa-3x mb-3"></i>
-              <h6 class="text-secondary">未检测到额外存储挂载 (/mnt/test001)</h6>
-              <p class="text-muted small mb-0">该挂载路径可能仅在特定存储节点或生产环境下启用。</p>
-            </div>
-          {% endif %}
-        </div>
+    <section class="content-section usage-card">
+      <div class="usage-card-header">
+        <div><i class="fa-solid fa-hard-drive"></i><h2 class="section-title">额外挂载存储</h2></div>
+        <span class="badge bg-info text-dark">/mnt/test001</span>
       </div>
-    </div>
+      {% if disk_info.extra and disk_info.extra.available %}
+      <p class="section-subtitle">用于归档和报表的额外存储。</p>
+      {{ usage_bar(disk_info.extra.percent) }}
+      <dl class="usage-metrics">
+        <dt>总大小</dt><dd>{{ (disk_info.extra.total / (1024**3)) | round(2) }} GB</dd>
+        <dt>已使用</dt><dd>{{ (disk_info.extra.used / (1024**3)) | round(2) }} GB</dd>
+        <dt>剩余空间</dt><dd>{{ (disk_info.extra.free / (1024**3)) | round(2) }} GB</dd>
+      </dl>
+      {% else %}
+      <div class="usage-unavailable">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+        <h3>未检测到挂载</h3>
+        <p>该路径可能仅在特定存储节点或生产环境启用。</p>
+      </div>
+      {% endif %}
+    </section>
 
-    <!-- JuiceFS Storage -->
-    <div class="col-md-4 mb-4">
-      <div class="card shadow-sm border-0">
-        <div class="card-header bg-success text-white d-flex justify-content-between align-items-center py-3">
-          <h5 class="mb-0"><i class="fa-solid fa-cloud me-2"></i>JuiceFS 存储 (/mnt/jfs)</h5>
-          <span class="badge bg-light text-success">备份 & 加速</span>
-        </div>
-        <div class="card-body">
-          {% if disk_info.jfs and disk_info.jfs.available %}
-            <div class="mb-4">
-              <h6 class="text-muted mb-2">空间状况 (Space Status)</h6>
-              <div class="alert alert-success border-0 py-2 mb-0" style="font-size: 0.9rem;">
-                <i class="fa-solid fa-circle-check me-1"></i> FUSE 挂载正常，S3 同步已启用
-              </div>
-            </div>
-            <ul class="list-group list-group-flush">
-              <li class="list-group-item d-flex justify-content-between align-items-center px-0">
-                <span>挂载已用 (FUSE Used)</span>
-                <strong>{{ (disk_info.jfs.used / (1024**3)) | round(2) }} GB</strong>
-              </li>
-              <li class="list-group-item d-flex justify-content-between align-items-center px-0">
-                <span>估算 S3 占用 (Est. S3 Size - x2)</span>
-                <strong class="text-primary">{{ (disk_info.jfs.est_s3 / (1024**3)) | round(2) }} GB</strong>
-              </li>
-            </ul>
-            <div class="mt-3 text-muted small">
-              <i class="fa-solid fa-circle-info me-1"></i>
-              <span>注：估算值包含挂载点切片数据及 sync 至 S3 的原始明文备份。</span>
-            </div>
-          {% else %}
-            <div class="text-center py-5">
-              <i class="fa-solid fa-triangle-exclamation text-warning fa-3x mb-3"></i>
-              <h6 class="text-secondary">未检测到 JuiceFS 挂载 (/mnt/jfs)</h6>
-              <p class="text-muted small mb-0">该挂载路径可能仅在特定存储节点或生产环境下启用。</p>
-            </div>
-          {% endif %}
-        </div>
+    <section class="content-section usage-card">
+      <div class="usage-card-header">
+        <div><i class="fa-solid fa-cloud"></i><h2 class="section-title">JuiceFS 存储</h2></div>
+        <span class="badge bg-success">/mnt/jfs</span>
       </div>
-    </div>
+      {% if disk_info.jfs and disk_info.jfs.available %}
+      <div class="usage-ok"><i class="fa-solid fa-circle-check me-1"></i> FUSE 挂载正常，S3 同步已启用</div>
+      <dl class="usage-metrics">
+        <dt>挂载已用</dt><dd>{{ (disk_info.jfs.used / (1024**3)) | round(2) }} GB</dd>
+        <dt>估算 S3 占用</dt><dd>{{ (disk_info.jfs.est_s3 / (1024**3)) | round(2) }} GB</dd>
+      </dl>
+      <p class="usage-note">估算值包含挂载点切片数据及同步到 S3 的原始备份。</p>
+      {% else %}
+      <div class="usage-unavailable">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+        <h3>未检测到 JuiceFS 挂载</h3>
+        <p>该路径可能仅在特定存储节点或生产环境启用。</p>
+      </div>
+      {% endif %}
+    </section>
   </div>
 </div>
 {% endblock %}
