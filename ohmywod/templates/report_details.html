@@ -2,246 +2,180 @@
 
 {% block title %}战报 - details{% endblock %}
 
-{% block head %}
-  {{ super() }}
-
-<style type="text/css">
-  .breadcrumb {
-      margin-bottom: 0px;
-  }
-
-  .iframe-loading {
-      height: calc(100vh - 72px - 36px - 113px - 56px - 54px);
-  }
-
-  .iframe-loading iframe {
-      width: 100%;
-      height: 100%;
-      display: none;
-  }
-
-  #spinner {
-      width: 100%;
-      height: calc(100vh - 72px - 36px - 113px - 56px - 54px);
-  }
-
-  #spinner .spinner-border {
-      width: 100px;
-      height: 100px;
-  }
-
-  #pills-tab .nav-link {
-      margin-top: 1em;
-      margin-left: 1em;
-  }
-
-  /*
-  .btn-primary-outline:hover {
-      color: #f0eb6e;
-      background-color: #38e896;
-      border-color: #0f3d1c;
-  }
-*/
-
-  @media (max-width: 768px) {
-  }
-
-</style>
-{% endblock %}
-
 {% block content %}
-<nav id="report-breadcrumb" aria-label="breadcrumb">
-  <ol class="breadcrumb">
-      <li class="breadcrumb-item">
-         <a href="/r/">目录</a>
-      </li>
-      <li class="breadcrumb-item text-truncate" aria-current="page">
+<div class="page-stack report-detail-page">
+  <div class="page-toolbar">
+    <nav id="report-breadcrumb" aria-label="breadcrumb" class="mb-0">
+      <ol class="breadcrumb mb-0">
+        <li class="breadcrumb-item"><a href="/r/">目录</a></li>
+        <li class="breadcrumb-item text-truncate" aria-current="page">
           <a href="{{ url_for('wodreport.view_category', category_id=report.category_id) }}">{{ report.category.title}}</a>
-      </li>
-      <li class="breadcrumb-item active text-truncate" aria-current="page">
-          <span alt="{{ report.name }}">{{ report.title }}</span>
-      </li>
-  </ol>
-</nav>
-<div>
-  <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
-    <li class="nav-item" role="presentation">
-      <button class="nav-link active" id="pills-report-tab" data-bs-toggle="pill" data-bs-target="#pills-report" type="button" role="tab" aria-controls="pills-report" aria-selected="true">战报 (原始版)</button>
-    </li>
-    <li class="nav-item" role="presentation">
-      <button class="nav-link" id="pills-details-tab" data-bs-toggle="pill" data-bs-target="#pills-details" type="button" role="tab" aria-controls="pills-details" aria-selected="false">元信息</button>
-    </li>
-  </ul>
-</div>
-<div class="tab-content" id="pills-tabContent">
-    <div class="tab-pane fade show active" id="pills-report" role="tabpanel" aria-labelledby="pills-report-tab">
-      <div class="embed-responsive iframe-loading">
-        <div id="spinner" class="row text-center align-items-center">
-          <div class="row spinner-border align-items-center mx-auto" role="status">
-            <span class="visually-hidden">Loading...</span>
-          </div>
-        </div>
-        <iframe id="report_iframe" class="embed-responsive-item" onload="$('#spinner').hide(); $('.iframe-loading iframe').show();" src="{{ url_for("wodreport.report_raw", username=report.owner, category=report.category.name, name=report.name, subpath=subpath) }}" title="Report details"></iframe>
-      </div>
-      <div class="mt-2">
-        <button type="button" class="btn btn-primary-outline border-0">
-          <i class="fa-solid fa-eye"></i> {{ report_presenter.views }}
-        </button>
-        {% set liked = current_user.is_authenticated and report_presenter.is_liked_by(current_user.username) %}
-        <button type="button" id="like-btn" class="btn btn-primary-outline border-0 {% if liked %}liked-on{% endif %} {% if not current_user.is_authenticated %}disabled{% endif %}">
-          {% if liked %}
-          <i class="text-danger fa-solid fa-heart"></i> {{ report_presenter.likes }}
-          {% else %}
-          <i class="fa-regular fa-heart"></i> {{ report_presenter.likes }}
-          {% endif%}
-        </button>
-        {% set favorited = current_user.is_authenticated and report_presenter.is_favorited_by(current_user.username) %}
-        <button type="button" id="favorite-btn" class="btn btn-primary-outline border-0 {% if favorited %}favorited-on{% endif %} {% if not current_user.is_authenticated %}disabled{% endif %}">
-          {% if favorited %}
-          <i class="text-warning fa-solid fa-star"></i> {{ report_presenter.favors }}
-          {% else %}
-          <i class="fa-regular fa-star"></i> {{ report_presenter.favors }}
-          {% endif%}
-        </button>
+        </li>
+        <li class="breadcrumb-item active text-truncate" aria-current="page">
+          <span title="{{ report.name }}">{{ report.title }}</span>
+        </li>
+      </ol>
+    </nav>
+  </div>
 
-        {% if current_user.username == report.owner %}
-        <div class="float-end me-3">
-          <button type="button" id="delete-btn" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#delete-report-modal">
-            <i class="fa-solid fa-trash"></i>
-            删除
-          </button>
+  <div class="page-hero report-hero">
+    <div>
+      <p class="page-eyebrow">战报详情</p>
+      <h1 class="page-title">{{ report.title }}</h1>
+      <p class="page-subtitle">
+        位于 <a href="{{ url_for('wodreport.view_category', category_id=report.category_id) }}">{{ report.category.title }}</a>
+        {% if report.owner %}<span class="mx-1">&middot;</span>由 <a href="{{ url_for('wodreport.user_categories', username=report.owner) }}">{{ report.owner }}</a> 分享{% endif %}
+      </p>
+    </div>
+    <div class="page-actions">
+      <button id="fullscreen-btn" class="btn btn-primary" type="button"><i class="fa-solid fa-expand me-1"></i>查看加强版</button>
+      {% if current_user.username == report.owner %}
+      <a class="btn btn-soft" href="{{ url_for('wodreport.edit_report', report_id=report.id) }}"><i class="fa-solid fa-pen me-1"></i>编辑</a>
+      <button type="button" id="delete-btn" class="btn btn-danger-soft" data-bs-toggle="modal" data-bs-target="#delete-report-modal">
+        <i class="fa-solid fa-trash me-1"></i>删除
+      </button>
+      {% endif%}
+    </div>
+  </div>
 
-          <!-- Modal -->
-          <div class="modal fade" id="delete-report-modal" tabindex="-1" aria-labelledby="delete-report-modal-label" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-              <div class="modal-content">
-                <form action="{{ url_for("wodreport.delete_report", report_id=report.id) }}" method="POST">
-                  <div class="modal-header">
-                    <h5 class="modal-title" id="delete-report-modal-label">删除战报</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                  </div>
-                  <div class="modal-body">
-                    你是否确认要删除战报 {{ report.title }}？
-                  </div>
-                  <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
-                    <button type="submit" class="btn btn-primary">确认删除</button>
-                  </div>
-                </form>
-              </div>
+  <section class="content-section report-preview-section">
+    <div class="section-header">
+      <h2 class="section-title">原始战报预览</h2>
+      <ul class="nav nav-pills report-tabs" id="pills-tab" role="tablist">
+        <li class="nav-item" role="presentation">
+          <button class="nav-link active" id="pills-report-tab" data-bs-toggle="pill" data-bs-target="#pills-report" type="button" role="tab" aria-controls="pills-report" aria-selected="true">战报</button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" id="pills-details-tab" data-bs-toggle="pill" data-bs-target="#pills-details" type="button" role="tab" aria-controls="pills-details" aria-selected="false">元信息</button>
+        </li>
+      </ul>
+    </div>
+
+    <div class="tab-content" id="pills-tabContent">
+      <div class="tab-pane fade show active" id="pills-report" role="tabpanel" aria-labelledby="pills-report-tab">
+        <div class="report-frame-shell iframe-loading">
+          <div id="spinner" class="report-spinner text-center align-items-center">
+            <div class="spinner-border align-items-center mx-auto" role="status">
+              <span class="visually-hidden">Loading...</span>
             </div>
           </div>
-
+          <iframe id="report_iframe" class="embed-responsive-item" onload="$('#spinner').hide(); $('.iframe-loading iframe').show();" src="{{ url_for("wodreport.report_raw", username=report.owner, category=report.category.name, name=report.name, subpath=subpath) }}" title="Report details"></iframe>
         </div>
-        {% endif%}
 
+        <div class="report-action-bar">
+          <button type="button" class="btn btn-soft report-metric" aria-label="浏览次数">
+            <i class="fa-solid fa-eye"></i> {{ report_presenter.views }}
+          </button>
+          {% set liked = current_user.is_authenticated and report_presenter.is_liked_by(current_user.username) %}
+          <button type="button" id="like-btn" class="btn btn-soft report-metric {% if liked %}liked-on{% endif %} {% if not current_user.is_authenticated %}disabled{% endif %}">
+            {% if liked %}
+            <i class="text-danger fa-solid fa-heart"></i> {{ report_presenter.likes }}
+            {% else %}
+            <i class="fa-regular fa-heart"></i> {{ report_presenter.likes }}
+            {% endif%}
+          </button>
+          {% set favorited = current_user.is_authenticated and report_presenter.is_favorited_by(current_user.username) %}
+          <button type="button" id="favorite-btn" class="btn btn-soft report-metric {% if favorited %}favorited-on{% endif %} {% if not current_user.is_authenticated %}disabled{% endif %}">
+            {% if favorited %}
+            <i class="text-warning fa-solid fa-star"></i> {{ report_presenter.favors }}
+            {% else %}
+            <i class="fa-regular fa-star"></i> {{ report_presenter.favors }}
+            {% endif%}
+          </button>
+        </div>
+      </div>
+
+      <div class="tab-pane fade" id="pills-details" role="tabpanel" aria-labelledby="pills-details-tab">
+        <div class="report-meta-stack">
+          <section class="metadata-panel">
+            <div class="section-header">
+              <h2 class="section-title">说明</h2>
+              {% if current_user.username == report.owner %}
+              <a href="{{ url_for('wodreport.edit_report', report_id=report.id) }}" class="btn btn-sm btn-soft"><i class="fa-solid fa-pen me-1"></i>编辑</a>
+              {% endif %}
+            </div>
+            <div id="report-desc" class="report-description">
+              {{ report.description_rendered | safe }}
+            </div>
+          </section>
+
+          <section class="metadata-panel">
+            <h2 class="section-title">基本信息</h2>
+            <dl class="metadata-grid">
+              <dt>ID</dt><dd>{{ report.id | default("-")}}</dd>
+              <dt>Name</dt><dd>{{ report.name | default("-")}}</dd>
+              <dt>Display Name</dt><dd>{{ report.display_name | default("-")}}</dd>
+              <dt>Order</dt><dd>{{ report.order | default("-")}}</dd>
+              <dt>Owner</dt>
+              <dd>
+                {% if report.owner %}
+                <a href="{{ url_for('wodreport.user_categories', username=report.owner) }}">{{ report.owner }}</a>
+                {% else %}
+                -
+                {% endif %}
+              </dd>
+              <dt>Created At</dt><dd>{{ report.created_at | default("-")}}</dd>
+              <dt>Updated At</dt><dd>{{ report.updated_at | default("-")}}</dd>
+            </dl>
+          </section>
+
+          <section class="metadata-panel">
+            <h2 class="section-title">战报元信息</h2>
+            <dl class="metadata-grid">
+              <dt>Site Name</dt><dd>{{ details.site_name | default("-")}}</dd>
+              <dt>Server Name</dt><dd>{{ details.server_name | default("-")}}</dd>
+              <dt>Group Name</dt><dd>{{ details.group_name | default("-")}}</dd>
+              <dt>Group Size</dt><dd>{{ details.group_size | default("-")}}</dd>
+              <dt>Dungeon Name</dt><dd>{{ details.dungeon_name | default("-")}}</dd>
+              <dt>Dungeon Type</dt><dd>{{ details.dungeon_type | default("-")}}</dd>
+              <dt>Dungeon Date</dt><dd>{{ details.dungeon_date | default("-")}}</dd>
+              <dt>Challenge Name</dt><dd>{{ details.challenge_name | default("-")}}</dd>
+              <dt>Challenge Type</dt><dd>{{ details.challenge_type | default("-")}}</dd>
+              <dt>Challenge Floor</dt><dd>{{ details.challenge_floors | default("-")}}</dd>
+              <dt>Succeed</dt><dd>{{ details.succeed | default("-")}}</dd>
+              <dt>Level Min</dt><dd>{{ details.level_min | default("-")}}</dd>
+              <dt>Level Max</dt><dd>{{ details.level_min | default("-")}}</dd>
+              <dt>Classes</dt><dd>{{ details.classes | default("-")}}</dd>
+              <dt>Races</dt><dd>{{ details.races | default("-")}}</dd>
+              <dt>Classes and Races</dt><dd>{{ details.classes_and_races | default("-")}}</dd>
+              <dt>Details Created At</dt><dd>{{ details.created_at | default("-")}}</dd>
+              <dt>Details Updated At</dt><dd>{{ details.updated_at | default("-")}}</dd>
+            </dl>
+          </section>
+        </div>
       </div>
     </div>
-    <div class="tab-pane fade" id="pills-details" role="tabpanel" aria-labelledby="pills-details-tab">
-      <div id="report-desc" class="m-3">
-        <p>{{ report.description_rendered | safe }}</p>
-      </div>
-        {% if current_user.username == report.owner %}
-        <div>
-          [<a href="{{ url_for('wodreport.edit_report', report_id=report.id) }}">Edit</a>]
+  </section>
+</div>
+
+{% if current_user.username == report.owner %}
+<div class="modal fade" id="delete-report-modal" tabindex="-1" aria-labelledby="delete-report-modal-label" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <form action="{{ url_for("wodreport.delete_report", report_id=report.id) }}" method="POST">
+        <div class="modal-header">
+          <h5 class="modal-title" id="delete-report-modal-label">删除战报</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
-        {% endif %}
-      <dl class="row">
-        <dt class="col-sm-3 col-3">ID</dt>
-        <dd class="col-sm-9 col-9">{{ report.id | default("-")}}</dd>
-
-        <dt class="col-sm-3 col-3">Name</dt>
-        <dd class="col-sm-9 col-9">{{ report.name | default("-")}}</dd>
-
-        <dt class="col-sm-3 col-3">Display Name</dt>
-        <dd class="col-sm-9 col-9">{{ report.display_name | default("-")}}</dd>
-
-        <dt class="col-sm-3 col-3">Order</dt>
-        <dd class="col-sm-9 col-9">{{ report.order | default("-")}}</dd>
-
-        <dt class="col-sm-3 col-3">Owner</dt>
-        <dd class="col-sm-9 col-9">
-          {% if report.owner %}
-          <a href="{{ url_for('wodreport.user_categories', username=report.owner) }}">{{ report.owner }}</a>
-          {% else %}
-          -
-          {% endif %}
-        </dd>
-
-      </dl>
-      <dl class="row">
-
-        <dt class="col-sm-3 col-3">Site Name</dt>
-        <dd class="col-sm-9 col-9">{{ details.site_name | default("-")}}</dd>
-
-        <dt class="col-sm-3 col-3">Name</dt>
-        <dd class="col-sm-9 col-9">{{ details.server_name | default("-")}}</dd>
-
-        <dt class="col-sm-3 col-3">Group Name</dt>
-        <dd class="col-sm-9 col-9">{{ details.group_name | default("-")}}</dd>
-
-        <dt class="col-sm-3 col-3">Group Size</dt>
-        <dd class="col-sm-9 col-9">{{ details.group_size | default("-")}}</dd>
-
-        <dt class="col-sm-3 col-3">Dungeon Name</dt>
-        <dd class="col-sm-9 col-9">{{ details.dungeon_name | default("-")}}</dd>
-
-        <dt class="col-sm-3 col-3">Dungeon Type</dt>
-        <dd class="col-sm-9 col-9">{{ details.dungeon_type | default("-")}}</dd>
-
-        <dt class="col-sm-3 col-3">Dungeon Date</dt>
-        <dd class="col-sm-9 col-9">{{ details.dungeon_date | default("-")}}</dd>
-
-        <dt class="col-sm-3 col-3">Challenge Name</dt>
-        <dd class="col-sm-9 col-9">{{ details.challenge_name | default("-")}}</dd>
-
-        <dt class="col-sm-3 col-3">Challenge Type</dt>
-        <dd class="col-sm-9 col-9">{{ details.challenge_type | default("-")}}</dd>
-
-        <dt class="col-sm-3 col-3">Challenge Floor</dt>
-        <dd class="col-sm-9 col-9">{{ details.challenge_floors | default("-")}}</dd>
-
-        <dt class="col-sm-3 col-3">Succeed</dt>
-        <dd class="col-sm-9 col-9">{{ details.succeed | default("-")}}</dd>
-
-        <dt class="col-sm-3 col-3">Level Min</dt>
-        <dd class="col-sm-9 col-9">{{ details.level_min | default("-")}}</dd>
-
-        <dt class="col-sm-3 col-3">Level Max</dt>
-        <dd class="col-sm-9 col-9">{{ details.level_min | default("-")}}</dd>
-
-        <dt class="col-sm-3 col-3">Classes</dt>
-        <dd class="col-sm-9 col-9">{{ details.classes | default("-")}}</dd>
-
-        <dt class="col-sm-3 col-3">Races</dt>
-        <dd class="col-sm-9 col-9">{{ details.races | default("-")}}</dd>
-
-        <dt class="col-sm-3 col-3">Classes and Races</dt>
-        <dd class="col-sm-9 col-9">{{ details.classes_and_races | default("-")}}</dd>
-
-        <dt class="col-sm-3 col-3">Details Created At</dt>
-        <dd class="col-sm-9 col-9">{{ details.created_at | default("-")}}</dd>
-
-        <dt class="col-sm-3 col-3">Details Updated At</dt>
-        <dd class="col-sm-9 col-9">{{ details.updated_at | default("-")}}</dd>
-
-        <dt class="col-sm-3 col-3">Report Created At</dt>
-        <dd class="col-sm-9 col-9">{{ report.created_at | default("-")}}</dd>
-
-        <dt class="col-sm-3 col-3">Report Updated At</dt>
-        <dd class="col-sm-9 col-9">{{ report.updated_at | default("-")}}</dd>
-      </dl>
+        <div class="modal-body">
+          你是否确认要删除战报 {{ report.title }}？
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+          <button type="submit" class="btn btn-primary">确认删除</button>
+        </div>
+      </form>
     </div>
+  </div>
+</div>
+{% endif%}
 {% endblock %}
 
 {% block sidebar_content %}
 TBD: meta for {{ report.title }}
 {% endblock %}
 
-{% block nav_content %}
-    {{ super() }}
-<button id="fullscreen-btn" class="btn btn-secondary" role="button">查看战报加强版</button>
-{% endblock %}
+
 
 {% block footer %}
   {{ super() }}
