@@ -55,11 +55,18 @@ class LDAPUser(UserMixin):
 
     @property
     def reader_theme(self):
-        # Even this looks weird, but just save the theme to
-        # "departmentNumber" to avoid creating a new table in DB
-        r = self.data.get('departmentNumber')
-        if r:
-            return int(r[0])
+        # Default reader theme
+        return 4
+
+    @property
+    def app_theme(self):
+        # No custom app theme
+        return None
+
+    @property
+    def theme_css(self):
+        # Default bootstrap style sheet
+        return "css/bootstrap.min.css"
 
     @classmethod
     def from_ldap_entry(cls, d):
@@ -78,17 +85,3 @@ class LDAPUser(UserMixin):
             username=username,
             data=d,
         )
-
-    @property
-    def app_theme(self):
-        r = self.data.get('employeeNumber')
-        if r:
-            return r
-
-    @property
-    def theme_css(self):
-        # similar to reader_theme
-        if self.app_theme:
-            return "css/themes/{}/bootstrap.min.css".format(self.app_theme)
-
-        return "css/bootstrap.min.css"

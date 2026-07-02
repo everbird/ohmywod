@@ -81,12 +81,10 @@ class UserController:
     def update_user(self, username,
                     display_name=None,
                     email=None,
-                    password=None,
-                    reader_theme=None,
-                    app_theme=None
+                    password=None
                     ):
         ldap_user = self.get_ldap_user_by_username(username)
-        if display_name or email or password or reader_theme or app_theme:
+        if display_name or email or password:
             conn = ldap_manager.connection
             d = {}
             if display_name:
@@ -98,12 +96,6 @@ class UserController:
             if password:
                 hashed_passwd = hashed(HASHED_SALTED_SHA, password)
                 d['userPassword'] = [(MODIFY_REPLACE, [hashed_passwd])]
-
-            if reader_theme:
-                d['departmentNumber'] = [(MODIFY_REPLACE, [str(reader_theme)])]
-
-            if app_theme:
-                d['employeeNumber'] = [(MODIFY_REPLACE, [str(app_theme)])]
 
             conn.modify(ldap_user.dn, d)
 

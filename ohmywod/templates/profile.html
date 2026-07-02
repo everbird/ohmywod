@@ -61,21 +61,7 @@
         <div class="invalid-feedback">* {{ error }}</div>
       {% endfor %}
    </div>
-   <br>
-   <div class="mb-4">
-      {{ form.reader_theme.label }}:
-      {{ form.reader_theme(class="form-control is-invalid" if form.reader_theme.errors else "form-control") }}
-      {% for error in form.reader_theme.errors %}
-        <div class="invalid-feedback">* {{ error }}</div>
-      {% endfor %}
-   </div>
-   <div class="mb-4">
-      {{ form.app_theme.label }}:
-      {{ form.app_theme(class="form-control is-invalid" if form.app_theme.errors else "form-control") }}
-      {% for error in form.app_theme.errors %}
-        <div class="invalid-feedback">* {{ error }}</div>
-      {% endfor %}
-   </div>
+    <br>
    <div class="d-grid gap-2">{{ form.submit(class="btn btn-primary mb-4") }}
    </div>
 </form>
