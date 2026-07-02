@@ -1208,3 +1208,36 @@ a:focus {
         width: 100%;
     }
 }
+
+/* Account and feedback pages */
+.auth-page,
+.profile-page,
+.feedback-page {
+    max-width: 980px;
+    margin: 0 auto;
+}
+
+.auth-form {
+    max-width: 760px;
+    width: 100%;
+    margin: 0 auto;
+}
+
+.form-grid-single {
+    grid-template-columns: 1fr;
+}
+
+.account-status .empty-state {
+    padding-block: 1rem;
+}
+
+.auth-actions {
+    align-items: center;
+}
+
+@media (max-width: 767.98px) {
+    .auth-actions,
+    .auth-actions .btn {
+        width: 100%;
+    }
+}

@@ -3,83 +3,89 @@
 {% block title %}个人资料与偏好设置{% endblock %}
 
 {% block content %}
-<div id="flash-message" class="alert alert-success" style="display:none;">
-{% with messages = get_flashed_messages() %}
-  {% if messages %}
-    <ul class=flashes>
-    {% for message in messages %}
+<div class="page-stack form-page profile-page">
+  <div id="flash-message" class="alert alert-success" style="display:none;">
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+    <ul class="mb-0 ps-3">
+      {% for message in messages %}
       <li>{{ message }}</li>
-    {% endfor %}
+      {% endfor %}
     </ul>
-  {% endif %}
-{% endwith %}
-</div>
-<section class="w-100 p-4 d-flex justify-content-center pb-4">
-<form action="" method="POST">
-   {{ form.hidden_tag() }}
-   <div class="text-center mb-4">
-      <h2>个人资料与偏好设置</h2>
-   </div>
-   <br>
-   <br>
-   <div class="mb-4">
-     用户名：
-     {{ current_user.username }}
+    {% endif %}
+    {% endwith %}
+  </div>
+
+  <div class="page-hero form-hero">
+    <div>
+      <p class="page-eyebrow">账号设置</p>
+      <h1 class="page-title">个人资料与偏好设置</h1>
+      <p class="page-subtitle">更新显示名称、邮箱或修改密码。</p>
     </div>
-   <div class="mb-4">
-      {{ form.display_name.label }}:
-      {{ form.display_name(placeholder="显示名称（默认为用户名）", class="form-control is-invalid" if form.display_name.errors else "form-control") }}
-      {% for error in form.display_name.errors %}
-        <div class="invalid-feedback">* {{ error }}</div>
-      {% endfor %}
-   </div>
-   <div class="mb-4">
-      {{ form.email.label }}:
-      {{ form.email(placeholder="邮箱", class="form-control is-invalid" if form.email.errors else "form-control") }}
-      {% for error in form.email.errors %}
-        <div class="invalid-feedback">* {{ error }}</div>
-      {% endfor %}
-   </div>
-   <div class="mb-4">
-      {{ form.old_password.label }}:
-      {{ form.old_password(placeholder="旧密码", class="form-control is-invalid" if form.old_password.errors else "form-control") }}
-      {% for error in form.old_password.errors %}
-        <div class="invalid-feedback">* {{ error }}</div>
-      {% endfor %}
-   </div>
-   <div class="mb-4">
-      {{ form.new_password1.label }}:
-      {{ form.new_password1(placeholder="新密码", class="form-control is-invalid" if form.new_password1.errors else "form-control") }}
-      {% for error in form.new_password1.errors %}
-        <div class="invalid-feedback">* {{ error }}</div>
-      {% endfor %}
-   </div>
-   <div class="mb-4">
-      {{ form.new_password2.label }}:
-      {{ form.new_password2(placeholder="确认新密码", class="form-control is-invalid" if form.new_password2.errors else "form-control") }}
-      {% for error in form.new_password2.errors %}
-        <div class="invalid-feedback">* {{ error }}</div>
-      {% endfor %}
-   </div>
-    <br>
-   <div class="d-grid gap-2">{{ form.submit(class="btn btn-primary mb-4") }}
-   </div>
-</form>
-</section>
+  </div>
+
+  <form action="" method="POST" class="content-section app-form">
+    {{ form.hidden_tag() }}
+
+    <section class="form-section">
+      <div class="form-section-heading">
+        <h2 class="section-title">基本信息</h2>
+        <p class="section-subtitle">当前用户名：{{ current_user.username }}</p>
+      </div>
+      <div class="form-grid">
+        <div class="form-field">
+          <label class="form-label" for="{{ form.display_name.id }}">{{ form.display_name.label.text }}</label>
+          {{ form.display_name(placeholder="显示名称（默认为用户名）", class="form-control is-invalid" if form.display_name.errors else "form-control") }}
+          {% for error in form.display_name.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}
+        </div>
+        <div class="form-field">
+          <label class="form-label" for="{{ form.email.id }}">{{ form.email.label.text }}</label>
+          {{ form.email(placeholder="邮箱", class="form-control is-invalid" if form.email.errors else "form-control") }}
+          {% for error in form.email.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}
+        </div>
+      </div>
+    </section>
+
+    <section class="form-section">
+      <div class="form-section-heading">
+        <h2 class="section-title">修改密码</h2>
+        <p class="section-subtitle">如需修改密码，请同时填写旧密码和新密码。</p>
+      </div>
+      <div class="form-grid">
+        <div class="form-field form-field-wide">
+          <label class="form-label" for="{{ form.old_password.id }}">{{ form.old_password.label.text }}</label>
+          {{ form.old_password(placeholder="旧密码", class="form-control is-invalid" if form.old_password.errors else "form-control") }}
+          {% for error in form.old_password.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}
+        </div>
+        <div class="form-field">
+          <label class="form-label" for="{{ form.new_password1.id }}">{{ form.new_password1.label.text }}</label>
+          {{ form.new_password1(placeholder="新密码", class="form-control is-invalid" if form.new_password1.errors else "form-control") }}
+          {% for error in form.new_password1.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}
+        </div>
+        <div class="form-field">
+          <label class="form-label" for="{{ form.new_password2.id }}">{{ form.new_password2.label.text }}</label>
+          {{ form.new_password2(placeholder="确认新密码", class="form-control is-invalid" if form.new_password2.errors else "form-control") }}
+          {% for error in form.new_password2.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}
+        </div>
+      </div>
+    </section>
+
+    <div class="form-actions">
+      {{ form.submit(class="btn btn-primary") }}
+    </div>
+  </form>
+</div>
 {% endblock %}
 
 {% block footer %}
   {{ super() }}
 <script>
   $(document).ready(function () {
-
       var flashmsg = $("#flash-message");
       flashmsg.hide();
-
       if (flashmsg.text().trim().length > 0) {
           flashmsg.show().delay(1000).fadeOut();
       }
-      
   });
 </script>
 {% endblock %}

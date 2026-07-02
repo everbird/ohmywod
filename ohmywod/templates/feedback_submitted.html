@@ -3,7 +3,14 @@
 {% block title %}反馈已提交{% endblock %}
 
 {% block content %}
-<div class="m-3">
-  <p class="text-success">你的反馈已提交成功，谢谢！</p>
+<div class="page-stack form-page feedback-page">
+  <section class="content-section">
+    <div class="empty-state mb-0">
+      <div class="empty-state-icon"><i class="fa-solid fa-circle-check"></i></div>
+      <div class="empty-state-title">反馈已提交</div>
+      <div class="empty-state-desc">你的反馈已提交成功，谢谢！</div>
+      <a class="btn btn-primary" href="{{ url_for('wodreport.home') }}">返回我的主页</a>
+    </div>
+  </section>
 </div>
 {% endblock %}

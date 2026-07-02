@@ -3,25 +3,38 @@
 {% block title %}战报 - 反馈{% endblock %}
 
 {% block content %}
-<div class="m-3">
-<form action="" method="POST">
-   {{ form.hidden_tag() }}
-  <div class="text-center mb-4">
-    <h2>反馈</h2>
+<div class="page-stack form-page feedback-page">
+  <div class="page-hero form-hero">
+    <div>
+      <p class="page-eyebrow">反馈</p>
+      <h1 class="page-title">提交反馈</h1>
+      <p class="page-subtitle">告诉我们你遇到的问题或想要的改进。</p>
+    </div>
   </div>
 
-   <div class="mb-4">
-      {{ form.username.label }}:
-      {{ form.username(placeholder="你的名称", class="form-control") }}
-   </div>
-   <div class="mb-4">
-      {{ form.feedback.label }}:
-      {{ form.feedback(placeholder="请在这里填写反馈内容", class="form-control", rows="6") }}
-   </div>
+  <form action="" method="POST" class="content-section app-form">
+    {{ form.hidden_tag() }}
 
-   <div class="d-grid gap-2">
-     {{ form.submit(class="btn btn-primary mb-4") }}
-   </div>
-</form>
+    <section class="form-section">
+      <div class="form-section-heading">
+        <h2 class="section-title">反馈内容</h2>
+        <p class="section-subtitle">留下称呼和详细内容，方便后续跟进。</p>
+      </div>
+      <div class="form-grid form-grid-single">
+        <div class="form-field form-field-wide">
+          <label class="form-label" for="{{ form.username.id }}">{{ form.username.label.text }}</label>
+          {{ form.username(placeholder="你的名称", class="form-control") }}
+        </div>
+        <div class="form-field form-field-wide">
+          <label class="form-label" for="{{ form.feedback.id }}">{{ form.feedback.label.text }}</label>
+          {{ form.feedback(placeholder="请在这里填写反馈内容", class="form-control", rows="6") }}
+        </div>
+      </div>
+    </section>
+
+    <div class="form-actions">
+      {{ form.submit(class="btn btn-primary") }}
+    </div>
+  </form>
 </div>
 {% endblock %}
