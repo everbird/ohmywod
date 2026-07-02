@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
     <head>
         {% block head %}
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -19,117 +19,6 @@
             })();
         </script>
         <title>{% block title %}{% endblock %} - OhMyWoD</title>
-        <style type="text/css">
-            .love {
-                margin-bottom: 0;
-            }
-
-            #right-content {
-                margin-top: 72px;
-            }
-
-            #navbar {
-                min-width: 300px;
-                margin-left: 335px;
-                transition: all 0.6s cubic-bezier(0.945, 0.020, 0.270, 0.665);
-            }
-
-            #navbar.active {
-                margin-left: 0;
-            }
-
-            #nav_menu {
-                position: static;
-            }
-
-            #dismiss {
-                width: 35px;
-                height: 35px;
-                position: absolute;
-                /* top right corner of the sidebar */
-                bottom: 0;
-                right: 15px;
-            }
-
-            #content {
-                min-width: 300px;
-                width: calc(100% - 335px);
-                min-height: 100vh;
-                min-height: calc(var(--vh, 1vh) * 100);
-                transition: all 0.6s cubic-bezier(0.945, 0.020, 0.270, 0.665);
-                position: absolute;
-                top: 0;
-                right: 0;
-            }
-
-            #content.active {
-                width: 100%;
-            }
-
-            .wrapper {
-                display: flex;
-                width: 100%;
-            }
-
-            #sidebar {
-                width: 335px;
-                position: fixed;
-                top: 0;
-                left: 0;
-                height: 100vh;
-                height: calc(var(--vh, 1vh) * 100);
-                z-index: 999;
-                transition: all 0.6s cubic-bezier(0.945, 0.020, 0.270, 0.665);
-                transform-origin: center left; /* Set the transformed position of sidebar to center left side. */
-            }
-
-            #sidebar.active {
-                margin-left: -335px;
-            }
-
-            #sidebarCollapse {
-                width: 40px;
-                height: 40px;
-                border-width: 0px;
-            }
-
-
-            @media (max-width: 768px) {
-                #content {
-                    min-width: 335px;
-                    width: 100%;
-                    margin-left: 0;
-                    left: 0;
-                    transition: all 0.6s cubic-bezier(0.945, 0.020, 0.270, 0.665);
-                }
-
-                #content.active {
-                    width: calc(100% - 335px);
-                    margin-left: 335px;
-                }
-
-                #sidebar {
-                    margin-left: -335px;
-                    transform: rotateY(100deg);
-                }
-
-                #sidebar.active {
-                    margin-left: 0;
-                    transform: none;
-                }
-
-                #navbar {
-                    min-width: 300px;
-                    margin-left: 0;
-                }
-
-                #navbar.active {
-                    margin-left: 335px;
-                    transition: all 0.6s cubic-bezier(0.945, 0.020, 0.270, 0.665);
-            }
-
-        </style>
-
         <!-- Google tag (gtag.js) -->
         <script async src="https://www.googletagmanager.com/gtag/js?id=G-TYGCT601XW"></script>
         <script>
@@ -142,11 +31,11 @@
         {% endblock %}
     </head>
     <body>
-        <div class="wrapper">
+        <div class="wrapper app-shell">
             <!-- Sidebar -->
-            <nav id="sidebar" class="d-flex flex-column flex-shrink-0 p-3 text-white bg-dark {{ 'active' if session['sidebar_is_active'] else ''}}">
-                <div class="sidebar-header text-center">
-                    <h3><a class="text-white text-decoration-none" href="{{ url_for('frontend.landing_page') }}"><i class="fa-solid fa-scroll fa-flip-horizontal"></i> Oh My WoD</a></h3>
+            <nav id="sidebar" class="d-flex flex-column flex-shrink-0 p-3 text-white bg-dark app-sidebar {{ 'active' if session['sidebar_is_active'] else ''}}">
+                <div class="sidebar-header">
+                    <h3 class="sidebar-brand"><a class="text-white text-decoration-none" href="{{ url_for('frontend.landing_page') }}"><i class="fa-solid fa-scroll fa-flip-horizontal"></i> <span>OhMyWoD</span></a></h3>
                 </div>
 
                 <hr>
@@ -154,44 +43,50 @@
                     <li class="nav-item">
                         <div class="dropdown">
                             <a href="#" role="button" id="dropdown-mine" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" aria-current="page">
-                                我的 (Mine)
+                                <i class="fa-solid fa-folder-tree"></i>
+                                <span>我的</span>
                             </a>
                             <ul class="dropdown-menu dropdown-menu-dark text-small shadow" aria-labelledby="dropdown-mine">
                                 <li>
-                                    <a class="dropdown-item" href="{{ url_for('wodreport.home') }}">我的主页 (Home)</a>
+                                    <a class="dropdown-item" href="{{ url_for('wodreport.home') }}">我的目录</a>
                                 </li>
                                 <li>
-                                    <a href="{{ url_for('wodreport.favorite_reports') }}" class="dropdown-item">我的收藏 (My Favorites)</a>
+                                    <a href="{{ url_for('wodreport.favorite_reports') }}" class="dropdown-item">我的收藏</a>
                                 </li>
                                 <li>
-                                    <a class="dropdown-item" href="{{ url_for("frontend.profile_page")  }}">设置 (Profile & Preference)</a>
+                                    <a class="dropdown-item" href="{{ url_for("frontend.profile_page")  }}">设置</a>
                                 </li>
                             </ul>
                         </div>
                     </li>
                     <li>
                         <a href="{{ url_for('wodreport.report_page') }}" class="nav-link text-white">
-                            浏览战报 (All Reports)
+                            <i class="fa-solid fa-list"></i>
+                            <span>全部战报</span>
                         </a>
                     </li>
                     <li>
                         <a href="{{ url_for('wodreport.search') }}" class="nav-link text-white">
-                            搜索 (Search)
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <span>搜索</span>
                         </a>
                     </li>
                     <li>
                         <a href="{{ url_for('frontend.help_page') }}" class="nav-link text-white">
-                            帮助 (Help)
+                            <i class="fa-solid fa-circle-question"></i>
+                            <span>帮助</span>
                         </a>
                     </li>
                     <li>
                         <a href="{{ url_for('frontend.feedback_page') }}" class="nav-link text-white">
-                            反馈 (Feedback)
+                            <i class="fa-solid fa-comment-dots"></i>
+                            <span>反馈</span>
                         </a>
                     </li>
                     <li>
                         <a href="{{ url_for('frontend.usage_page') }}" class="nav-link text-white">
-                            使用情况 (Usage: {{ disk_info.percent }}%)
+                            <i class="fa-solid fa-chart-pie"></i>
+                            <span>使用情况 {{ disk_info.percent }}%</span>
                         </a>
                     </li>
                 </ul>
@@ -231,27 +126,27 @@
                 </div>
                 <hr>
                 {% if not current_user or current_user.is_anonymous %}
-                <div class="mr-4">
+                <div class="sidebar-account">
                     <i class="fa-solid fa-user me-2"></i>
-                    <a href="{{ url_for("frontend.login") }}">Log in</a>
+                    <a href="{{ url_for("frontend.login") }}">登录</a>
                 </div>
                 {% else %}
-                <div class="dropdown mr-4">
+                <div class="dropdown sidebar-account">
                     <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" id="dropdownUser1" data-bs-toggle="dropdown" aria-expanded="false">
                         <i class="fa-solid fa-user me-2"></i>
                         <strong>{{ current_user.username }}</strong>
                     </a>
                     <ul class="dropdown-menu dropdown-menu-dark text-small shadow" aria-labelledby="dropdownUser1" style="">
-                        <li><a class="dropdown-item" href="{{ url_for("wodreport.new_category")  }}">新建目录 (New Category) ...</a></li>
-                        <li><a class="dropdown-item" href="{{ url_for("frontend.profile_page")  }}">设置 (Profile & Preference)</a></li>
-                        <li><a class="dropdown-item" href="{{ url_for("wodreport.favorite_reports")  }}">我的收藏 (My Favorites)</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for("wodreport.new_category")  }}">新建目录</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for("frontend.profile_page")  }}">设置</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for("wodreport.favorite_reports")  }}">我的收藏</a></li>
                         <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item" href="{{ url_for("frontend.logout") }}">登出 (Sign out)</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for("frontend.logout") }}">登出</a></li>
                     </ul>
                 </div>
                 {% endif %}
-                <div id="dismiss" class="mr-4 text-end">
-                    <a href="#" class="text-white text-decoration-none">
+                <div id="dismiss" class="text-end">
+                    <a href="#" class="text-white text-decoration-none" aria-label="????">
                         <i class="fa-solid fa-chevron-left"></i>
                     </a>
                 </div>
@@ -259,10 +154,10 @@
 
             <div id="content" class="{{ 'active' if session['sidebar_is_active'] else ''}} d-flex flex-column">
 
-                <nav id="navbar" class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top {{ 'active' if session['sidebar_is_active'] else ''}}">
+                <nav id="navbar" class="navbar navbar-expand-lg navbar-dark fixed-top app-topbar {{ 'active' if session['sidebar_is_active'] else ''}}">
 
                     <div class="container-fluid">
-                        <button type="button" id="sidebarCollapse" class="btn btn-primary {{ 'active' if session['sidebar_is_active'] else ''}}">
+                        <button type="button" id="sidebarCollapse" class="btn btn-primary {{ 'active' if session['sidebar_is_active'] else ''}}" aria-label="????">
                             <i class="fa-solid fa-bars"></i>
                         </button>
 
@@ -270,7 +165,7 @@
 
                     </div>
                 </nav>
-                <div id="right-content">{% block content %}{% endblock %}</div>
+                <main id="right-content" class="app-main">{% block content %}{% endblock %}</main>
 
 
                 <div id="footer" class="text-center mt-auto">
