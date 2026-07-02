@@ -12,3 +12,5 @@ redis-store.conf
 .python-version
 .venv/
 .vscode/
+.coverage
+.pytest_cache/

@@ -18,7 +18,7 @@
                 }
             })();
         </script>
-        <title>{% block title %}{% endblock %} - OhMyWoD</title>
+        <title>{% block title %}{% endblock %} - 战报网</title>
         <!-- Google tag (gtag.js) -->
         <script async src="https://www.googletagmanager.com/gtag/js?id=G-TYGCT601XW"></script>
         <script>
@@ -35,8 +35,9 @@
             <!-- Sidebar -->
             <nav id="sidebar" class="d-flex flex-column flex-shrink-0 p-3 text-white bg-dark app-sidebar {{ 'active' if session['sidebar_is_active'] else ''}}">
                 <div class="sidebar-header">
-                    <h3 class="sidebar-brand"><a class="text-white text-decoration-none" href="{{ url_for('frontend.landing_page') }}"><i class="fa-solid fa-scroll fa-flip-horizontal"></i> <span>OhMyWoD</span></a></h3>
+                    <h3 class="sidebar-brand"><a class="text-white text-decoration-none" href="{{ url_for('frontend.landing_page') }}"><img src="{{ url_for('static', filename='img/logo.png') }}" class="brand-logo" alt="Logo"></a></h3>
                 </div>
+
 
                 <hr>
                 <ul id="nav_menu" class="nav nav-pills flex-column">
@@ -78,19 +79,13 @@
                         </a>
                     </li>
                     <li>
-                        <a href="{{ url_for('frontend.feedback_page') }}" class="nav-link text-white">
-                            <i class="fa-solid fa-comment-dots"></i>
-                            <span>反馈</span>
-                        </a>
-                    </li>
-                    <li>
                         <a href="{{ url_for('frontend.usage_page') }}" class="nav-link text-white">
                             <i class="fa-solid fa-chart-pie"></i>
                             <span>使用情况 {{ disk_info.percent }}%</span>
                         </a>
                     </li>
                 </ul>
-                <div id="sidebar_ad" class="align-items-center mt-auto">
+                <div id="sidebar_ad" class="align-items-center mt-4">
                     <hr>
                     {% block sidebar_ad%}
                     <div class="text-center">

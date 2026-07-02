@@ -10,7 +10,7 @@ SUPERVISOR_CONF = supervisord.conf
 SUPERVISORD = .venv/bin/supervisord
 SUPERVISORCTL = .venv/bin/supervisorctl
 
-.PHONY: all help clean clean_pyc clean_tmp requirements generate init_db start stop restart status log-web log-store log-cache install-deps ensure-pyenv-python .venv
+.PHONY: all help clean clean_pyc clean_tmp requirements generate init_db start stop restart status log-web log-store log-cache install-deps ensure-pyenv-python .venv test
 
 all: install-deps ensure-pyenv-python init_db start
 
@@ -28,6 +28,7 @@ help:
 	@echo "  log-store        - Tail redis-store logs"
 	@echo "  log-cache        - Tail redis-cache logs"
 	@echo "  clean            - Clean python bytecodes and swap files"
+	@echo "  test             - Run local tests using pytest"
 
 clean: clean_pyc clean_tmp
 	@#@find -regex ".*\.\(pyc\|swp\|un\~\)" | xargs rm -rf
@@ -40,6 +41,9 @@ clean_tmp:
 
 requirements:
 	.venv/bin/pip install -r ./requirements.txt
+
+test: .venv
+	.venv/bin/python -m pytest tests/ --cov=ohmywod -v
 
 install-deps:
 	@echo "Checking system dependencies..."

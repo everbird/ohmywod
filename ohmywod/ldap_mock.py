@@ -132,6 +132,10 @@ class MockRedisPipeline:
         self.ops.append(lambda: self.client.incr(key))
         return self
         
+    def get(self, key):
+        self.ops.append(lambda: self.client.get(key))
+        return self
+        
     def execute(self):
         results = [op() for op in self.ops]
         self.ops = []
