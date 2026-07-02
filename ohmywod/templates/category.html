@@ -126,9 +126,9 @@
     <table class="modern-table">
       <thead>
         <tr>
-          <th scope="col" style="width: 60px;" class="d-none d-md-table-cell">Id</th>
+          <th scope="col" style="width: 60px;" class="d-none d-md-table-cell">编号</th>
           <th scope="col" style="min-width: 150px;">名称</th>
-          <th scope="col" style="width: 160px;">Stats</th>
+          <th scope="col" style="width: 160px;">统计</th>
           <th scope="col" style="width: 110px;">所有者</th>
           <th scope="col" style="min-width: 200px;" class="d-none d-lg-table-cell">说明</th>
         </tr>
@@ -178,7 +178,7 @@
               <span class="stat-badge"><i class="fa-regular fa-star"></i> {{ p.favors }}</span>
             </div>
             <div class="modern-card-footer">
-              <span>ID: {{ r.id }}</span>
+              <span>编号：{{ r.id }}</span>
               <span>
                 <a href="{{ url_for('wodreport.user_categories', username=category.owner) }}" class="text-secondary text-decoration-none">{{ category.owner }}</a>
               </span>
