@@ -7,20 +7,20 @@
   <div class="page-toolbar">
     <nav aria-label="breadcrumb" class="mb-0">
       <ol class="breadcrumb mb-0">
-        <li class="breadcrumb-item"><a href="{{ url_for('wodreport.view_report', report_id=report.id) }}">Report</a></li>
-        <li class="breadcrumb-item active text-truncate" aria-current="page">Edit {{ report.title }}</li>
+        <li class="breadcrumb-item"><a href="{{ url_for('wodreport.view_report', report_id=report.id) }}">战报</a></li>
+        <li class="breadcrumb-item active text-truncate" aria-current="page">编辑 {{ report.title }}</li>
       </ol>
     </nav>
   </div>
 
   <div class="page-hero form-hero">
     <div>
-      <p class="page-eyebrow">Report editor</p>
-      <h1 class="page-title">Edit {{ report.title }}</h1>
-      <p class="page-subtitle">Update the display metadata used by lists, search, and report details.</p>
+      <p class="page-eyebrow">战报编辑</p>
+      <h1 class="page-title">编辑 {{ report.title }}</h1>
+      <p class="page-subtitle">更新列表、搜索和战报详情中展示的元信息。</p>
     </div>
     <div class="page-actions">
-      <a class="btn btn-soft" href="{{ url_for('wodreport.view_report', report_id=report.id) }}"><i class="fa-solid fa-arrow-left me-1"></i>Cancel</a>
+      <a class="btn btn-soft" href="{{ url_for('wodreport.view_report', report_id=report.id) }}"><i class="fa-solid fa-arrow-left me-1"></i>取消</a>
     </div>
   </div>
 
@@ -29,21 +29,21 @@
 
     <section class="form-section">
       <div class="form-section-heading">
-        <h2 class="section-title">Report summary</h2>
-        <p class="section-subtitle">Basic text shown across the site.</p>
+        <h2 class="section-title">战报概要</h2>
+        <p class="section-subtitle">站内各处展示的基础文本。</p>
       </div>
       <div class="form-grid">
         <div class="form-field form-field-wide">
-          <label class="form-label" for="{{ form.display_name.id }}">Display Name</label>
-          {{ form.display_name(placeholder="Display name", class="form-control is-invalid" if form.display_name.errors else "form-control") }}
+          <label class="form-label" for="{{ form.display_name.id }}">显示名称</label>
+          {{ form.display_name(placeholder="显示名称", class="form-control is-invalid" if form.display_name.errors else "form-control") }}
           {% for error in form.display_name.errors %}
           <div class="invalid-feedback">{{ error }}</div>
           {% endfor %}
         </div>
         <div class="form-field form-field-wide">
-          <label class="form-label" for="{{ form.description.id }}">Description</label>
-          {{ form.description(placeholder="Description", class="form-control is-invalid" if form.description.errors else "form-control", rows="5") }}
-          <div class="form-text">BBCode supported.</div>
+          <label class="form-label" for="{{ form.description.id }}">说明</label>
+          {{ form.description(placeholder="说明", class="form-control is-invalid" if form.description.errors else "form-control", rows="5") }}
+          <div class="form-text">支持 BBCode。</div>
           {% for error in form.description.errors %}
           <div class="invalid-feedback">{{ error }}</div>
           {% endfor %}
@@ -53,28 +53,28 @@
 
     <section class="form-section">
       <div class="form-section-heading">
-        <h2 class="section-title">Server and group</h2>
-        <p class="section-subtitle">Where the run happened and who joined it.</p>
+        <h2 class="section-title">站点与队伍</h2>
+        <p class="section-subtitle">记录战报所在的站点、服务器和队伍信息。</p>
       </div>
       <div class="form-grid">
         <div class="form-field">
-          <label class="form-label" for="{{ form.site_name.id }}">Site Name</label>
-          {{ form.site_name(placeholder="Site name", class="form-control is-invalid" if form.site_name.errors else "form-control") }}
+          <label class="form-label" for="{{ form.site_name.id }}">站点名称</label>
+          {{ form.site_name(placeholder="站点名称", class="form-control is-invalid" if form.site_name.errors else "form-control") }}
           {% for error in form.site_name.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}
         </div>
         <div class="form-field">
-          <label class="form-label" for="{{ form.server_name.id }}">Server Name</label>
-          {{ form.server_name(placeholder="Server name", class="form-control is-invalid" if form.server_name.errors else "form-control") }}
+          <label class="form-label" for="{{ form.server_name.id }}">服务器名称</label>
+          {{ form.server_name(placeholder="服务器名称", class="form-control is-invalid" if form.server_name.errors else "form-control") }}
           {% for error in form.server_name.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}
         </div>
         <div class="form-field">
-          <label class="form-label" for="{{ form.group_name.id }}">Group Name</label>
-          {{ form.group_name(placeholder="Group name", class="form-control is-invalid" if form.group_name.errors else "form-control") }}
+          <label class="form-label" for="{{ form.group_name.id }}">队伍名称</label>
+          {{ form.group_name(placeholder="队伍名称", class="form-control is-invalid" if form.group_name.errors else "form-control") }}
           {% for error in form.group_name.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}
         </div>
         <div class="form-field">
-          <label class="form-label" for="{{ form.group_size.id }}">Group Size</label>
-          {{ form.group_size(placeholder="Group size", class="form-control is-invalid" if form.group_size.errors else "form-control") }}
+          <label class="form-label" for="{{ form.group_size.id }}">队伍人数</label>
+          {{ form.group_size(placeholder="队伍人数", class="form-control is-invalid" if form.group_size.errors else "form-control") }}
           {% for error in form.group_size.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}
         </div>
       </div>
@@ -82,23 +82,23 @@
 
     <section class="form-section">
       <div class="form-section-heading">
-        <h2 class="section-title">Dungeon</h2>
-        <p class="section-subtitle">Dungeon identity and run date.</p>
+        <h2 class="section-title">副本</h2>
+        <p class="section-subtitle">副本名称、类型和日期。</p>
       </div>
       <div class="form-grid">
         <div class="form-field">
-          <label class="form-label" for="{{ form.dungeon_name.id }}">Dungeon Name</label>
-          {{ form.dungeon_name(placeholder="Dungeon name", class="form-control is-invalid" if form.dungeon_name.errors else "form-control") }}
+          <label class="form-label" for="{{ form.dungeon_name.id }}">副本名称</label>
+          {{ form.dungeon_name(placeholder="副本名称", class="form-control is-invalid" if form.dungeon_name.errors else "form-control") }}
           {% for error in form.dungeon_name.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}
         </div>
         <div class="form-field">
-          <label class="form-label" for="{{ form.dungeon_type.id }}">Dungeon Type</label>
-          {{ form.dungeon_type(placeholder="Dungeon type", class="form-control is-invalid" if form.dungeon_type.errors else "form-control") }}
+          <label class="form-label" for="{{ form.dungeon_type.id }}">副本类型</label>
+          {{ form.dungeon_type(placeholder="副本类型", class="form-control is-invalid" if form.dungeon_type.errors else "form-control") }}
           {% for error in form.dungeon_type.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}
         </div>
         <div class="form-field">
-          <label class="form-label" for="{{ form.dungeon_date.id }}">Dungeon Date</label>
-          {{ form.dungeon_date(placeholder="Dungeon date", class="form-control is-invalid" if form.dungeon_date.errors else "form-control") }}
+          <label class="form-label" for="{{ form.dungeon_date.id }}">副本日期</label>
+          {{ form.dungeon_date(placeholder="副本日期", class="form-control is-invalid" if form.dungeon_date.errors else "form-control") }}
           {% for error in form.dungeon_date.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}
         </div>
       </div>
@@ -106,28 +106,28 @@
 
     <section class="form-section">
       <div class="form-section-heading">
-        <h2 class="section-title">Challenge</h2>
-        <p class="section-subtitle">Challenge mode, floors, and result.</p>
+        <h2 class="section-title">挑战</h2>
+        <p class="section-subtitle">挑战模式、层数和结果。</p>
       </div>
       <div class="form-grid">
         <div class="form-field">
-          <label class="form-label" for="{{ form.challenge_name.id }}">Challenge Name</label>
-          {{ form.challenge_name(placeholder="Challenge name", class="form-control is-invalid" if form.challenge_name.errors else "form-control") }}
+          <label class="form-label" for="{{ form.challenge_name.id }}">挑战名称</label>
+          {{ form.challenge_name(placeholder="挑战名称", class="form-control is-invalid" if form.challenge_name.errors else "form-control") }}
           {% for error in form.challenge_name.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}
         </div>
         <div class="form-field">
-          <label class="form-label" for="{{ form.challenge_type.id }}">Challenge Type</label>
-          {{ form.challenge_type(placeholder="Challenge type", class="form-control is-invalid" if form.challenge_type.errors else "form-control") }}
+          <label class="form-label" for="{{ form.challenge_type.id }}">挑战类型</label>
+          {{ form.challenge_type(placeholder="挑战类型", class="form-control is-invalid" if form.challenge_type.errors else "form-control") }}
           {% for error in form.challenge_type.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}
         </div>
         <div class="form-field">
-          <label class="form-label" for="{{ form.challenge_floors.id }}">Challenge Floors</label>
-          {{ form.challenge_floors(placeholder="Challenge floors", class="form-control is-invalid" if form.challenge_floors.errors else "form-control") }}
+          <label class="form-label" for="{{ form.challenge_floors.id }}">挑战层数</label>
+          {{ form.challenge_floors(placeholder="挑战层数", class="form-control is-invalid" if form.challenge_floors.errors else "form-control") }}
           {% for error in form.challenge_floors.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}
         </div>
         <div class="form-field">
-          <label class="form-label" for="{{ form.succeed.id }}">Succeed</label>
-          {{ form.succeed(placeholder="Succeed", class="form-control is-invalid" if form.succeed.errors else "form-control") }}
+          <label class="form-label" for="{{ form.succeed.id }}">是否成功</label>
+          {{ form.succeed(placeholder="是否成功", class="form-control is-invalid" if form.succeed.errors else "form-control") }}
           {% for error in form.succeed.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}
         </div>
       </div>
@@ -135,40 +135,40 @@
 
     <section class="form-section">
       <div class="form-section-heading">
-        <h2 class="section-title">Character details</h2>
-        <p class="section-subtitle">Party level, classes, and races.</p>
+        <h2 class="section-title">角色信息</h2>
+        <p class="section-subtitle">队伍等级、职业和种族信息。</p>
       </div>
       <div class="form-grid">
         <div class="form-field">
-          <label class="form-label" for="{{ form.level_min.id }}">Min Level</label>
-          {{ form.level_min(placeholder="Min level", class="form-control is-invalid" if form.level_min.errors else "form-control") }}
+          <label class="form-label" for="{{ form.level_min.id }}">最低等级</label>
+          {{ form.level_min(placeholder="最低等级", class="form-control is-invalid" if form.level_min.errors else "form-control") }}
           {% for error in form.level_min.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}
         </div>
         <div class="form-field">
-          <label class="form-label" for="{{ form.level_max.id }}">Max Level</label>
-          {{ form.level_max(placeholder="Max level", class="form-control is-invalid" if form.level_max.errors else "form-control") }}
+          <label class="form-label" for="{{ form.level_max.id }}">最高等级</label>
+          {{ form.level_max(placeholder="最高等级", class="form-control is-invalid" if form.level_max.errors else "form-control") }}
           {% for error in form.level_max.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}
         </div>
         <div class="form-field">
-          <label class="form-label" for="{{ form.classes.id }}">Classes</label>
-          {{ form.classes(placeholder="Classes", class="form-control is-invalid" if form.classes.errors else "form-control") }}
+          <label class="form-label" for="{{ form.classes.id }}">职业</label>
+          {{ form.classes(placeholder="职业", class="form-control is-invalid" if form.classes.errors else "form-control") }}
           {% for error in form.classes.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}
         </div>
         <div class="form-field">
-          <label class="form-label" for="{{ form.races.id }}">Races</label>
-          {{ form.races(placeholder="Races", class="form-control is-invalid" if form.races.errors else "form-control") }}
+          <label class="form-label" for="{{ form.races.id }}">种族</label>
+          {{ form.races(placeholder="种族", class="form-control is-invalid" if form.races.errors else "form-control") }}
           {% for error in form.races.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}
         </div>
         <div class="form-field form-field-wide">
-          <label class="form-label" for="{{ form.classes_and_races.id }}">Classes and Races</label>
-          {{ form.classes_and_races(placeholder="Classes and races", class="form-control is-invalid" if form.classes_and_races.errors else "form-control") }}
+          <label class="form-label" for="{{ form.classes_and_races.id }}">职业与种族</label>
+          {{ form.classes_and_races(placeholder="职业与种族", class="form-control is-invalid" if form.classes_and_races.errors else "form-control") }}
           {% for error in form.classes_and_races.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}
         </div>
       </div>
     </section>
 
     <div class="form-actions">
-      <a class="btn btn-soft" href="{{ url_for('wodreport.view_report', report_id=report.id) }}">Cancel</a>
+      <a class="btn btn-soft" href="{{ url_for('wodreport.view_report', report_id=report.id) }}">取消</a>
       {{ form.submit(class="btn btn-primary") }}
     </div>
   </form>

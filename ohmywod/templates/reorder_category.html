@@ -24,8 +24,8 @@
 {% if reports %}
 <form action="{{ url_for('wodreport.reorder_category', category_id=category.id)}}" method="POST">
   <div class="m-3">
-    <input class="btn btn-primary" type="submit" value="Submit"></input>
-    <a class="btn btn-secondary" href="{{ url_for('wodreport.view_category', category_id=category.id) }}">Cancel</a>
+    <input class="btn btn-primary" type="submit" value="保存顺序"></input>
+    <a class="btn btn-secondary" href="{{ url_for('wodreport.view_category', category_id=category.id) }}">取消</a>
   </div>
 <div class="table-responsive">
 <table class="table table-striped table-dark">
@@ -33,8 +33,8 @@
         <tr>
             <th scope="col" style="width: 50px;"></th>
             <th scope="col" style="width: 80px;">Id</th>
-            <th scope="col">Name</th>
-            <th scope="col">Description</th>
+            <th scope="col">名称</th>
+            <th scope="col">说明</th>
         </tr>
     </thead>
     <tbody id="sortable-tbody">

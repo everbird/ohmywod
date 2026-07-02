@@ -7,36 +7,36 @@
 <form action="" method="POST" style="width: 22em;">
    {{ form.hidden_tag() }}
    <div class="text-center mb-4">
-      <h2>Create an Account</h2>
+      <h2>创建账号</h2>
    </div>
    <br>
    <br>
    <div class="mb-4">
-      {{ form.username(placeholder="Username", class="form-control is-invalid" if form.username.errors else "form-control") }}
+      {{ form.username(placeholder="用户名", class="form-control is-invalid" if form.username.errors else "form-control") }}
       {% for error in form.username.errors %}
         <div class="invalid-feedback">* {{ error }}</div>
       {% endfor %}
    </div>
    <div class="mb-4">
-      {{ form.display_name(placeholder="Display name (default to username)", class="form-control is-invalid" if form.display_name.errors else "form-control") }}
+      {{ form.display_name(placeholder="显示名称（默认为用户名）", class="form-control is-invalid" if form.display_name.errors else "form-control") }}
       {% for error in form.display_name.errors %}
         <div class="invalid-feedback">* {{ error }}</div>
       {% endfor %}
    </div>
    <div class="mb-4">
-      {{ form.email(placeholder="Email", class="form-control is-invalid" if form.email.errors else "form-control") }}
+      {{ form.email(placeholder="邮箱", class="form-control is-invalid" if form.email.errors else "form-control") }}
       {% for error in form.email.errors %}
         <div class="invalid-feedback">* {{ error }}</div>
       {% endfor %}
    </div>
    <div class="mb-4">
-      {{ form.password1(placeholder="Password", class="form-control is-invalid" if form.password1.errors else "form-control") }}
+      {{ form.password1(placeholder="密码", class="form-control is-invalid" if form.password1.errors else "form-control") }}
       {% for error in form.password1.errors %}
         <div class="invalid-feedback">* {{ error }}</div>
       {% endfor %}
    </div>
    <div class="mb-4">
-      {{ form.password2(placeholder="Confirm password", class="form-control is-invalid" if form.password2.errors else "form-control") }}
+      {{ form.password2(placeholder="确认密码", class="form-control is-invalid" if form.password2.errors else "form-control") }}
       {% for error in form.password2.errors %}
         <div class="invalid-feedback">* {{ error }}</div>
       {% endfor %}
@@ -47,7 +47,7 @@
    <br>
    <br>
   <div class="d-flex align-items-center justify-content-center pb-4">
-    <p>Already have an account? <a href="{{ url_for('frontend.login') }}">Login</a></p>
+    <p>已有账号？<a href="{{ url_for('frontend.login') }}">登录</a></p>
   </div>
 </form>
 </section>

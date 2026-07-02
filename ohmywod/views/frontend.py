@@ -54,12 +54,12 @@ def login():
 
 
 class RegistrationForm(FlaskForm):
-    username = StringField('username', validators =[DataRequired()])
-    display_name = StringField('display_name')
-    email = StringField('Email', validators=[DataRequired(),Email()])
-    password1 = PasswordField('Password', validators = [DataRequired()])
-    password2 = PasswordField('Confirm Password', validators = [DataRequired(),EqualTo('password1')])
-    submit = SubmitField('Register')
+    username = StringField('用户名', validators =[DataRequired()])
+    display_name = StringField('显示名称')
+    email = StringField('邮箱', validators=[DataRequired(),Email()])
+    password1 = PasswordField('密码', validators = [DataRequired()])
+    password2 = PasswordField('确认密码', validators = [DataRequired(),EqualTo('password1')])
+    submit = SubmitField('注册')
 
     def validate_email(form, field):
         email = field.data
@@ -68,7 +68,7 @@ class RegistrationForm(FlaskForm):
             ldap_user = uc.get_ldap_user_by_email(email)
             db_user = uc.get_db_user_by_email(email)
             if ldap_user or db_user:
-                raise ValidationError("Email is already used by other users.")
+                raise ValidationError("邮箱已被其他用户使用。")
 
     def validate_display_name(form, field):
         display_name = field.data
@@ -76,7 +76,7 @@ class RegistrationForm(FlaskForm):
             uc = UserController()
             db_user = uc.get_db_user_by_display_name(display_name)
             if db_user:
-                raise ValidationError("Display name is already used by other users.")
+                raise ValidationError("显示名称已被其他用户使用。")
 
     def validate_username(form, field):
         username = field.data
@@ -84,7 +84,7 @@ class RegistrationForm(FlaskForm):
             uc = UserController()
             db_user = uc.get_db_user(username)
             if db_user:
-                raise ValidationError("Username is already used by other users.")
+                raise ValidationError("用户名已被其他用户使用。")
 
 
 
@@ -138,9 +138,9 @@ def usage_page():
 
 
 class FeedbackForm(FlaskForm):
-    username = StringField('Your Name')
-    feedback = StringField("Content", widget=TextArea())
-    submit = SubmitField("Submit")
+    username = StringField('你的名称')
+    feedback = StringField("反馈内容", widget=TextArea())
+    submit = SubmitField("提交")
 
 
 @frontend.route("/feedback", methods=["POST", "GET"])
@@ -158,12 +158,12 @@ def feedback_page():
 
 
 class ProfileForm(FlaskForm):
-    display_name = StringField('display_name')
-    email = StringField('Email', validators=[Email()])
-    old_password = PasswordField('Password')
-    new_password1 = PasswordField('Password')
-    new_password2 = PasswordField('Confirm Password', validators = [EqualTo('new_password1')])
-    submit = SubmitField('Update')
+    display_name = StringField('显示名称')
+    email = StringField('邮箱', validators=[Email()])
+    old_password = PasswordField('旧密码')
+    new_password1 = PasswordField('新密码')
+    new_password2 = PasswordField('确认新密码', validators = [EqualTo('new_password1')])
+    submit = SubmitField('更新')
 
     def validate_email(form, field):
         email = field.data
@@ -172,7 +172,7 @@ class ProfileForm(FlaskForm):
             ldap_user = uc.get_ldap_user_by_email(email)
             db_user = uc.get_db_user_by_email(email)
             if ldap_user or db_user:
-                raise ValidationError("Email is already used by other users.")
+                raise ValidationError("邮箱已被其他用户使用。")
 
     def validate_old_password(form, field):
         old_password = field.data
@@ -180,9 +180,9 @@ class ProfileForm(FlaskForm):
             result = ldap_manager.authenticate(current_user.username, old_password)
             print(result.status)
             if result.status != AuthenticationResponseStatus.success:
-                raise ValidationError("Password doesn't match with existing one")
+                raise ValidationError("旧密码不匹配。")
         elif form.new_password1.data or form.new_password2.data:
-            raise ValidationError("Old password is require when change to a new password.")
+            raise ValidationError("修改密码时需要填写旧密码。")
 
 
 
@@ -202,7 +202,7 @@ def profile_page():
             form.new_password1.data,
         )
 
-        flash("Updated successfully.")
+        flash("更新成功。")
         return redirect(url_for('frontend.profile_page'))
     return rt("profile.html", form=form)
 

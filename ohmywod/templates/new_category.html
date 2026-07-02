@@ -1,26 +1,26 @@
 {% extends "base.html" %}
 
-{% block title %}战报 - New Category{% endblock %}
+{% block title %}战报 - 新建分类{% endblock %}
 
 {% block content %}
 <div class="page-stack form-page category-form-page">
   <div class="page-toolbar">
     <nav aria-label="breadcrumb" class="mb-0">
       <ol class="breadcrumb mb-0">
-        <li class="breadcrumb-item"><a href="{{ url_for('wodreport.home') }}">Home</a></li>
-        <li class="breadcrumb-item active" aria-current="page">New category</li>
+        <li class="breadcrumb-item"><a href="{{ url_for('wodreport.home') }}">首页</a></li>
+        <li class="breadcrumb-item active" aria-current="page">新建分类</li>
       </ol>
     </nav>
   </div>
 
   <div class="page-hero form-hero">
     <div>
-      <p class="page-eyebrow">Category editor</p>
-      <h1 class="page-title">Create a new category</h1>
-      <p class="page-subtitle">Group related reports under a clear name and description.</p>
+      <p class="page-eyebrow">分类编辑</p>
+      <h1 class="page-title">新建分类</h1>
+      <p class="page-subtitle">用清晰的名称和说明归纳相关战报。</p>
     </div>
     <div class="page-actions">
-      <a href="{{ url_for('wodreport.home') }}" class="btn btn-soft"><i class="fa-solid fa-arrow-left me-1"></i>Cancel</a>
+      <a href="{{ url_for('wodreport.home') }}" class="btn btn-soft"><i class="fa-solid fa-arrow-left me-1"></i>取消</a>
     </div>
   </div>
 
@@ -29,21 +29,21 @@
 
     <section class="form-section">
       <div class="form-section-heading">
-        <h2 class="section-title">Category details</h2>
-        <p class="section-subtitle">Choose the stable category slug and the description shown on its page.</p>
+        <h2 class="section-title">分类信息</h2>
+        <p class="section-subtitle">填写分类标识和页面上展示的说明。</p>
       </div>
       <div class="form-grid">
         <div class="form-field form-field-wide">
-          <label class="form-label" for="{{ form.name.id }}">Name</label>
-          {{ form.name(placeholder="name", class="form-control is-invalid" if form.name.errors else "form-control") }}
+          <label class="form-label" for="{{ form.name.id }}">名称</label>
+          {{ form.name(placeholder="名称", class="form-control is-invalid" if form.name.errors else "form-control") }}
           {% for error in form.name.errors %}
           <div class="invalid-feedback">{{ error }}</div>
           {% endfor %}
         </div>
         <div class="form-field form-field-wide">
-          <label class="form-label" for="{{ form.description.id }}">Description</label>
-          {{ form.description(placeholder="description", class="form-control is-invalid" if form.description.errors else "form-control", rows=5) }}
-          <div class="form-text">BBCode supported.</div>
+          <label class="form-label" for="{{ form.description.id }}">说明</label>
+          {{ form.description(placeholder="说明", class="form-control is-invalid" if form.description.errors else "form-control", rows=5) }}
+          <div class="form-text">支持 BBCode。</div>
           {% for error in form.description.errors %}
           <div class="invalid-feedback">{{ error }}</div>
           {% endfor %}
@@ -52,7 +52,7 @@
     </section>
 
     <div class="form-actions">
-      <a href="{{ url_for('wodreport.home') }}" class="btn btn-soft">Cancel</a>
+      <a href="{{ url_for('wodreport.home') }}" class="btn btn-soft">取消</a>
       {{ form.submit(class="btn btn-primary") }}
     </div>
   </form>

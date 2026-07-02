@@ -59,7 +59,7 @@
               <span class="visually-hidden">Loading...</span>
             </div>
           </div>
-          <iframe id="report_iframe" class="embed-responsive-item" onload="$('#spinner').hide(); $('.iframe-loading iframe').show();" src="{{ url_for("wodreport.report_raw", username=report.owner, category=report.category.name, name=report.name, subpath=subpath) }}" title="Report details"></iframe>
+          <iframe id="report_iframe" class="embed-responsive-item" onload="$('#spinner').hide(); $('.iframe-loading iframe').show();" src="{{ url_for("wodreport.report_raw", username=report.owner, category=report.category.name, name=report.name, subpath=subpath) }}" title="战报详情"></iframe>
         </div>
 
         <div class="report-action-bar">
@@ -103,10 +103,10 @@
             <h2 class="section-title">基本信息</h2>
             <dl class="metadata-grid">
               <dt>ID</dt><dd>{{ report.id | default("-")}}</dd>
-              <dt>Name</dt><dd>{{ report.name | default("-")}}</dd>
-              <dt>Display Name</dt><dd>{{ report.display_name | default("-")}}</dd>
-              <dt>Order</dt><dd>{{ report.order | default("-")}}</dd>
-              <dt>Owner</dt>
+              <dt>名称</dt><dd>{{ report.name | default("-")}}</dd>
+              <dt>显示名称</dt><dd>{{ report.display_name | default("-")}}</dd>
+              <dt>排序</dt><dd>{{ report.order | default("-")}}</dd>
+              <dt>所有者</dt>
               <dd>
                 {% if report.owner %}
                 <a href="{{ url_for('wodreport.user_categories', username=report.owner) }}">{{ report.owner }}</a>
@@ -114,32 +114,32 @@
                 -
                 {% endif %}
               </dd>
-              <dt>Created At</dt><dd>{{ report.created_at | default("-")}}</dd>
-              <dt>Updated At</dt><dd>{{ report.updated_at | default("-")}}</dd>
+              <dt>创建时间</dt><dd>{{ report.created_at | default("-")}}</dd>
+              <dt>更新时间</dt><dd>{{ report.updated_at | default("-")}}</dd>
             </dl>
           </section>
 
           <section class="metadata-panel">
             <h2 class="section-title">战报元信息</h2>
             <dl class="metadata-grid">
-              <dt>Site Name</dt><dd>{{ details.site_name | default("-")}}</dd>
-              <dt>Server Name</dt><dd>{{ details.server_name | default("-")}}</dd>
-              <dt>Group Name</dt><dd>{{ details.group_name | default("-")}}</dd>
-              <dt>Group Size</dt><dd>{{ details.group_size | default("-")}}</dd>
-              <dt>Dungeon Name</dt><dd>{{ details.dungeon_name | default("-")}}</dd>
-              <dt>Dungeon Type</dt><dd>{{ details.dungeon_type | default("-")}}</dd>
-              <dt>Dungeon Date</dt><dd>{{ details.dungeon_date | default("-")}}</dd>
-              <dt>Challenge Name</dt><dd>{{ details.challenge_name | default("-")}}</dd>
-              <dt>Challenge Type</dt><dd>{{ details.challenge_type | default("-")}}</dd>
-              <dt>Challenge Floor</dt><dd>{{ details.challenge_floors | default("-")}}</dd>
-              <dt>Succeed</dt><dd>{{ details.succeed | default("-")}}</dd>
-              <dt>Level Min</dt><dd>{{ details.level_min | default("-")}}</dd>
-              <dt>Level Max</dt><dd>{{ details.level_min | default("-")}}</dd>
-              <dt>Classes</dt><dd>{{ details.classes | default("-")}}</dd>
-              <dt>Races</dt><dd>{{ details.races | default("-")}}</dd>
-              <dt>Classes and Races</dt><dd>{{ details.classes_and_races | default("-")}}</dd>
-              <dt>Details Created At</dt><dd>{{ details.created_at | default("-")}}</dd>
-              <dt>Details Updated At</dt><dd>{{ details.updated_at | default("-")}}</dd>
+              <dt>站点名称</dt><dd>{{ details.site_name | default("-")}}</dd>
+              <dt>服务器名称</dt><dd>{{ details.server_name | default("-")}}</dd>
+              <dt>队伍名称</dt><dd>{{ details.group_name | default("-")}}</dd>
+              <dt>队伍人数</dt><dd>{{ details.group_size | default("-")}}</dd>
+              <dt>副本名称</dt><dd>{{ details.dungeon_name | default("-")}}</dd>
+              <dt>副本类型</dt><dd>{{ details.dungeon_type | default("-")}}</dd>
+              <dt>副本日期</dt><dd>{{ details.dungeon_date | default("-")}}</dd>
+              <dt>挑战名称</dt><dd>{{ details.challenge_name | default("-")}}</dd>
+              <dt>挑战类型</dt><dd>{{ details.challenge_type | default("-")}}</dd>
+              <dt>挑战层数</dt><dd>{{ details.challenge_floors | default("-")}}</dd>
+              <dt>是否成功</dt><dd>{{ details.succeed | default("-")}}</dd>
+              <dt>最低等级</dt><dd>{{ details.level_min | default("-")}}</dd>
+              <dt>最高等级</dt><dd>{{ details.level_min | default("-")}}</dd>
+              <dt>职业</dt><dd>{{ details.classes | default("-")}}</dd>
+              <dt>种族</dt><dd>{{ details.races | default("-")}}</dd>
+              <dt>职业与种族</dt><dd>{{ details.classes_and_races | default("-")}}</dd>
+              <dt>元信息创建时间</dt><dd>{{ details.created_at | default("-")}}</dd>
+              <dt>元信息更新时间</dt><dd>{{ details.updated_at | default("-")}}</dd>
             </dl>
           </section>
         </div>

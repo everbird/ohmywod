@@ -155,19 +155,19 @@ def view_category(category_id):
 
 class EditCategoryForm(FlaskForm):
     order_by = SelectField(
-        "Order reports by",
+        "战报排序方式",
         choices=[
-            ("ctime", "Created At"),
-            ("name", "Name"),
-            ("customized", "Customized order"),
-            ("reversed_ctime", "Created At(reversed)"),
-            ("reversed_name", "Name(reversed)"),
-            ("reversed_customized", "Customized order(reversed)"),
+            ("ctime", "创建时间"),
+            ("name", "名称"),
+            ("customized", "自定义顺序"),
+            ("reversed_ctime", "创建时间（倒序）"),
+            ("reversed_name", "名称（倒序）"),
+            ("reversed_customized", "自定义顺序（倒序）"),
         ]
     )
     display_name = StringField("display_name", validators=[Optional()])
     description = StringField("description", widget=TextArea())
-    submit = SubmitField("Update")
+    submit = SubmitField("更新")
 
 
 @report.route("/category/<category_id>/edit", methods=["POST", "GET"])
@@ -283,7 +283,7 @@ class EditReportForm(FlaskForm):
     races = StringField("races", validators=[Optional()])
     classes_and_races = StringField("classes_and_races", validators=[Optional()])
 
-    submit = SubmitField("Update")
+    submit = SubmitField("更新")
 
 
 @report.route("/report/<report_id>/edit", methods=["GET", "POST"])
@@ -423,14 +423,14 @@ def report_page():
 class NewCategoryForm(FlaskForm):
     name = StringField('name', validators =[DataRequired()])
     description = StringField("description", widget=TextArea())
-    submit = SubmitField("Create")
+    submit = SubmitField("创建")
 
     def validate_name(form, field):
         name = field.data
         rc = ReportController()
         if rc.get_category_by_name_and_username(name, current_user.username):
             raise ValidationError(
-                "Category {} exists for username:{}"
+                "分类 {} 已存在，用户：{}"
                 .format(name, current_user.username)
             )
 
@@ -461,10 +461,10 @@ def ajax_like(report_id):
     report = rc.get_report(report_id)
     if report:
         rc.like(username, report_id)
-        r = {"status": 0, "message": "Liked successfully."}
+        r = {"status": 0, "message": "点赞成功。"}
         rc.incr_likes_cnt(report_id)
     else:
-        r = {"status": 1, "message": f"Report {report_id} doesn't exist."}
+        r = {"status": 1, "message": f"战报 {report_id} 不存在。"}
     return jsonify(r)
 
 
@@ -476,10 +476,10 @@ def ajax_unlike(report_id):
     report = rc.get_report(report_id)
     if report:
         rc.unlike(username, report_id)
-        r = {"status": 0, "message": "Uniked successfully."}
+        r = {"status": 0, "message": "取消点赞成功。"}
         rc.decr_likes_cnt(report_id)
     else:
-        r = {"status": 1, "message": f"Report {report_id} doesn't exist."}
+        r = {"status": 1, "message": f"战报 {report_id} 不存在。"}
     return jsonify(r)
 
 
@@ -491,10 +491,10 @@ def ajax_add_favorite(report_id):
     report = rc.get_report(report_id)
     if report:
         rc.add_favor(username, report_id)
-        r = {"status": 0, "message": "Favorite added successfully."}
+        r = {"status": 0, "message": "收藏成功。"}
         rc.incr_favors(report_id)
     else:
-        r = {"status": 1, "message": f"Report {report_id} doesn't exist."}
+        r = {"status": 1, "message": f"战报 {report_id} 不存在。"}
     return jsonify(r)
 
 
@@ -506,10 +506,10 @@ def ajax_cancel_favorite(report_id):
     report = rc.get_report(report_id)
     if report:
         rc.cancel_favor(username, report_id)
-        r = {"status": 0, "message": "Favorite cancelled successfully."}
+        r = {"status": 0, "message": "取消收藏成功。"}
         rc.decr_favors(report_id)
     else:
-        r = {"status": 1, "message": f"Report {report_id} doesn't exist."}
+        r = {"status": 1, "message": f"战报 {report_id} 不存在。"}
     return jsonify(r)
 
 

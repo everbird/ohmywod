@@ -1,6 +1,6 @@
 {% extends "base_noadsense.html" %}
 
-{% block title %}战报 - Login{% endblock %}
+{% block title %}战报 - 登录{% endblock %}
 
 {% block content %}
 <section class="w-100 p-4 d-flex justify-content-center pb-4">
@@ -16,24 +16,24 @@
     {% endwith %}
   </div>
 {% if current_user and not current_user.is_anonymous %}
-<p>You're logged in already!</p>
+<p>你已经登录了！</p>
 {% else %}
 <form method="POST" style="width: 22em;">
   {{ form.hidden_tag() }}
    <div class="text-center mb-6">
-      <h2>Log in</h2>
+      <h2>登录</h2>
    </div>
    <br>
    <br>
   <div class="form-outline mb-4">
-    {{ form.username(placeholder="Username", class="form-control is-invalid" if form.username.errors else "form-control") }}
+    {{ form.username(placeholder="用户名", class="form-control is-invalid" if form.username.errors else "form-control") }}
     {% for error in form.username.errors %}
         <div class="invalid-feedback">* {{ error }}</div>
     {% endfor %}
   </div>
 
   <div class="form-outline mb-4">
-    {{ form.password(placeholder="Password", class="form-control is-invalid" if form.password.errors else "form-control") }}
+    {{ form.password(placeholder="密码", class="form-control is-invalid" if form.password.errors else "form-control") }}
     {% for error in form.password.errors %}
         <div class="invalid-feedback">* {{ error }}</div>
     {% endfor %}
@@ -41,15 +41,15 @@
 
   <br>
   <div class="d-grid gap-2">
-  <!-- Submit button -->
-  {{ form.submit(class="btn btn-primary mb-4") }}
+  <!-- 提交按钮 -->
+  {{ form.submit(value="登录", class="btn btn-primary mb-4") }}
   </div>
 
    <br>
    <br>
-  <!-- Register buttons -->
+  <!-- 注册入口 -->
   <div class="text-center">
-    <p>Not a member? <a href="/register">Register</a></p>
+    <p>还没有账号？<a href="/register">注册</a></p>
   </div>
 </form>
 {% endif %}

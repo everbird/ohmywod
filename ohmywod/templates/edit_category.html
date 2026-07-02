@@ -7,20 +7,20 @@
   <div class="page-toolbar">
     <nav aria-label="breadcrumb" class="mb-0">
       <ol class="breadcrumb mb-0">
-        <li class="breadcrumb-item"><a href="{{ url_for('wodreport.view_category', category_id=category.id) }}">Category</a></li>
-        <li class="breadcrumb-item active text-truncate" aria-current="page">Edit {{ category.title }}</li>
+        <li class="breadcrumb-item"><a href="{{ url_for('wodreport.view_category', category_id=category.id) }}">分类</a></li>
+        <li class="breadcrumb-item active text-truncate" aria-current="page">编辑 {{ category.title }}</li>
       </ol>
     </nav>
   </div>
 
   <div class="page-hero form-hero">
     <div>
-      <p class="page-eyebrow">Category editor</p>
-      <h1 class="page-title">Edit {{ category.title }}</h1>
-      <p class="page-subtitle">Update category presentation and default report ordering.</p>
+      <p class="page-eyebrow">分类编辑</p>
+      <h1 class="page-title">编辑 {{ category.title }}</h1>
+      <p class="page-subtitle">更新分类展示信息和默认战报排序。</p>
     </div>
     <div class="page-actions">
-      <a class="btn btn-soft" href="{{ url_for('wodreport.view_category', category_id=category.id) }}"><i class="fa-solid fa-arrow-left me-1"></i>Cancel</a>
+      <a class="btn btn-soft" href="{{ url_for('wodreport.view_category', category_id=category.id) }}"><i class="fa-solid fa-arrow-left me-1"></i>取消</a>
     </div>
   </div>
 
@@ -29,13 +29,13 @@
 
     <section class="form-section">
       <div class="form-section-heading">
-        <h2 class="section-title">Category details</h2>
-        <p class="section-subtitle">Control how this category appears in navigation, listings, and report pages.</p>
+        <h2 class="section-title">分类信息</h2>
+        <p class="section-subtitle">控制分类在导航、列表和战报页中的展示方式。</p>
       </div>
       <div class="form-grid">
         <div class="form-field">
-          <label class="form-label" for="{{ form.display_name.id }}">Display Name</label>
-          {{ form.display_name(placeholder="Display name", class="form-control is-invalid" if form.display_name.errors else "form-control") }}
+          <label class="form-label" for="{{ form.display_name.id }}">显示名称</label>
+          {{ form.display_name(placeholder="显示名称", class="form-control is-invalid" if form.display_name.errors else "form-control") }}
           {% for error in form.display_name.errors %}
           <div class="invalid-feedback">{{ error }}</div>
           {% endfor %}
@@ -48,9 +48,9 @@
           {% endfor %}
         </div>
         <div class="form-field form-field-wide">
-          <label class="form-label" for="{{ form.description.id }}">Description</label>
-          {{ form.description(placeholder="Description", class="form-control is-invalid" if form.description.errors else "form-control", rows="5") }}
-          <div class="form-text">BBCode supported.</div>
+          <label class="form-label" for="{{ form.description.id }}">说明</label>
+          {{ form.description(placeholder="说明", class="form-control is-invalid" if form.description.errors else "form-control", rows="5") }}
+          <div class="form-text">支持 BBCode。</div>
           {% for error in form.description.errors %}
           <div class="invalid-feedback">{{ error }}</div>
           {% endfor %}
@@ -59,7 +59,7 @@
     </section>
 
     <div class="form-actions">
-      <a class="btn btn-soft" href="{{ url_for('wodreport.view_category', category_id=category.id) }}">Cancel</a>
+      <a class="btn btn-soft" href="{{ url_for('wodreport.view_category', category_id=category.id) }}">取消</a>
       {{ form.submit(class="btn btn-primary") }}
     </div>
   </form>

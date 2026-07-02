@@ -1,6 +1,6 @@
 {% extends "base_noadsense.html" %}
 
-{% block title %}Profile & Preference{% endblock %}
+{% block title %}个人资料与偏好设置{% endblock %}
 
 {% block content %}
 <div id="flash-message" class="alert alert-success" style="display:none;">
@@ -18,45 +18,45 @@
 <form action="" method="POST">
    {{ form.hidden_tag() }}
    <div class="text-center mb-4">
-      <h2>Profile &amp; Preference</h2>
+      <h2>个人资料与偏好设置</h2>
    </div>
    <br>
    <br>
    <div class="mb-4">
-     Username:
+     用户名：
      {{ current_user.username }}
     </div>
    <div class="mb-4">
       {{ form.display_name.label }}:
-      {{ form.display_name(placeholder="Display name (default to username)", class="form-control is-invalid" if form.display_name.errors else "form-control") }}
+      {{ form.display_name(placeholder="显示名称（默认为用户名）", class="form-control is-invalid" if form.display_name.errors else "form-control") }}
       {% for error in form.display_name.errors %}
         <div class="invalid-feedback">* {{ error }}</div>
       {% endfor %}
    </div>
    <div class="mb-4">
       {{ form.email.label }}:
-      {{ form.email(placeholder="Email", class="form-control is-invalid" if form.email.errors else "form-control") }}
+      {{ form.email(placeholder="邮箱", class="form-control is-invalid" if form.email.errors else "form-control") }}
       {% for error in form.email.errors %}
         <div class="invalid-feedback">* {{ error }}</div>
       {% endfor %}
    </div>
    <div class="mb-4">
       {{ form.old_password.label }}:
-      {{ form.old_password(placeholder="Old password", class="form-control is-invalid" if form.old_password.errors else "form-control") }}
+      {{ form.old_password(placeholder="旧密码", class="form-control is-invalid" if form.old_password.errors else "form-control") }}
       {% for error in form.old_password.errors %}
         <div class="invalid-feedback">* {{ error }}</div>
       {% endfor %}
    </div>
    <div class="mb-4">
       {{ form.new_password1.label }}:
-      {{ form.new_password1(placeholder="Password", class="form-control is-invalid" if form.new_password1.errors else "form-control") }}
+      {{ form.new_password1(placeholder="新密码", class="form-control is-invalid" if form.new_password1.errors else "form-control") }}
       {% for error in form.new_password1.errors %}
         <div class="invalid-feedback">* {{ error }}</div>
       {% endfor %}
    </div>
    <div class="mb-4">
       {{ form.new_password2.label }}:
-      {{ form.new_password2(placeholder="Confirm password", class="form-control is-invalid" if form.new_password2.errors else "form-control") }}
+      {{ form.new_password2(placeholder="确认新密码", class="form-control is-invalid" if form.new_password2.errors else "form-control") }}
       {% for error in form.new_password2.errors %}
         <div class="invalid-feedback">* {{ error }}</div>
       {% endfor %}
