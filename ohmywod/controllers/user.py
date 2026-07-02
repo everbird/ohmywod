@@ -71,10 +71,8 @@ class UserController:
         if result:
             entry = conn.entries[0]
             data = json.loads(entry.entry_to_json())
-            _entry = dict(
-                dn=data['dn'],
-                **data['attributes']
-            )
+            _entry = data['attributes'].copy()
+            _entry['dn'] = data['dn']
             return LDAPUser.from_ldap_entry(_entry)
 
     def get_db_user_by_display_name(self, display_name):

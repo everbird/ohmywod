@@ -63,9 +63,19 @@ class LDAPUser(UserMixin):
 
     @classmethod
     def from_ldap_entry(cls, d):
+        if isinstance(d, (tuple, list)):
+            d = d[0]
+        dn = d.get("dn")
+        if isinstance(dn, (tuple, list)):
+            dn = dn[0]
+        username = d.get("cn")
+        if isinstance(username, list):
+            username = username[0]
+        elif isinstance(username, (tuple, list)):
+            username = username[0]
         return LDAPUser(
-            dn=d["dn"],
-            username=d["cn"][0],
+            dn=dn,
+            username=username,
             data=d,
         )
 
