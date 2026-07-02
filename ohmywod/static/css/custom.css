@@ -1319,6 +1319,23 @@ a:focus {
     margin-bottom: 0;
 }
 
+.donate-panel {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.donate-panel p {
+    margin-bottom: 0;
+}
+
+.donate-qr {
+    width: min(100%, 12rem);
+    border: 1px solid var(--app-border);
+    border-radius: 8px;
+    background-color: #fff;
+    padding: 0.35rem;
+}
+
 .info-list {
     display: grid;
     gap: 0.65rem;
