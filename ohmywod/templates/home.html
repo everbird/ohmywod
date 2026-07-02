@@ -3,15 +3,22 @@
 {% block title %}战报 - Home{% endblock %}
 
 {% block content %}
-    <div class="m-3">
-    <h1>欢迎: {{ current_user.display_name }}</h1>
+<div class="page-stack">
+  <div class="page-hero">
+    <div>
+      <p class="page-eyebrow">我的战报库</p>
+      <h1 class="page-title">欢迎，{{ current_user.display_name }}</h1>
+      <p class="page-subtitle">管理目录、跟踪收藏，从这里继续整理 WoD 战报。</p>
     </div>
-    <br>
+    <div class="page-actions">
+      <a type="button" class="btn btn-primary" href="{{ url_for('wodreport.new_category') }}"><i class="fa-solid fa-folder-plus me-1"></i>新建目录</a>
+    </div>
+  </div>
 
     {% if current_user.is_authenticated %}
-    <div class="m-3">
-    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-      <h2 class="mb-0">我的收藏（最近5个）：（<a href="{{ url_for('wodreport.favorite_reports') }}">查看全部</a>）</h2>
+    <section class="content-section">
+    <div class="section-header">
+      <h2 class="section-title">我的收藏 <a href="{{ url_for('wodreport.favorite_reports') }}">查看全部</a></h2>
       {% if favor_reports %}
       <div class="layout-toggle-container">
         <button class="btn btn-sm layout-btn-list" title="列表视图"><i class="fa-solid fa-list"></i></button>
@@ -94,16 +101,15 @@
       </div>
     </div>
     {% else %}
-    <p class="text-secondary">还没有收藏任何战报</p>
+    <p class="text-secondary mb-0">还没有收藏任何战报</p>
     {% endif %}
-    </div>
+    </section>
 
-    <br>
     {% endif %}
 
-    <div class="m-3">
-    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-      <h2 class="mb-0">我创建的目录：</h2>
+    <section class="content-section">
+    <div class="section-header">
+      <h2 class="section-title">我创建的目录</h2>
       {% if categories %}
       <div class="layout-toggle-container">
         <button class="btn btn-sm layout-btn-list" title="列表视图"><i class="fa-solid fa-list"></i></button>
@@ -168,9 +174,6 @@
       </div>
     </div>
     {% endif %}
-    </div>
-
-    <div class="m-3">
-        <a type="button" class="btn btn-primary" href="{{ url_for('wodreport.new_category') }}">创建新目录</a>
-    </div>
+    </section>
+</div>
 {% endblock %}

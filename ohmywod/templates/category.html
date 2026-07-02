@@ -47,7 +47,7 @@
 {% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+<div class="page-toolbar">
   <nav id="report-breadcrumb" aria-label="breadcrumb" class="mb-0">
     <ol class="breadcrumb mb-0">
         <li class="breadcrumb-item">
@@ -66,21 +66,22 @@
   </div>
   {% endif %}
 </div>
-<div id="description" class="m-3">
-    <h2>{{ category.title }}</h2>
-    <br>
-    <div id="category-desc">
+<div id="description" class="page-hero">
+  <div>
+    <p class="page-eyebrow">目录</p>
+    <h1 class="page-title">{{ category.title }}</h1>
+    <div id="category-desc" class="category-description">
     {{ category.description_rendered | safe }}
     </div>
     <a id="more-desc" href="#" class="d-none">显示更多</a>
     {% if current_user.username == category.owner %}
-    <br>
-    [ <a href="{{ url_for('wodreport.edit_category', category_id=category.id) }}" class="btn btn-link p-0 border-0">Edit</a>
-    | <a href="{{ url_for('wodreport.reorder_category', category_id=category.id) }}" class="btn btn-link p-0 border-0">Reorder</a>
-    | <button type="button" id="delete-btn" class="btn btn-secondary-outline btn-link p-0 border-0" data-bs-toggle="modal" data-bs-target="#delete-category-modal">
-      删除
-    </button>
-    ]
+    <div class="category-actions">
+      <a href="{{ url_for('wodreport.edit_category', category_id=category.id) }}" class="btn btn-sm btn-soft"><i class="fa-solid fa-pen me-1"></i>编辑</a>
+      <a href="{{ url_for('wodreport.reorder_category', category_id=category.id) }}" class="btn btn-sm btn-soft"><i class="fa-solid fa-arrow-up-wide-short me-1"></i>排序</a>
+      <button type="button" id="delete-btn" class="btn btn-sm btn-danger-soft" data-bs-toggle="modal" data-bs-target="#delete-category-modal">
+        <i class="fa-solid fa-trash me-1"></i>删除
+      </button>
+    </div>
 
     <!-- Modal -->
     <div class="modal fade" id="delete-category-modal" tabindex="-1" aria-labelledby="delete-category-modal-label" aria-hidden="true">
@@ -104,10 +105,19 @@
       </div>
     </div>
     {% endif %}
+  </div>
 </div>
 {% if current_user.username == category.owner %}
-<div class="pond" style="opacity: 1;">
-    <input id="mypond" type="file" style="opacity: 1;"/>
+<div class="upload-panel">
+  <div class="upload-panel-header">
+    <div>
+      <h2 class="upload-panel-title">上传战报</h2>
+      <p class="upload-panel-desc">支持拖拽或选择 WoD 导出的 zip 文件。</p>
+    </div>
+  </div>
+  <div class="pond" style="opacity: 1;">
+      <input id="mypond" type="file" style="opacity: 1;"/>
+  </div>
 </div>
 {% endif %}
 {% if reports %}
