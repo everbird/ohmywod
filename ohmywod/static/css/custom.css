@@ -722,7 +722,18 @@ a:focus {
 }
 
 .search-panel .form-control {
+    flex: 1 1 auto;
+    min-width: 0;
     min-height: 2.75rem;
+}
+
+.search-panel .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    min-width: 6.5rem;
+    white-space: nowrap;
 }
 
 .upload-panel {
