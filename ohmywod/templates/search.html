@@ -21,8 +21,9 @@
     {% endif %}
   {% endwith %}
   <div class="search-panel">
-    <form class="d-flex gap-2" method="GET">
-      <input class="form-control" type="search" placeholder="输入关键字" name="q" value="{{ q  }}">
+    <form class="search-form d-flex gap-2" method="GET">
+      <label class="visually-hidden" for="search-query">搜索关键字</label>
+      <input id="search-query" class="form-control" type="search" placeholder="输入标题、说明或关键字" name="q" value="{{ q  }}">
       <button class="btn btn-primary my-0" type="submit"><i class="fa-solid fa-magnifying-glass me-1"></i>搜索</button>
     </form>
   </div>
@@ -122,6 +123,14 @@
       <div class="empty-state-desc">未找到符合“{{ q }}”的战报，请尝试更换搜索关键字。</div>
     </div>
     {% endif %}
+    {% else %}
+    <div class="empty-state empty-state-compact">
+      <div class="empty-state-icon">
+        <i class="fa-solid fa-magnifying-glass"></i>
+      </div>
+      <div class="empty-state-title">开始搜索战报</div>
+      <div class="empty-state-desc">输入标题、说明或关键字，从公开战报中快速定位内容。</div>
+    </div>
     {% endif %}
   </section>
 </div>

@@ -20,7 +20,7 @@
 
   <div class="page-hero report-hero">
     <div>
-      <h1 class="page-title report-title-copy">{{ report.title }}</h1>
+      <h1 class="page-title report-title-copy" title="{{ report.title }}">{{ report.title }}</h1>
       <p class="page-subtitle">
         位于 <a href="{{ url_for('wodreport.view_category', category_id=report.category_id) }}">{{ report.category.title }}</a>
         {% if report.owner %}<span class="mx-1">&middot;</span>由 <a href="{{ url_for('wodreport.user_categories', username=report.owner) }}">{{ report.owner }}</a> 分享{% endif %}
@@ -33,7 +33,7 @@
       </div>
     </div>
     <div class="page-actions">
-      <button id="fullscreen-btn" class="btn btn-primary" type="button"><i class="fa-solid fa-expand me-1"></i>查看加强版</button>
+      <button id="fullscreen-btn" class="btn btn-primary" type="button"><i class="fa-solid fa-expand me-1"></i>阅读模式</button>
       {% if current_user.username == report.owner %}
       <a class="btn btn-soft" href="{{ url_for('wodreport.edit_report', report_id=report.id) }}"><i class="fa-solid fa-pen me-1"></i>编辑</a>
       <button type="button" id="delete-btn" class="btn btn-danger-soft" data-bs-toggle="modal" data-bs-target="#delete-report-modal">
@@ -45,13 +45,13 @@
 
   <section class="content-section report-preview-section">
     <div class="section-header">
-      <h2 class="section-title">原始战报预览</h2>
+      <h2 class="section-title">战报预览</h2>
       <ul class="nav nav-pills report-tabs" id="pills-tab" role="tablist">
         <li class="nav-item" role="presentation">
           <button class="nav-link active" id="pills-report-tab" data-bs-toggle="pill" data-bs-target="#pills-report" type="button" role="tab" aria-controls="pills-report" aria-selected="true">战报</button>
         </li>
         <li class="nav-item" role="presentation">
-          <button class="nav-link" id="pills-details-tab" data-bs-toggle="pill" data-bs-target="#pills-details" type="button" role="tab" aria-controls="pills-details" aria-selected="false">元信息</button>
+          <button class="nav-link" id="pills-details-tab" data-bs-toggle="pill" data-bs-target="#pills-details" type="button" role="tab" aria-controls="pills-details" aria-selected="false">详情</button>
         </li>
       </ul>
     </div>
@@ -64,7 +64,7 @@
               <span class="visually-hidden">正在加载战报</span>
             </div>
           </div>
-          <iframe id="report_iframe" class="embed-responsive-item" onload="$('#spinner').hide(); $('.iframe-loading iframe').show();" src="{{ url_for("wodreport.report_raw", username=report.owner, category=report.category.name, name=report.name, subpath=subpath) }}" title="原始战报预览"></iframe>
+          <iframe id="report_iframe" class="embed-responsive-item" onload="$('#spinner').hide(); $('.iframe-loading iframe').show();" src="{{ url_for("wodreport.report_raw", username=report.owner, category=report.category.name, name=report.name, subpath=subpath) }}" title="战报预览"></iframe>
         </div>
 
         <div class="report-action-bar">
@@ -92,7 +92,7 @@
 
       <div class="tab-pane fade" id="pills-details" role="tabpanel" aria-labelledby="pills-details-tab">
         <div class="report-meta-stack">
-          <section class="metadata-panel">
+          <section class="metadata-panel report-description-panel">
             <div class="section-header">
               <h2 class="section-title">说明</h2>
               {% if current_user.username == report.owner %}
@@ -108,7 +108,7 @@
             </div>
           </section>
 
-          <section class="metadata-panel">
+          <section class="metadata-panel report-basic-panel">
             <h2 class="section-title">基本信息</h2>
             <dl class="metadata-grid">
               <dt>ID</dt><dd>{{ report.id | default("-")}}</dd>
@@ -128,8 +128,8 @@
             </dl>
           </section>
 
-          <section class="metadata-panel">
-            <h2 class="section-title">战报元信息</h2>
+          <section class="metadata-panel report-wod-panel">
+            <h2 class="section-title">战报详细信息</h2>
             <dl class="metadata-grid">
               <dt>站点名称</dt><dd>{{ details.site_name | default("-")}}</dd>
               <dt>服务器名称</dt><dd>{{ details.server_name | default("-")}}</dd>
@@ -188,7 +188,7 @@
       function setupCollapsibleCopy() {
           var expandText = "展开";
           var collapseText = "收起";
-          var targets = document.querySelectorAll(".report-title-copy, .report-description, .metadata-grid dd");
+          var targets = document.querySelectorAll(".report-description, .metadata-grid dd");
 
           targets.forEach(function (target) {
               if (!target.offsetParent && target.getClientRects().length === 0) {
@@ -199,7 +199,7 @@
               }
               target.dataset.collapsibleReady = "true";
 
-              var inner = document.createElement(target.classList.contains("report-title-copy") ? "span" : "div");
+              var inner = document.createElement("div");
               inner.className = "collapsible-copy-inner";
               while (target.firstChild) {
                   inner.appendChild(target.firstChild);
@@ -207,9 +207,7 @@
               target.appendChild(inner);
 
               var collapsedHeight = 72;
-              if (target.classList.contains("report-title-copy")) {
-                  collapsedHeight = 132;
-              } else if (target.classList.contains("report-description")) {
+              if (target.classList.contains("report-description")) {
                   collapsedHeight = 192;
               }
               inner.style.setProperty("--collapsed-height", collapsedHeight + "px");

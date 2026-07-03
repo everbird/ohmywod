@@ -72,7 +72,7 @@
     <div id="category-desc" class="category-description">
     {{ category.description_rendered | safe }}
     </div>
-    <a id="more-desc" href="#" class="d-none">显示更多</a>
+    <button id="category-desc-toggle" type="button" class="btn btn-sm btn-soft collapsible-copy-toggle category-desc-toggle d-none" aria-expanded="false">展开说明</button>
     {% if current_user.username == category.owner %}
     <div class="category-actions">
       <a href="{{ url_for('wodreport.edit_category', category_id=category.id) }}" class="btn btn-sm btn-soft"><i class="fa-solid fa-pen me-1"></i>编辑</a>
@@ -200,7 +200,7 @@
   <div class="empty-state-title">当前目录为空</div>
   <div class="empty-state-desc">这个目录里还没有上传任何战报。</div>
   {% if current_user.username == category.owner %}
-    <p class="text-secondary font-monospace">拖拽文件到下方上传框以添加战报</p>
+    <p class="text-secondary font-monospace">拖拽文件到上方上传区以添加战报</p>
   {% endif %}
 </div>
 {% endif %}
@@ -229,27 +229,35 @@
     })
 {% endif %}
   $(document).ready(function () {
+      var desc = document.getElementById("category-desc");
+      var toggle = document.getElementById("category-desc-toggle");
+      var collapsedHeight = 120;
 
-      var h = $('#category-desc')[0].scrollHeight;
-      var height_limit = 50
-      
-      if ($("#category-desc").height() > height_limit) {
-          console.info("> 50");
-          $("#category-desc").css({
-              'height': '100px'
-          })
-
-          $("#more-desc").toggleClass("d-none");
+      if (!desc || !toggle || desc.dataset.collapsibleReady === "true") {
+          return;
       }
 
-      $("#more-desc").click(function () {
-          $("#category-desc").animate({
-              'height': h
-          });
+      desc.dataset.collapsibleReady = "true";
+      var inner = document.createElement("div");
+      inner.className = "collapsible-copy-inner";
+      while (desc.firstChild) {
+          inner.appendChild(desc.firstChild);
+      }
+      desc.appendChild(inner);
+      inner.style.setProperty("--collapsed-height", collapsedHeight + "px");
 
-          $(this).toggleClass("d-none");
+      if (inner.scrollHeight <= collapsedHeight + 8) {
+          return;
+      }
+
+      desc.classList.add("collapsible-copy", "is-collapsed");
+      toggle.classList.remove("d-none");
+
+      toggle.addEventListener("click", function () {
+          var isCollapsed = desc.classList.toggle("is-collapsed");
+          toggle.setAttribute("aria-expanded", isCollapsed ? "false" : "true");
+          toggle.textContent = isCollapsed ? "展开说明" : "收起说明";
       });
-      
   });
 
 </script>
