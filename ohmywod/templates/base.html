@@ -141,7 +141,7 @@
                 </div>
                 {% endif %}
                 <div id="dismiss" class="text-end">
-                    <a href="#" class="text-white text-decoration-none" aria-label="????">
+                    <a href="#" class="text-white text-decoration-none" aria-label="收起侧边栏">
                         <i class="fa-solid fa-chevron-left"></i>
                     </a>
                 </div>
@@ -149,17 +149,9 @@
 
             <div id="content" class="{{ 'active' if session['sidebar_is_active'] else ''}} d-flex flex-column">
 
-                <nav id="navbar" class="navbar navbar-expand-lg navbar-dark fixed-top app-topbar {{ 'active' if session['sidebar_is_active'] else ''}}">
-
-                    <div class="container-fluid">
-                        <button type="button" id="sidebarCollapse" class="btn btn-primary {{ 'active' if session['sidebar_is_active'] else ''}}" aria-label="????">
-                            <i class="fa-solid fa-bars"></i>
-                        </button>
-
-                        {% block nav_content %}{% endblock %}
-
-                    </div>
-                </nav>
+                <button type="button" id="sidebarCollapse" class="btn btn-primary sidebar-floating-toggle {{ 'active' if session['sidebar_is_active'] else ''}}" aria-label="展开侧边栏">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
                 <main id="right-content" class="app-main">{% block content %}{% endblock %}</main>
 
 
@@ -205,14 +197,13 @@
 
                         $(document).ready(function () {
                             $("#dismiss").on('click', function () {
-                                $('#sidebar, #content, #sidebarCollapse, #navbar').toggleClass('active');
+                                $('#sidebar, #content, #sidebarCollapse').toggleClass('active');
                                 var is_active = $('#sidebar').hasClass("active");
                                 update_sidebar_active(is_active);
                             });
                             
                             $('#sidebarCollapse').on('click', function () {
-                                $('#sidebar, #content, #navbar').toggleClass('active');
-                                $(this).toggleClass('active');
+                                $('#sidebar, #content, #sidebarCollapse').toggleClass('active');
                                 var is_active = $('#sidebar').hasClass("active");
                                 update_sidebar_active(is_active);
                             });
@@ -239,7 +230,7 @@
                                     }
                                     if (xDown != xUp || yDown != yUp) {
                                         if (xDown - xUp > 10) {
-                                            $('#sidebar, #content, #sidebarCollapse, #navbar').toggleClass('active');
+                                            $('#sidebar, #content, #sidebarCollapse').toggleClass('active');
                                             var is_active = $('#sidebar').hasClass("active");
                                             update_sidebar_active(is_active);
                                         }

@@ -2,106 +2,119 @@
 
 {% block title %}战报 - 我的收藏{% endblock %}
 
-
 {% block content %}
-<div class="m-3">
-<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-  <h2 class="mb-0">我的收藏</h2>
-  {% if reports %}
-  <div class="layout-toggle-container">
-    <button class="btn btn-sm layout-btn-list" title="列表视图"><i class="fa-solid fa-list"></i></button>
-    <button class="btn btn-sm layout-btn-card" title="网格视图"><i class="fa-solid fa-table-cells-large"></i></button>
+<div class="page-stack favorite-page">
+  <div class="page-hero">
+    <div>
+      <h1 class="page-title">我的收藏</h1>
+      <p class="page-subtitle">收纳常看的战报，方便从这里快速回到阅读进度和讨论线索。</p>
+    </div>
+    <div class="page-actions">
+      <a class="btn btn-soft" href="{{ url_for('wodreport.report_page') }}"><i class="fa-solid fa-list me-1"></i>浏览全部战报</a>
+    </div>
   </div>
-  {% endif %}
-</div>
 
-{% if reports %}
-<div class="layout-list-view">
-  <div class="modern-table-responsive my-3">
-    <table class="modern-table">
-      <thead>
-        <tr>
-          <th scope="col" style="width: 60px;" class="d-none d-md-table-cell">编号</th>
-          <th scope="col" style="min-width: 150px;">名称</th>
-          <th scope="col" style="width: 110px;">所有者</th>
-          <th scope="col" style="width: 160px;">统计</th>
-          <th scope="col" style="min-width: 200px;" class="d-none d-lg-table-cell">说明</th>
-          <th scope="col" style="width: 140px;" class="d-none d-md-table-cell">收藏时间</th>
-        </tr>
-      </thead>
-      <tbody>
+  <section class="content-section">
+    <div class="section-header">
+      <div>
+        <h2 class="section-title">收藏列表</h2>
+        <p class="section-subtitle">按收藏时间查看你关注的战报。</p>
+      </div>
+      {% if reports %}
+      <div class="layout-toggle-container">
+        <button class="btn btn-sm layout-btn-list" title="列表视图"><i class="fa-solid fa-list"></i></button>
+        <button class="btn btn-sm layout-btn-card" title="网格视图"><i class="fa-solid fa-table-cells-large"></i></button>
+      </div>
+      {% endif %}
+    </div>
+
+    {% if reports %}
+    <div class="layout-list-view">
+      <div class="modern-table-responsive my-3">
+        <table class="modern-table">
+          <thead>
+            <tr>
+              <th scope="col" style="width: 60px;" class="d-none d-md-table-cell">编号</th>
+              <th scope="col" style="min-width: 150px;">名称</th>
+              <th scope="col" style="width: 110px;">所有者</th>
+              <th scope="col" style="width: 160px;">统计</th>
+              <th scope="col" style="min-width: 200px;" class="d-none d-lg-table-cell">说明</th>
+              <th scope="col" style="width: 140px;" class="d-none d-md-table-cell">收藏时间</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for r in reports %}
+              <tr>
+                <td class="d-none d-md-table-cell">{{ r.id }}</td>
+                <td>
+                  <a href="{{ url_for('wodreport.view_report', report_id=r.id) }}" class="fw-bold text-decoration-none text-truncate-title" title="{{ r.title }}">{{ r.title }}</a>
+                </td>
+                <td>
+                  <a href="{{ url_for('wodreport.user_categories', username=r.owner) }}" class="text-info text-decoration-none">{{ r.owner }}</a>
+                </td>
+                <td>
+                  <div class="d-flex gap-1">
+                    {% set p = r.presenter %}
+                    <span class="stat-badge"><i class="fa-regular fa-eye"></i> {{ p.views }}</span>
+                    <span class="stat-badge"><i class="fa-regular fa-thumbs-up"></i> {{ p.likes }}</span>
+                    <span class="stat-badge"><i class="fa-regular fa-star"></i> {{ p.favors }}</span>
+                  </div>
+                </td>
+                <td class="text-secondary d-none d-lg-table-cell" {% if r.description %}title="{{ r.description }}"{% endif %}>{{ r.description | default("-", True) | truncate(144) }}</td>
+                {% set favor = r.get_favor(current_user.username) %}
+                <td class="text-secondary d-none d-md-table-cell">{{ favor.updated_at.strftime('%Y-%m-%d %H:%M') if favor and favor.updated_at else '' }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="layout-card-view">
+      <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 my-3">
         {% for r in reports %}
-          <tr>
-            <td class="d-none d-md-table-cell">{{ r.id }}</td>
-            <td>
-              <a href="{{ url_for('wodreport.view_report', report_id=r.id) }}" class="fw-bold text-decoration-none text-truncate-title" title="{{ r.title }}">{{ r.title }}</a>
-            </td>
-            <td>
-              <a href="{{ url_for('wodreport.user_categories', username=r.owner) }}" class="text-info text-decoration-none">{{ r.owner }}</a>
-            </td>
-            <td>
-              <div class="d-flex gap-1">
-                {% set p = r.presenter %}
-                <span class="stat-badge"><i class="fa-regular fa-eye"></i> {{ p.views }}</span>
-                <span class="stat-badge"><i class="fa-regular fa-thumbs-up"></i> {{ p.likes }}</span>
-                <span class="stat-badge"><i class="fa-regular fa-star"></i> {{ p.favors }}</span>
+          <div class="col">
+            <div class="modern-card">
+              <div class="modern-card-body">
+                <div class="modern-card-title">
+                  <a href="{{ url_for('wodreport.view_report', report_id=r.id) }}">{{ r.title }}</a>
+                </div>
+                <div class="modern-card-desc">
+                  {{ r.description | default("暂无描述", True) }}
+                </div>
+                <div class="mb-3 d-flex gap-2 flex-wrap">
+                  {% set p = r.presenter %}
+                  <span class="stat-badge"><i class="fa-regular fa-eye"></i> {{ p.views }}</span>
+                  <span class="stat-badge"><i class="fa-regular fa-thumbs-up"></i> {{ p.likes }}</span>
+                  <span class="stat-badge"><i class="fa-regular fa-star"></i> {{ p.favors }}</span>
+                </div>
+                <div class="modern-card-footer">
+                  <span>
+                    <a href="{{ url_for('wodreport.user_categories', username=r.owner) }}" class="text-secondary text-decoration-none">{{ r.owner }}</a>
+                  </span>
+                  {% set favor = r.get_favor(current_user.username) %}
+                  <span><i class="fa-regular fa-clock me-1"></i>{{ favor.updated_at.strftime('%Y-%m-%d') if favor and favor.updated_at else '' }}</span>
+                </div>
               </div>
-            </td>
-            <td class="text-secondary d-none d-lg-table-cell" {% if r.description %}title="{{ r.description }}"{% endif %}>{{ r.description | default("-", True) | truncate(144) }}</td>
-            {% set favor = r.get_favor(current_user.username) %}
-            <td class="text-secondary d-none d-md-table-cell">{{ favor.updated_at.strftime('%Y-%m-%d %H:%M') if favor and favor.updated_at else '' }}</td>
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
-</div>
-
-<div class="layout-card-view">
-  <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 my-3">
-    {% for r in reports %}
-      <div class="col">
-        <div class="modern-card">
-          <div class="modern-card-body">
-            <div class="modern-card-title">
-              <a href="{{ url_for('wodreport.view_report', report_id=r.id) }}">{{ r.title }}</a>
-            </div>
-            <div class="modern-card-desc">
-              {{ r.description | default("暂无描述", True) }}
-            </div>
-            <div class="mb-3 d-flex gap-2 flex-wrap">
-              {% set p = r.presenter %}
-              <span class="stat-badge"><i class="fa-regular fa-eye"></i> {{ p.views }}</span>
-              <span class="stat-badge"><i class="fa-regular fa-thumbs-up"></i> {{ p.likes }}</span>
-              <span class="stat-badge"><i class="fa-regular fa-star"></i> {{ p.favors }}</span>
-            </div>
-            <div class="modern-card-footer">
-              <span>
-                <a href="{{ url_for('wodreport.user_categories', username=r.owner) }}" class="text-secondary text-decoration-none">{{ r.owner }}</a>
-              </span>
-              {% set favor = r.get_favor(current_user.username) %}
-              <span><i class="fa-regular fa-clock me-1"></i>{{ favor.updated_at.strftime('%Y-%m-%d') if favor and favor.updated_at else '' }}</span>
             </div>
           </div>
-        </div>
+        {% endfor %}
       </div>
-    {% endfor %}
-  </div>
-</div>
+    </div>
 
-<div class="d-flex justify-content-center my-4">
-  {{ pagination.links }}
-</div>
-{% else %}
-<div class="empty-state">
-  <div class="empty-state-icon">
-    <i class="fa-regular fa-star"></i>
-  </div>
-  <div class="empty-state-title">还没有收藏任何战报</div>
-  <div class="empty-state-desc">在浏览战报时点击右上角的收藏按钮，即可在这里快速找到。</div>
-  <a class="btn btn-primary" href="{{ url_for('wodreport.report_page') }}">浏览全部战报</a>
-</div>
-{% endif %}
-
+    <div class="d-flex justify-content-center my-4">
+      {{ pagination.links }}
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <div class="empty-state-icon">
+        <i class="fa-regular fa-star"></i>
+      </div>
+      <div class="empty-state-title">还没有收藏任何战报</div>
+      <div class="empty-state-desc">在浏览战报时点击收藏按钮，即可在这里快速找到。</div>
+      <a class="btn btn-primary" href="{{ url_for('wodreport.report_page') }}">浏览全部战报</a>
+    </div>
+    {% endif %}
+  </section>
 </div>
 {% endblock %}

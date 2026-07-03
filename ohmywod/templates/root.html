@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}战报{% endblock %}
+{% block title %}战报 - 全部目录{% endblock %}
 
 {% block head %}
     {{ super() }}
@@ -8,96 +8,107 @@
 {% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-  <nav id="report-breadcrumb" aria-label="breadcrumb" class="mb-0">
-    <ol class="breadcrumb mb-0">
-        <li class="breadcrumb-item active">
-           <a href="/r/">目录</a>
-        </li>
-    </ol>
-  </nav>
-
-  {% if categories %}
-  <div class="layout-toggle-container">
-    <button class="btn btn-sm layout-btn-list" title="列表视图"><i class="fa-solid fa-list"></i></button>
-    <button class="btn btn-sm layout-btn-card" title="网格视图"><i class="fa-solid fa-table-cells-large"></i></button>
+<div class="page-stack root-page">
+  <div class="page-hero">
+    <div>
+      <h1 class="page-title">全部战报目录</h1>
+      <p class="page-subtitle">浏览站内公开整理的 WoD 战报目录，按所有者和说明快速找到想看的内容。</p>
+    </div>
+    {% if categories %}
+    <div class="page-actions">
+      <div class="layout-toggle-container">
+        <button class="btn btn-sm layout-btn-list" title="列表视图"><i class="fa-solid fa-list"></i></button>
+        <button class="btn btn-sm layout-btn-card" title="网格视图"><i class="fa-solid fa-table-cells-large"></i></button>
+      </div>
+    </div>
+    {% endif %}
   </div>
-  {% endif %}
-</div>
 
-{% if categories %}
-<div class="layout-list-view">
-  <div class="modern-table-responsive my-3">
-    <table class="modern-table">
-      <thead>
-        <tr>
-          <th scope="col" style="width: 60px;" class="d-none d-md-table-cell">编号</th>
-          <th scope="col" style="min-width: 150px;">名称</th>
-          <th scope="col" style="width: 100px;">战报数</th>
-          <th scope="col" style="width: 110px;">所有者</th>
-          <th scope="col" style="min-width: 200px;" class="d-none d-lg-table-cell">说明</th>
-        </tr>
-      </thead>
-      <tbody>
+  <section class="content-section">
+    <div class="section-header">
+      <div>
+        <h2 class="section-title">目录列表</h2>
+        <p class="section-subtitle">每个目录都收纳了一组相关战报。</p>
+      </div>
+    </div>
+
+    {% if categories %}
+    <div class="layout-list-view">
+      <div class="modern-table-responsive my-3">
+        <table class="modern-table">
+          <thead>
+            <tr>
+              <th scope="col" style="width: 60px;" class="d-none d-md-table-cell">编号</th>
+              <th scope="col" style="min-width: 150px;">名称</th>
+              <th scope="col" style="width: 100px;">战报数</th>
+              <th scope="col" style="width: 110px;">所有者</th>
+              <th scope="col" style="min-width: 200px;" class="d-none d-lg-table-cell">说明</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for category in categories %}
+              <tr>
+                <td class="d-none d-md-table-cell">{{ category.id }}</td>
+                <td>
+                  <a href="{{ url_for('wodreport.view_category', category_id=category.id) }}" class="fw-bold text-decoration-none text-truncate-title" title="{{ category.title }}">{{ category.title }}</a>
+                </td>
+                <td>
+                  <span class="badge bg-secondary">{{ category.display_reports_count }} 战报</span>
+                </td>
+                <td>
+                  <a href="{{ url_for('wodreport.user_categories', username=category.owner) }}" class="text-info text-decoration-none">{{ category.owner }}</a>
+                </td>
+                <td class="text-secondary d-none d-lg-table-cell" {% if category.description %}title="{{ category.description }}"{% endif %}>{{ category.description | default("-", True) | truncate(144) }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="layout-card-view">
+      <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 my-3">
         {% for category in categories %}
-          <tr>
-            <td class="d-none d-md-table-cell">{{ category.id }}</td>
-            <td>
-              <a href="{{ url_for('wodreport.view_category', category_id=category.id) }}" class="fw-bold text-decoration-none text-truncate-title" title="{{ category.title }}">{{ category.title }}</a>
-            </td>
-            <td>
-              <span class="badge bg-secondary">{{ category.display_reports_count }} 战报</span>
-            </td>
-            <td>
-              <a href="{{ url_for('wodreport.user_categories', username=category.owner) }}" class="text-info text-decoration-none">{{ category.owner }}</a>
-            </td>
-            <td class="text-secondary d-none d-lg-table-cell" {% if category.description %}title="{{ category.description }}"{% endif %}>{{ category.description | default("-", True) | truncate(144) }}</td>
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
-</div>
-
-<div class="layout-card-view">
-  <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 my-3">
-    {% for category in categories %}
-      <div class="col">
-        <div class="modern-card">
-          <div class="modern-card-body">
-            <div class="modern-card-title">
-              <a href="{{ url_for('wodreport.view_category', category_id=category.id) }}">{{ category.title }}</a>
-            </div>
-            <div class="modern-card-desc">
-              {{ category.description | default("暂无描述", True) }}
-            </div>
-            <div class="modern-card-footer">
-              <span>
-                <i class="fa-solid fa-file-invoice me-1"></i>
-                {{ category.display_reports_count }} 战报
-              </span>
-              <span>
-                <a href="{{ url_for('wodreport.user_categories', username=category.owner) }}" class="text-secondary text-decoration-none">{{ category.owner }}</a>
-              </span>
+          <div class="col">
+            <div class="modern-card">
+              <div class="modern-card-body">
+                <div class="modern-card-title">
+                  <a href="{{ url_for('wodreport.view_category', category_id=category.id) }}">{{ category.title }}</a>
+                </div>
+                <div class="modern-card-desc">
+                  {{ category.description | default("暂无描述", True) }}
+                </div>
+                <div class="modern-card-footer">
+                  <span>
+                    <i class="fa-solid fa-file-invoice me-1"></i>
+                    {{ category.display_reports_count }} 战报
+                  </span>
+                  <span>
+                    <a href="{{ url_for('wodreport.user_categories', username=category.owner) }}" class="text-secondary text-decoration-none">{{ category.owner }}</a>
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
+        {% endfor %}
       </div>
-    {% endfor %}
-  </div>
-</div>
+    </div>
 
-<div class="d-flex justify-content-center my-4">
-  {{ pagination.links }}
+    <div class="d-flex justify-content-center my-4">
+      {{ pagination.links }}
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <div class="empty-state-icon">
+        <i class="fa-solid fa-folder-open"></i>
+      </div>
+      <div class="empty-state-title">还没有任何目录</div>
+      <div class="empty-state-desc">暂时还没有可浏览的公开战报目录。</div>
+      {% if current_user.is_authenticated %}
+      <a class="btn btn-primary" href="{{ url_for('wodreport.new_category') }}">创建新目录</a>
+      {% endif %}
+    </div>
+    {% endif %}
+  </section>
 </div>
-{% else %}
-<div class="empty-state">
-  <div class="empty-state-icon">
-    <i class="fa-solid fa-folder-open"></i>
-  </div>
-  <div class="empty-state-title">还没有任何目录</div>
-  <div class="empty-state-desc">快去创建一个属于你的战报目录吧！</div>
-  <a class="btn btn-primary" href="{{ url_for('wodreport.new_category') }}">创建新目录</a>
-</div>
-{% endif %}
 {% endblock %}

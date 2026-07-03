@@ -1,5 +1,43 @@
 {% extends 'admin/master.html' %}
 
 {% block body %}
-  Hello World from MyView!
+<div class="container-fluid">
+  <div class="page-header">
+    <h1>OhMyWoD 管理后台 <small>数据维护入口</small></h1>
+  </div>
+
+  <div class="row">
+    <div class="col-sm-6 col-lg-4">
+      <div class="panel panel-primary">
+        <div class="panel-heading"><strong>战报数据</strong></div>
+        <div class="list-group">
+          <a class="list-group-item" href="{{ url_for('report.index_view') }}">战报</a>
+          <a class="list-group-item" href="{{ url_for('category.index_view') }}">目录</a>
+          <a class="list-group-item" href="{{ url_for('report_details.index_view') }}">战报元信息</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-sm-6 col-lg-4">
+      <div class="panel panel-info">
+        <div class="panel-heading"><strong>用户与互动</strong></div>
+        <div class="list-group">
+          <a class="list-group-item" href="{{ url_for('user.index_view') }}">用户</a>
+          <a class="list-group-item" href="{{ url_for('favorite.index_view') }}">收藏</a>
+          <a class="list-group-item" href="{{ url_for('feedback.index_view') }}">反馈</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-sm-12 col-lg-4">
+      <div class="panel panel-default">
+        <div class="panel-heading"><strong>操作提醒</strong></div>
+        <div class="panel-body">
+          <p>这里用于直接维护数据库记录。删除、批量修改和状态字段调整会影响前台展示，请在操作前确认对象和范围。</p>
+          <p class="text-muted small">需要回到前台时，可以打开站点首页或“全部战报”页面检查展示效果。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 {% endblock %}

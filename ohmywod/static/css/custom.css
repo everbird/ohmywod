@@ -1,7 +1,6 @@
 /* Application shell and design tokens */
 :root {
     --app-sidebar-width: 335px;
-    --app-topbar-height: 64px;
     --app-shell-transition: all 0.28s ease;
     --app-content-max-width: 1440px;
 }
@@ -133,33 +132,32 @@ body {
     width: 100%;
 }
 
-#navbar,
-.app-topbar {
-    min-width: 300px;
-    min-height: var(--app-topbar-height);
-    margin-left: var(--app-sidebar-width);
-    transition: var(--app-shell-transition);
-    background-color: var(--bs-primary, #0d6efd);
-    box-shadow: 0 1px 0 var(--bs-border-color-translucent, rgba(255, 255, 255, 0.12));
-}
-
-#navbar.active {
-    margin-left: 0;
-}
-
 #sidebarCollapse {
-    width: 40px;
-    height: 40px;
+    position: fixed;
+    top: 0.75rem;
+    left: 0.75rem;
+    z-index: 1001;
+    width: 2.5rem;
+    height: 2.5rem;
     border-width: 0;
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    box-shadow: 0 0.5rem 1.25rem rgba(0, 0, 0, 0.22);
+    transition: var(--app-shell-transition);
+}
+
+#sidebarCollapse.active {
+    opacity: 1;
+    pointer-events: auto;
 }
 
 #right-content,
 .app-main {
     width: min(100%, var(--app-content-max-width));
-    margin: var(--app-topbar-height) auto 0;
+    margin: 0 auto;
     padding: 1rem;
 }
 
@@ -174,7 +172,6 @@ body {
 @media (max-width: 768px) {
     :root {
         --app-sidebar-width: min(335px, 88vw);
-        --app-topbar-height: 56px;
     }
 
     #content {
@@ -199,12 +196,14 @@ body {
         transform: none;
     }
 
-    #navbar {
-        margin-left: 0;
+    #sidebarCollapse {
+        opacity: 1;
+        pointer-events: auto;
     }
 
-    #navbar.active {
-        margin-left: var(--app-sidebar-width);
+    #sidebarCollapse.active {
+        opacity: 0;
+        pointer-events: none;
     }
 
     #right-content,
@@ -562,9 +561,6 @@ a:focus {
     margin-top: 0 !important;
 }
 
-.app-topbar {
-    background-color: #17202a;
-}
 
 .modern-table-responsive,
 .modern-card,
@@ -648,7 +644,7 @@ a:focus {
 .page-stack {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: 0.75rem;
 }
 
 .page-hero,
@@ -663,31 +659,25 @@ a:focus {
 
 .page-hero {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     justify-content: space-between;
-    gap: 1rem;
-    padding: 1.25rem;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
 }
 
-.page-eyebrow {
-    color: var(--app-muted);
-    font-size: 0.8rem;
-    font-weight: 700;
-    margin: 0 0 0.35rem;
-    text-transform: uppercase;
-}
 
 .page-title {
     color: var(--bs-heading-color);
-    font-size: clamp(1.55rem, 3vw, 2.2rem);
-    line-height: 1.18;
+    font-size: clamp(1.25rem, 2vw, 1.55rem);
+    line-height: 1.2;
     margin: 0;
 }
 
 .page-subtitle {
     color: var(--app-muted);
-    margin: 0.65rem 0 0;
+    margin: 0.3rem 0 0;
     max-width: 52rem;
+    font-size: 0.92rem;
 }
 
 .page-actions,
@@ -820,7 +810,8 @@ a:focus {
 @media (max-width: 767.98px) {
     .page-hero {
         flex-direction: column;
-        padding: 1rem;
+        align-items: stretch;
+        padding: 0.75rem;
     }
 
     .page-actions,

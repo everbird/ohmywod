@@ -68,7 +68,6 @@
 </div>
 <div id="description" class="page-hero">
   <div>
-    <p class="page-eyebrow">目录</p>
     <h1 class="page-title">{{ category.title }}</h1>
     <div id="category-desc" class="category-description">
     {{ category.description_rendered | safe }}
@@ -90,7 +89,7 @@
           <form action="{{ url_for("wodreport.delete_category", category_id=category.id) }}" method="POST">
             <div class="modal-header">
               <h5 class="modal-title" id="delete-category-modal-label">删除目录</h5>
-              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="关闭"></button>
             </div>
             <div class="modal-body">
               你是否确认要删除目录 {{ category.title }}？<br>
@@ -98,7 +97,7 @@
             </div>
             <div class="modal-footer">
               <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
-              <button type="submit" class="btn btn-primary">确认删除</button>
+              <button type="submit" class="btn btn-danger">确认删除</button>
             </div>
           </form>
         </div>
