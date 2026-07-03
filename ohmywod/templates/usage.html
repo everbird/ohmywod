@@ -143,12 +143,12 @@
       <table class="modern-table">
         <thead>
           <tr>
-            <th scope="col" style="width: 80px;">编号</th>
-            <th scope="col" style="min-width: 150px;">战报名称</th>
-            <th scope="col" style="width: 150px;">所属目录</th>
-            <th scope="col" style="width: 120px;">所有者</th>
-            <th scope="col" style="width: 180px;">上传时间</th>
-            <th scope="col" style="width: 180px;">互动数据</th>
+            <th scope="col" style="width: 60px;">编号</th>
+            <th scope="col">战报名称</th>
+            <th scope="col" style="width: 140px;">所属目录</th>
+            <th scope="col" style="width: 100px;">所有者</th>
+            <th scope="col" style="width: 160px; white-space: nowrap;">上传时间</th>
+            <th scope="col" style="width: 150px;">互动数据</th>
           </tr>
         </thead>
         <tbody>
@@ -164,7 +164,7 @@
             <td>
               <a href="{{ url_for('wodreport.user_categories', username=r.owner) }}" class="text-info text-decoration-none">{{ r.owner }}</a>
             </td>
-            <td>
+            <td style="white-space: nowrap;">
               <span class="text-secondary">{{ r.created_at.strftime('%Y-%m-%d %H:%M:%S') if r.created_at else '-' }}</span>
             </td>
             <td>
