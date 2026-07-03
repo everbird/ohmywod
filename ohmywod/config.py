@@ -4,6 +4,10 @@ class DefaultConfig(object):
     DEBUG = False
     SECRET_KEY = "<secret:secret_key>"
 
+    # Site is HTTPS-only (behind nginx); harden the session cookie.
+    SESSION_COOKIE_SECURE = True
+    SESSION_COOKIE_SAMESITE = "Lax"
+
     # --- SQLAlchemy ---
     SQLALCHEMY_DATABASE_URI = "sqlite:////data/ohmywod/ohmywod_d.sqlite"
     SQLALCHEMY_ECHO = False

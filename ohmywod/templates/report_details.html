@@ -162,6 +162,7 @@
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
       <form action="{{ url_for("wodreport.delete_report", report_id=report.id) }}" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="modal-header">
           <h5 class="modal-title" id="delete-report-modal-label">删除战报</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="关闭"></button>

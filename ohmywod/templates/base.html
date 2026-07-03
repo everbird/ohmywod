@@ -3,6 +3,7 @@
     <head>
         {% block head %}
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="csrf-token" content="{{ csrf_token() }}">
         <link rel="shortcut icon" href="{{ url_for('static', filename='img/favicon.ico') }}">
         <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
         <link rel="stylesheet" href="{{ url_for('static', filename='css/font-awesome-6.2.0-all.min.css' )}}">
@@ -165,6 +166,18 @@
                     <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
                     <script src="{{ url_for('static', filename='js/vendor/js.cookie.min-3.0.1.js') }}"></script>
                     <script src="{{ url_for('static', filename='js/vendor/popper-v2.11.6.js') }}"></script>
+                    <script>
+                        // Attach the CSRF token to every jQuery AJAX POST/PUT/PATCH/DELETE
+                        // so existing $.post()/$.ajax() calls don't need to be touched.
+                        $.ajaxSetup({
+                            beforeSend: function (xhr, settings) {
+                                var method = (settings.type || 'GET').toUpperCase();
+                                if (!/^(GET|HEAD|OPTIONS|TRACE)$/.test(method) && !this.crossDomain) {
+                                    xhr.setRequestHeader('X-CSRFToken', $('meta[name="csrf-token"]').attr('content'));
+                                }
+                            }
+                        });
+                    </script>
                     <script>
                         // REF: https://css-tricks.com/the-trick-to-viewport-units-on-mobile/
                         // First we get the viewport height and we multiple it by 1% to get a value for a vh unit

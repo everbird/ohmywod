@@ -29,6 +29,7 @@
 
   {% if reports %}
   <form action="{{ url_for('wodreport.reorder_category', category_id=category.id)}}" method="POST" class="content-section reorder-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <div class="section-header reorder-section-header">
       <div>
         <h2 class="section-title">战报列表</h2>

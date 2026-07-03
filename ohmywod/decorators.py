@@ -5,6 +5,7 @@
 Snippet from http://flask.pocoo.org/snippets/8/
 """
 
+import hmac
 from functools import wraps
 
 from flask import request, Response, current_app
@@ -15,8 +16,8 @@ def check_auth(username, password):
     password combination is valid.
     """
     return (
-        username == current_app.config["FLASK_ADMIN_USERNAME"]
-        and password == current_app.config["FLASK_ADMIN_PASSWD"]
+        hmac.compare_digest(username, current_app.config["FLASK_ADMIN_USERNAME"])
+        and hmac.compare_digest(password, current_app.config["FLASK_ADMIN_PASSWD"])
     )
 
 

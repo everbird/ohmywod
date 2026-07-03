@@ -14,3 +14,4 @@ redis-store.conf
 .vscode/
 .coverage
 .pytest_cache/
+.claude

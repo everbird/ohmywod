@@ -7,6 +7,7 @@ from flask_login import LoginManager
 from flask_paginate import Pagination, get_page_args
 from flask_redis import FlaskRedis
 from flask_sqlalchemy import SQLAlchemy
+from flask_wtf import CSRFProtect
 
 from ohmywod.decorators import requires_auth
 
@@ -25,3 +26,4 @@ login_manager = LoginManager()
 ldap_manager = LDAP3LoginManager()
 redis = FlaskRedis()
 cache = Cache()
+csrf = CSRFProtect()

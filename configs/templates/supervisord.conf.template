@@ -23,6 +23,8 @@ command=$GUNICORN_BIN_PATH $GUNICORN_EXTRA_ARGS -c gunicorn_config.py deploy:app
 directory=%(here)s
 redirect_stderr=true
 stdout_logfile=$VAR_PATH/$APP_NAME/log/supervisord-web-out.log
+stdout_logfile_maxbytes=20MB
+stdout_logfile_backups=5
 stderr_logfile=$VAR_PATH/$APP_NAME/log/supervisord-web-error.log
 
 [program:redis-store]

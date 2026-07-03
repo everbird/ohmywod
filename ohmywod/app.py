@@ -21,7 +21,7 @@ except ImportError as e:
         raise
 
 from ohmywod.extensions import (
-    db, admin, login_manager, ldap_manager, redis, cache
+    db, admin, login_manager, ldap_manager, redis, cache, csrf
 )
 from ohmywod.decorators import check_auth
 from ohmywod.models.favorite import Favorite
@@ -138,6 +138,7 @@ def configure_extensions(app):
     db.init_app(app)
     login_manager.init_app(app)
     ldap_manager.init_app(app)
+    csrf.init_app(app)
 
     if app.config.get('LDAP_MOCK', False):
         from ohmywod.ldap_mock import init_mock_ldap
@@ -181,6 +182,14 @@ def configure_extensions(app):
         endpoint='feedback', category='Misc'))
 
     admin.init_app(app)
+
+    # Flask-Admin ships its own auth gate (HTTP Basic, see AuthModelView
+    # above) and its templates/JS were never wired up to send CSRF tokens.
+    # Exempt it so the global CSRFProtect below doesn't 400 every admin
+    # form submit/delete action.
+    for bp in app.blueprints.values():
+        if bp.url_prefix and bp.url_prefix.startswith('/admin'):
+            csrf.exempt(bp)
 
 
 def configure_modules(app, modules):

@@ -87,6 +87,7 @@
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
           <form action="{{ url_for("wodreport.delete_category", category_id=category.id) }}" method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="modal-header">
               <h5 class="modal-title" id="delete-category-modal-label">删除目录</h5>
               <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="关闭"></button>
@@ -222,6 +223,7 @@
         server: {
             process: {
                 url: "{{ url_for('upload.process', category_id=category.id) }}",
+                headers: { 'X-CSRFToken': "{{ csrf_token() }}" },
                 onerror: (response) => response
             }
         },
