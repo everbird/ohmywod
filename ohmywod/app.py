@@ -166,7 +166,7 @@ def configure_extensions(app):
                     'You have to login with proper credentials', 401,
                     {'WWW-Authenticate': 'Basic realm="Login Required"'})
 
-        return AuthModelView(model_class, db.session, *args, **kwargs)
+        return AuthModelView(model_class, db, *args, **kwargs)
 
     admin.add_view(_make_model_view(Report, endpoint='report',
         category='Online'))

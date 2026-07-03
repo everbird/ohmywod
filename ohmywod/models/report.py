@@ -3,7 +3,7 @@ from datetime import datetime
 
 import bbcode
 from functools import reduce
-from flask_sqlalchemy import BaseQuery
+from flask_sqlalchemy.query import Query as BaseQuery
 from sqlalchemy.orm import backref, relationship
 
 from ohmywod.extensions import db

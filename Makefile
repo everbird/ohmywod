@@ -1,4 +1,4 @@
-PYTHON_VERSION ?= 3.9.13
+PYTHON_VERSION ?= 3.12.8
 
 # Determine python executable to use for venv creation
 # If pyenv is available, use the specified PYTHON_VERSION
@@ -74,7 +74,7 @@ ensure-pyenv-python:
 		$(PYTHON) -m venv .venv; \
 		.venv/bin/pip install --upgrade pip; \
 		.venv/bin/pip install -r requirements.txt; \
-		.venv/bin/pip install supervisor "Flask-Admin<2.0" "werkzeug<3.0.0" "setuptools<82"; \
+		.venv/bin/pip install supervisor; \
 	fi
 
 generate: .venv

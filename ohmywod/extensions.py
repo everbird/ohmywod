@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from flask_admin import Admin, AdminIndexView, expose
+from flask_admin.theme import Bootstrap4Theme
 from flask_caching import Cache
 from flask_ldap3_login import LDAP3LoginManager
 from flask_login import LoginManager
@@ -21,7 +22,7 @@ class AuthAdminHome(AdminIndexView):
         return self.render('admin_index.html')
 
 db = SQLAlchemy()
-admin = Admin(name='Admin of Ohmywod', index_view=AuthAdminHome(), template_mode='bootstrap3')
+admin = Admin(name='Admin of Ohmywod', index_view=AuthAdminHome(), theme=Bootstrap4Theme(swatch='darkly'))
 login_manager = LoginManager()
 ldap_manager = LDAP3LoginManager()
 redis = FlaskRedis()
