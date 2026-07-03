@@ -427,7 +427,7 @@ body {
     transition: color 0.2s ease;
 }
 .modern-card-title a:hover {
-    color: var(--bs-primary, #0d6efd);
+    color: var(--app-link);
 }
 .modern-card-desc {
     font-size: 0.9rem;
@@ -539,7 +539,7 @@ html.layout-pref-card .layout-list-view, body.layout-pref-card .layout-list-view
     --app-surface-hover: #243042;
     --app-border: #303a46;
     --app-muted: #aab4c0;
-    --app-link: #8ab4ff;
+    --app-link: #2ecc71;
 }
 
 html,
@@ -554,7 +554,7 @@ a {
 
 a:hover,
 a:focus {
-    color: #b6ccff;
+    color: #5eff9c;
 }
 
 .app-main > .m-3:first-child,
