@@ -134,7 +134,10 @@ def help_page():
 
 @frontend.route("/usage")
 def usage_page():
-    return rt("usage.html")
+    rc = ReportController()
+    stats = rc.get_system_stats()
+    latest_reports = rc.get_latest_reports(limit=5)
+    return rt("usage.html", stats=stats, latest_reports=latest_reports)
 
 
 class FeedbackForm(FlaskForm):

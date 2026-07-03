@@ -120,3 +120,27 @@ def test_feedback_controller(db):
     feedbacks = Feedback.query.all()
     assert len(feedbacks) == 1
     assert feedbacks[0].content == "This site is awesome!"
+
+
+def test_report_controller_system_stats_and_latest(db):
+    rc = ReportController()
+    
+    from ohmywod.controllers.user import UserController
+    uc = UserController()
+    uc.save("stats_john", "Stats John", "statsjohn@example.com", "password")
+    
+    cat = rc.create_category("stats_cat", "Category Stats", "stats_john")
+    rc.create_report(cat.id, "report_latest_1", "stats_john")
+    rc.create_report(cat.id, "report_latest_2", "stats_john")
+    
+    # Check stats
+    stats = rc.get_system_stats()
+    assert stats['users'] >= 1
+    assert stats['categories'] >= 1
+    assert stats['reports'] >= 2
+    
+    # Check latest reports
+    latest = rc.get_latest_reports(limit=5)
+    assert len(latest) >= 2
+    assert latest[0].name in ["report_latest_1", "report_latest_2"]
+

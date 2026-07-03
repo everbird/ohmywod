@@ -325,3 +325,54 @@ class ReportController:
             query = query.limit(limit)
 
         return query.all(), total
+
+    def get_system_stats(self):
+        from ohmywod.extensions import cache
+        from ohmywod.models.user import User
+        
+        stats = cache.get("system_stats")
+        if stats is not None:
+            return stats
+
+        reports_count = Report.query.filter(Report.status == None).count()
+        categories_count = ReportCategory.query.filter(ReportCategory.status == None).count()
+        users_count = User.query.count()
+        
+        favors_count = Favorite.query.filter(
+            Favorite.ftype == "report",
+            Favorite.status == 0
+        ).join(Report, Favorite.report_id == Report.id).filter(Report.status == None).count()
+        
+        active_report_ids = [r[0] for r in db.session.query(Report.id).filter(Report.status == None).all()]
+        
+        total_likes = 0
+        total_views = 0
+        if active_report_ids:
+            pipe = redis.pipeline()
+            for r_id in active_report_ids:
+                pipe.get(f"/stats/report/{r_id}/likes")
+                pipe.get(f"/stats/report/{r_id}/views")
+            results = pipe.execute()
+            
+            for idx, r_id in enumerate(active_report_ids):
+                likes_val = results[idx * 2]
+                views_val = results[idx * 2 + 1]
+                total_likes += int(likes_val) if likes_val else 0
+                total_views += int(views_val) if views_val else 0
+                
+        stats = {
+            'reports': reports_count,
+            'categories': categories_count,
+            'users': users_count,
+            'favors': favors_count,
+            'likes': total_likes,
+            'views': total_views
+        }
+        cache.set("system_stats", stats, timeout=300)
+        return stats
+
+    def get_latest_reports(self, limit=5):
+        reports = Report.query.filter(Report.status == None).order_by(Report.created_at.desc()).limit(limit).all()
+        self.bulk_load_report_stats(reports)
+        return reports
+

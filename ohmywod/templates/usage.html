@@ -77,5 +77,118 @@
       {% endif %}
     </section>
   </div>
+
+  <div class="page-hero mt-5">
+    <div>
+      <h1 class="page-title">数据统计</h1>
+      <p class="page-subtitle">查看系统的总体数据运行指标和用户交互数据。</p>
+    </div>
+  </div>
+
+  <div class="stats-grid mb-5">
+    <div class="stats-card">
+      <div class="stats-card-icon text-primary"><i class="fa-solid fa-file-contract"></i></div>
+      <div class="stats-card-content">
+        <div class="stats-number">{{ stats.reports }}</div>
+        <div class="stats-label">当前战报</div>
+      </div>
+    </div>
+    <div class="stats-card">
+      <div class="stats-card-icon text-info"><i class="fa-solid fa-folder-open"></i></div>
+      <div class="stats-card-content">
+        <div class="stats-number">{{ stats.categories }}</div>
+        <div class="stats-label">当前目录</div>
+      </div>
+    </div>
+    <div class="stats-card">
+      <div class="stats-card-icon text-success"><i class="fa-solid fa-users"></i></div>
+      <div class="stats-card-content">
+        <div class="stats-number">{{ stats.users }}</div>
+        <div class="stats-label">注册用户</div>
+      </div>
+    </div>
+    <div class="stats-card">
+      <div class="stats-card-icon text-warning"><i class="fa-solid fa-star"></i></div>
+      <div class="stats-card-content">
+        <div class="stats-number">{{ stats.favors }}</div>
+        <div class="stats-label">收藏数量</div>
+      </div>
+    </div>
+    <div class="stats-card">
+      <div class="stats-card-icon text-danger"><i class="fa-solid fa-heart"></i></div>
+      <div class="stats-card-content">
+        <div class="stats-number">{{ stats.likes }}</div>
+        <div class="stats-label">点赞数量</div>
+      </div>
+    </div>
+    <div class="stats-card">
+      <div class="stats-card-icon text-light"><i class="fa-solid fa-eye"></i></div>
+      <div class="stats-card-content">
+        <div class="stats-number">{{ stats.views }}</div>
+        <div class="stats-label">观看次数</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="page-hero mt-5">
+    <div>
+      <h1 class="page-title">最新上传战报</h1>
+      <p class="page-subtitle">近期由用户上传的 5 篇最新战报。</p>
+    </div>
+  </div>
+
+  <div class="content-section mb-5">
+    {% if latest_reports %}
+    <div class="modern-table-responsive">
+      <table class="modern-table">
+        <thead>
+          <tr>
+            <th scope="col" style="width: 80px;">编号</th>
+            <th scope="col" style="min-width: 150px;">战报名称</th>
+            <th scope="col" style="width: 150px;">所属目录</th>
+            <th scope="col" style="width: 120px;">所有者</th>
+            <th scope="col" style="width: 180px;">上传时间</th>
+            <th scope="col" style="width: 180px;">互动数据</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in latest_reports %}
+          <tr>
+            <td>{{ r.id }}</td>
+            <td>
+              <a href="{{ url_for('wodreport.view_report', report_id=r.id) }}" class="fw-bold text-decoration-none text-truncate-title" title="{{ r.title }}">{{ r.title }}</a>
+            </td>
+            <td>
+              <a href="{{ url_for('wodreport.view_category', category_id=r.category.id) }}" class="text-decoration-none text-truncate-title" title="{{ r.category.title }}">{{ r.category.title }}</a>
+            </td>
+            <td>
+              <a href="{{ url_for('wodreport.user_categories', username=r.owner) }}" class="text-info text-decoration-none">{{ r.owner }}</a>
+            </td>
+            <td>
+              <span class="text-secondary">{{ r.created_at.strftime('%Y-%m-%d %H:%M:%S') if r.created_at else '-' }}</span>
+            </td>
+            <td>
+              <div class="d-flex gap-1">
+                {% set p = r.presenter %}
+                <span class="stat-badge" title="观看"><i class="fa-regular fa-eye"></i> {{ p.views }}</span>
+                <span class="stat-badge" title="点赞"><i class="fa-regular fa-thumbs-up"></i> {{ p.likes }}</span>
+                <span class="stat-badge" title="收藏"><i class="fa-regular fa-star"></i> {{ p.favors }}</span>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <div class="empty-state-icon">
+        <i class="fa-solid fa-folder-open"></i>
+      </div>
+      <div class="empty-state-title">暂无最新战报</div>
+      <div class="empty-state-desc">系统内目前还没有上传任何战报。</div>
+    </div>
+    {% endif %}
+  </div>
 </div>
 {% endblock %}
