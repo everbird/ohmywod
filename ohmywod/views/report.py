@@ -153,17 +153,29 @@ def view_category(category_id):
     )
 
 
+CATEGORY_ORDER_BY_CHOICES = [
+    ("ctime", "创建时间"),
+    ("reversed_ctime", "创建时间（倒序）"),
+    ("name", "名称"),
+    ("reversed_name", "名称（倒序）"),
+    ("customized", "手动排序"),
+    ("reversed_customized", "手动排序（倒序）"),
+]
+CATEGORY_ORDER_BY_LABELS = dict(CATEGORY_ORDER_BY_CHOICES)
+
+
+def category_order_by_label(order_by):
+    return CATEGORY_ORDER_BY_LABELS.get(order_by or "ctime", CATEGORY_ORDER_BY_LABELS["ctime"])
+
+
+def is_manual_category_order(order_by):
+    return (order_by or "").replace("reversed_", "") == "customized"
+
+
 class EditCategoryForm(FlaskForm):
     order_by = SelectField(
-        "战报排序方式",
-        choices=[
-            ("ctime", "创建时间"),
-            ("name", "名称"),
-            ("customized", "自定义顺序"),
-            ("reversed_ctime", "创建时间（倒序）"),
-            ("reversed_name", "名称（倒序）"),
-            ("reversed_customized", "自定义顺序（倒序）"),
-        ]
+        "默认显示顺序",
+        choices=CATEGORY_ORDER_BY_CHOICES
     )
     display_name = StringField("display_name", validators=[Optional()])
     description = StringField("description", widget=TextArea())
@@ -210,7 +222,7 @@ def reorder_category(category_id):
     updates = []
     d = request.form
     for k, v in d.items():
-        if not v or not v.isnumeric():
+        if not k.startswith("order-") or not v or not v.isnumeric():
             continue
 
         rid = k.replace("order-", "")
@@ -221,10 +233,20 @@ def reorder_category(category_id):
         if r and r.category_id == category.id:
             r.order = order
 
+    if request.method == "POST" and updates and not is_manual_category_order(category.order_by):
+        category.order_by = "customized"
+        db.session.add(category)
+
     db.session.commit()
 
     reports, _ = rc.get_category_reports(category)
-    return rt("reorder_category.html", category=category, reports=reports)
+    return rt(
+        "reorder_category.html",
+        category=category,
+        reports=reports,
+        current_order_label=category_order_by_label(category.order_by),
+        manual_order_active=is_manual_category_order(category.order_by)
+    )
 
 
 @report.route("/category/<category_id>/delete", methods=["POST"])

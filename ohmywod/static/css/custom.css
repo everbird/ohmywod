@@ -1386,14 +1386,24 @@ a:focus {
 }
 
 .info-panel > i {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.25rem;
     color: var(--bs-primary, #0d6efd);
-    margin-bottom: 0.75rem;
+    margin: 0 0.5rem 0.55rem 0;
+    vertical-align: -0.12em;
 }
 
 .info-panel h3,
 .usage-unavailable h3 {
     font-size: 1rem;
     margin-bottom: 0.5rem;
+}
+
+.info-panel h3 {
+    display: inline;
+    margin-bottom: 0;
 }
 
 .info-panel p,
@@ -1403,9 +1413,12 @@ a:focus {
     margin-bottom: 0;
 }
 
+.info-panel p {
+    margin-top: 0.35rem;
+}
+
 .donate-panel {
-    display: grid;
-    gap: 0.75rem;
+    display: block;
 }
 
 .donate-panel p {
@@ -1413,6 +1426,8 @@ a:focus {
 }
 
 .donate-qr {
+    display: block;
+    margin-top: 0.75rem;
     width: min(100%, 12rem);
     border: 1px solid var(--app-border);
     border-radius: 8px;

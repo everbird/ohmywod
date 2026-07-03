@@ -42,6 +42,7 @@
         <div class="form-field">
           <label class="form-label" for="{{ form.order_by.id }}">{{ form.order_by.label.text }}</label>
           {{ form.order_by(class="form-control is-invalid" if form.order_by.errors else "form-control") }}
+          <div class="form-text">如果选择“手动排序”，请在目录页点击“调整手动排序”来维护具体顺序。</div>
           {% for error in form.order_by.errors %}
           <div class="invalid-feedback">{{ error }}</div>
           {% endfor %}
