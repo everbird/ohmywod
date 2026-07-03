@@ -2,12 +2,13 @@
 # -*- coding: utf-8 -*-
 
 import os
+import re
 import shutil
+import unicodedata
 from pathlib import Path
 from zipfile import ZipFile
 
 from flask import Blueprint, redirect, request, abort, current_app, flash
-from werkzeug.utils import secure_filename
 from flask_login import current_user
 
 from ohmywod.controllers.report import ReportController
@@ -17,6 +18,21 @@ from ohmywod.extensions import db
 upload = Blueprint("upload", __name__)
 
 ALLOWED_EXTENSIONS = {'zip'}
+UNSAFE_FILENAME_CHARS = re.compile(r'[\x00-\x1f\x7f<>:"|?*]+')
+FILENAME_WHITESPACE = re.compile(r'\s+')
+
+
+def secure_upload_filename(filename):
+    filename = unicodedata.normalize("NFKC", filename or "")
+    filename = filename.replace("\\", "/").rsplit("/", 1)[-1]
+    filename = UNSAFE_FILENAME_CHARS.sub("_", filename)
+    filename = FILENAME_WHITESPACE.sub("_", filename).strip("._ ")
+    filename = re.sub(r'_+', '_', filename)
+    return filename
+
+
+def report_name_from_filename(filename):
+    return filename.rsplit(".", 1)[0]
 
 def allowed_file(filename):
     return '.' in filename and \
@@ -52,7 +68,9 @@ def process(category_id):
         return "上传失败：未选择任何文件", 400
 
     if fobj and allowed_file(fobj.filename):
-        filename = secure_filename(fobj.filename)
+        filename = secure_upload_filename(fobj.filename)
+        if not filename or not allowed_file(filename):
+            return "上传失败：文件名无效", 400
         uid = os.path.join(str(category.id), filename)
         dpath = Path(
             os.path.join(
@@ -68,7 +86,7 @@ def process(category_id):
             fobj.save(os.fspath(fpath))
 
             with ZipFile(fpath, 'r') as z:
-                _filename = filename.replace(".zip", "")
+                _filename = report_name_from_filename(filename)
                 data_dir = current_app.config["DATA_DIR"]
                 tpath = Path(data_dir) / category.owner / category.name / _filename
                 tpath.mkdir(parents=True, exist_ok=True)

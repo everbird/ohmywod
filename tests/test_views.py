@@ -202,3 +202,37 @@ def test_upload_flow(authenticated_client, app, db):
     assert os.path.exists(extracted_html)
     with open(extracted_html, 'r', encoding='utf-8') as f:
         assert "Uploaded Report HTML" in f.read()
+
+
+def test_upload_preserves_chinese_report_filename(authenticated_client, app, db):
+    rc = ReportController()
+    cat = rc.create_category("cat1", "Cat Desc", "testuser")
+    report_filename = "\u542b\u4e2d\u6587\u7684\u6218\u62a5.zip"
+    report_name = "\u542b\u4e2d\u6587\u7684\u6218\u62a5"
+
+    zip_buffer = io.BytesIO()
+    with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as z:
+        z.writestr('index.html', '<html><body>Chinese Report HTML</body></html>')
+
+    zip_buffer.seek(0)
+
+    res = authenticated_client.post(
+        f'/upload/process/{cat.id}',
+        data={'filepond': (zip_buffer, report_filename)},
+        content_type='multipart/form-data'
+    )
+
+    assert res.status_code == 200
+    assert f"{cat.id}/{report_filename}" in res.data.decode('utf-8')
+
+    reports = Report.query.filter_by(category_id=cat.id).all()
+    assert len(reports) == 1
+    assert reports[0].name == report_name
+
+    uploaded_zip = os.path.join(app.config['UPLOAD_DIR'], 'testuser', 'cat1', report_filename)
+    extracted_html = os.path.join(app.config['DATA_DIR'], 'testuser', 'cat1', report_name, 'index.html')
+
+    assert os.path.exists(uploaded_zip)
+    assert os.path.exists(extracted_html)
+    with open(extracted_html, 'r', encoding='utf-8') as f:
+        assert "Chinese Report HTML" in f.read()

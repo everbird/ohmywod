@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}战报 - details{% endblock %}
+{% block title %}战报 - {{ report.title }}{% endblock %}
 
 {% block content %}
 <div class="page-stack report-detail-page">
@@ -21,11 +21,17 @@
   <div class="page-hero report-hero">
     <div>
       <p class="page-eyebrow">战报详情</p>
-      <h1 class="page-title">{{ report.title }}</h1>
+      <h1 class="page-title report-title-copy">{{ report.title }}</h1>
       <p class="page-subtitle">
         位于 <a href="{{ url_for('wodreport.view_category', category_id=report.category_id) }}">{{ report.category.title }}</a>
         {% if report.owner %}<span class="mx-1">&middot;</span>由 <a href="{{ url_for('wodreport.user_categories', username=report.owner) }}">{{ report.owner }}</a> 分享{% endif %}
       </p>
+      <div class="report-hero-metrics" aria-label="战报统计">
+        <span class="stat-badge"><i class="fa-regular fa-eye"></i> {{ report_presenter.views }}</span>
+        <span class="stat-badge"><i class="fa-regular fa-thumbs-up"></i> {{ report_presenter.likes }}</span>
+        <span class="stat-badge"><i class="fa-regular fa-star"></i> {{ report_presenter.favors }}</span>
+        <span class="stat-badge">ID {{ report.id }}</span>
+      </div>
     </div>
     <div class="page-actions">
       <button id="fullscreen-btn" class="btn btn-primary" type="button"><i class="fa-solid fa-expand me-1"></i>查看加强版</button>
@@ -56,18 +62,18 @@
         <div class="report-frame-shell iframe-loading">
           <div id="spinner" class="report-spinner text-center align-items-center">
             <div class="spinner-border align-items-center mx-auto" role="status">
-              <span class="visually-hidden">Loading...</span>
+              <span class="visually-hidden">正在加载战报</span>
             </div>
           </div>
-          <iframe id="report_iframe" class="embed-responsive-item" onload="$('#spinner').hide(); $('.iframe-loading iframe').show();" src="{{ url_for("wodreport.report_raw", username=report.owner, category=report.category.name, name=report.name, subpath=subpath) }}" title="战报详情"></iframe>
+          <iframe id="report_iframe" class="embed-responsive-item" onload="$('#spinner').hide(); $('.iframe-loading iframe').show();" src="{{ url_for("wodreport.report_raw", username=report.owner, category=report.category.name, name=report.name, subpath=subpath) }}" title="原始战报预览"></iframe>
         </div>
 
         <div class="report-action-bar">
-          <button type="button" class="btn btn-soft report-metric" aria-label="浏览次数">
+          <button type="button" class="btn btn-soft report-metric" aria-label="浏览次数" title="浏览次数">
             <i class="fa-solid fa-eye"></i> {{ report_presenter.views }}
           </button>
           {% set liked = current_user.is_authenticated and report_presenter.is_liked_by(current_user.username) %}
-          <button type="button" id="like-btn" class="btn btn-soft report-metric {% if liked %}liked-on{% endif %} {% if not current_user.is_authenticated %}disabled{% endif %}">
+          <button type="button" id="like-btn" class="btn btn-soft report-metric {% if liked %}liked-on{% endif %} {% if not current_user.is_authenticated %}disabled{% endif %}" aria-label="点赞" title="点赞">
             {% if liked %}
             <i class="text-danger fa-solid fa-heart"></i> {{ report_presenter.likes }}
             {% else %}
@@ -75,7 +81,7 @@
             {% endif%}
           </button>
           {% set favorited = current_user.is_authenticated and report_presenter.is_favorited_by(current_user.username) %}
-          <button type="button" id="favorite-btn" class="btn btn-soft report-metric {% if favorited %}favorited-on{% endif %} {% if not current_user.is_authenticated %}disabled{% endif %}">
+          <button type="button" id="favorite-btn" class="btn btn-soft report-metric {% if favorited %}favorited-on{% endif %} {% if not current_user.is_authenticated %}disabled{% endif %}" aria-label="收藏" title="收藏">
             {% if favorited %}
             <i class="text-warning fa-solid fa-star"></i> {{ report_presenter.favors }}
             {% else %}
@@ -95,7 +101,11 @@
               {% endif %}
             </div>
             <div id="report-desc" class="report-description">
+              {% if report.description_rendered %}
               {{ report.description_rendered | safe }}
+              {% else %}
+              <p class="text-secondary mb-0">暂无说明</p>
+              {% endif %}
             </div>
           </section>
 
@@ -134,7 +144,7 @@
               <dt>挑战层数</dt><dd>{{ details.challenge_floors | default("-")}}</dd>
               <dt>是否成功</dt><dd>{{ details.succeed | default("-")}}</dd>
               <dt>最低等级</dt><dd>{{ details.level_min | default("-")}}</dd>
-              <dt>最高等级</dt><dd>{{ details.level_min | default("-")}}</dd>
+              <dt>最高等级</dt><dd>{{ details.level_max | default("-")}}</dd>
               <dt>职业</dt><dd>{{ details.classes | default("-")}}</dd>
               <dt>种族</dt><dd>{{ details.races | default("-")}}</dd>
               <dt>职业与种族</dt><dd>{{ details.classes_and_races | default("-")}}</dd>
@@ -155,14 +165,14 @@
       <form action="{{ url_for("wodreport.delete_report", report_id=report.id) }}" method="POST">
         <div class="modal-header">
           <h5 class="modal-title" id="delete-report-modal-label">删除战报</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="关闭"></button>
         </div>
         <div class="modal-body">
           你是否确认要删除战报 {{ report.title }}？
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
-          <button type="submit" class="btn btn-primary">确认删除</button>
+          <button type="submit" class="btn btn-danger">确认删除</button>
         </div>
       </form>
     </div>
@@ -171,16 +181,61 @@
 {% endif%}
 {% endblock %}
 
-{% block sidebar_content %}
-TBD: meta for {{ report.title }}
-{% endblock %}
-
-
 
 {% block footer %}
   {{ super() }}
 <script>
   $(document).ready(function () {
+      function setupCollapsibleCopy() {
+          var expandText = "展开";
+          var collapseText = "收起";
+          var targets = document.querySelectorAll(".report-title-copy, .report-description, .metadata-grid dd");
+
+          targets.forEach(function (target) {
+              if (!target.offsetParent && target.getClientRects().length === 0) {
+                  return;
+              }
+              if (target.dataset.collapsibleReady === "true") {
+                  return;
+              }
+              target.dataset.collapsibleReady = "true";
+
+              var inner = document.createElement(target.classList.contains("report-title-copy") ? "span" : "div");
+              inner.className = "collapsible-copy-inner";
+              while (target.firstChild) {
+                  inner.appendChild(target.firstChild);
+              }
+              target.appendChild(inner);
+
+              var collapsedHeight = 72;
+              if (target.classList.contains("report-title-copy")) {
+                  collapsedHeight = 132;
+              } else if (target.classList.contains("report-description")) {
+                  collapsedHeight = 192;
+              }
+              inner.style.setProperty("--collapsed-height", collapsedHeight + "px");
+
+              if (inner.scrollHeight <= collapsedHeight + 8) {
+                  return;
+              }
+
+              target.classList.add("collapsible-copy", "is-collapsed");
+              var toggle = document.createElement("button");
+              toggle.type = "button";
+              toggle.className = "btn btn-sm btn-soft collapsible-copy-toggle";
+              toggle.setAttribute("aria-expanded", "false");
+              toggle.textContent = expandText;
+              toggle.addEventListener("click", function () {
+                  var isCollapsed = target.classList.toggle("is-collapsed");
+                  toggle.setAttribute("aria-expanded", isCollapsed ? "false" : "true");
+                  toggle.textContent = isCollapsed ? expandText : collapseText;
+              });
+              target.appendChild(toggle);
+          });
+      }
+
+      setupCollapsibleCopy();
+      $('button[data-bs-target="#pills-details"]').on("shown.bs.tab", setupCollapsibleCopy);
       
       $("#fullscreen-btn").on("click", function () {
           var iframe_href = $("#report_iframe")[0].contentWindow.location.href;
