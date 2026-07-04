@@ -78,8 +78,8 @@ def configure_app(app, config):
                 'percent': round((used / total) * 100, 2)
             }
             
-            # Extra disk usage check for /mnt/test001
-            extra_path = "/mnt/test001"
+            # Extra disk usage check for /mnt/extra-report
+            extra_path = "/mnt/extra-report"
             if os.path.exists(extra_path):
                 try:
                     e_total, e_used, e_free = shutil.disk_usage(extra_path)
