@@ -25,7 +25,7 @@
 ## 迁移步骤（精简版，最终跑通的顺序）
 
 1. **准备新机器**：apt 装 Python 3.12、nginx、slapd、redis-server（装完立刻 `systemctl disable` 掉，避免跟 supervisord 自己拉起的 `redis-store`/`redis-cache` 抢 6379/7379 端口）。
-2. **迁移 LDAP**：`slapcat -b "dc=everbird,dc=me"`（按 suffix 导，不猜数据库序号）→ 传到新机器 → `dpkg-reconfigure slapd` 把默认的 `dc=nodomain` 改成正确后缀 → `slapadd -b "dc=everbird,dc=me"` 导入。
+2. **迁移 LDAP**：`slapcat -b "dc=everbird,dc=me"`（按 suffix 导，不猜数据库序号）→ 传到新机器 → `dpkg-reconfigure slapd` 把默认的 `dc=nodomain` 改成正确后缀 → `slapadd -b "dc=everbird,dc=me"` 导入。**只导了 `data.ldif`（数据树），没导 `config.ldif`（cn=config）**——如果 app 配置的 `LDAP_BIND_USER_DN` 走的是 `olcRootDN`/`olcRootPW` 机制（而不是数据树里一条带 `userPassword` 的普通记录），这个密码就完全没跟着迁移过来，`dpkg-reconfigure` 时随手填的临时密码会成为新机器实际生效的 rootPW，导致服务账号 bind 失败（后续详细排查见下）。
 3. **部署代码**：`git clone`（用只读 Deploy Key，不是个人 SSH key）→ 建 venv → `gen.py product` 生成 `supervisord.conf`/redis 配置 → 手动传 `ohmywod/local_config.py`（含真实密钥，不进 git）。
 4. **迁移数据**：
    - SQLite：`sqlite3 .backup` + rsync
@@ -49,6 +49,7 @@
 - **Apache 的 `Redirect permanent` 强制跳转 + Cloudflare Flexible 模式会导致无限重定向循环**，但如果记录是灰云直连就不受影响——这条记录当时就是灰云，所以老机器的强制跳转配置本身从来没触发过这个问题。
 - **venv 目录不能简单 `mv` 挪位置**，`bin/` 下的脚本 shebang 写死了绝对路径，挪了地方这些脚本就找不到自己的解释器了，需要删了在正确位置重建。
 - **本机 gpg-agent 的 `pinentry-program` 配置是从 Mac 同步过来的**（指向不存在的 `/opt/homebrew/bin/pinentry-mac`），导致这台 WSL 机器上 `git commit` 一直卡住等一个永远不会出现的密码输入框，改成 `/usr/bin/pinentry-curses` 后签名本身能跑通，但在这个非交互会话里 gpg 进程签完之后依然不正常退出（怀疑是 `gpg-agent --supervised` 模式的会话/tty 问题），后续都用 `--no-gpg-sign` 绕过。
+- **登录成功一瞬间又被弹回登录页，且没有任何报错日志**：根因是 LDAP 服务账号（`LDAP_BIND_USER_DN`，这里是 `cn=admin,dc=everbird,dc=me`）的密码走的是 `olcRootDN`/`olcRootPW`（cn=config 里的配置项），不是数据树里一条带 `userPassword` 的普通记录——迁移时只导入了 `data.ldif`，没导入 `config.ldif`，`dpkg-reconfigure slapd` 时随手填的临时密码就成了新机器实际生效的 rootPW。表现很有迷惑性：用户自己的账号密码登录 (`LDAPLoginForm` 直接拿用户自己的 DN+密码 bind) 完全正常，POST /login 也正确返回 302；但 Flask-Login 每次请求都要用**服务账号**重新查一次用户信息（`load_user` → `get_user_info` → 内部用 `LDAP_BIND_USER_DN`/`PASSWORD` bind），这一步因为 rootPW 不对而失败，`load_user` 返回 `None`（异常被业务代码的 `except: print()` 吞掉，且这次失败本身不算致命异常，不会有明显报错），Flask-Login 于是认为当前请求匿名，直接弹回登录页。排查时加了几行临时 `print` 到 `load_user` 里才看清是在这一步失败、失败原因是 `LDAPInvalidCredentialsResult`。修复：`ldapsearch -Y EXTERNAL -H ldapi:/// -b cn=config "(olcRootDN=*)"` 找到对应的 `olcDatabase={n}mdb,cn=config` 条目，用 `slappasswd` 生成跟 `LDAP_BIND_USER_PASSWORD` 一致的哈希，`ldapmodify -Y EXTERNAL -H ldapi:///` 替换 `olcRootPW`。**以后再迁移自建 OpenLDAP，`config.ldif`（cn=config）该不该一起认真导入、或者至少确认 rootDN/rootPW 是否也需要手动对齐，是要提前想清楚的一步，不能只顾着导数据树。**
 
 ## 迁移后又做的事
 
