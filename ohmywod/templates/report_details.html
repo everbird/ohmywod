@@ -2,6 +2,18 @@
 
 {% block title %}战报 - {{ report.title }}{% endblock %}
 
+{% block meta_description %}{% if report.description %}{{ report.description_rendered | striptags | truncate(160, True) }}{% else %}{{ report.owner }} 分享的 World of Dungeons 战报：{{ report.title }}（{{ report.category.title }}）。{% endif %}{% endblock %}
+
+{% block meta_extra %}
+<link rel="canonical" href="{{ url_for('wodreport.view_report', report_id=report.id, _external=True) }}">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="战报网">
+<meta property="og:title" content="{{ report.title }} - 战报网">
+<meta property="og:description" content="{{ self.meta_description() }}">
+<meta property="og:url" content="{{ url_for('wodreport.view_report', report_id=report.id, _external=True) }}">
+<meta property="og:image" content="{{ url_for('static', filename='img/logo.png', _external=True) }}">
+{% endblock %}
+
 {% block content %}
 <div class="page-stack report-detail-page">
   <div class="page-toolbar">

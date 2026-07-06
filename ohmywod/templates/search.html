@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}战报 - 搜索{% endblock %}
+{% block title %}战报 - 搜索{% if q %}：{{ q }}{% endif %}{% endblock %}
 
 {% block content %}
 <div class="page-stack">

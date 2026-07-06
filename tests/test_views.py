@@ -312,3 +312,90 @@ def test_upload_preserves_chinese_report_filename(authenticated_client, app, db)
     assert os.path.exists(extracted_html)
     with open(extracted_html, 'r', encoding='utf-8') as f:
         assert "Chinese Report HTML" in f.read()
+
+
+def test_report_details_seo_meta(authenticated_client, db):
+    rc = ReportController()
+    cat = rc.create_category("cat1", "Cat Desc", "testuser")
+    rc.create_report(cat.id, "myreport", "testuser")
+    report = Report.query.filter_by(name="myreport").first()
+    report.description = "[b]一次成功的副本[/b] 五人小队通关记录"
+    db.session.commit()
+
+    res = authenticated_client.get(f'/r/report/{report.id}')
+    assert res.status_code == 200
+    page = res.data.decode('utf-8')
+
+    # meta description comes from the bbcode-stripped report description
+    assert 'name="description"' in page
+    assert '一次成功的副本' in page
+    assert '[b]' not in page.split('name="description"')[1].split('>')[0]
+
+    # OG tags + canonical
+    assert 'property="og:title"' in page
+    assert 'property="og:description"' in page
+    assert 'property="og:url"' in page
+    assert 'rel="canonical"' in page
+    assert f'/r/report/{report.id}' in page
+
+
+def test_report_details_seo_meta_without_description(authenticated_client, db):
+    rc = ReportController()
+    cat = rc.create_category("cat1", "Cat Desc", "testuser")
+    rc.create_report(cat.id, "myreport", "testuser")
+    report = Report.query.filter_by(name="myreport").first()
+
+    res = authenticated_client.get(f'/r/report/{report.id}')
+    assert res.status_code == 200
+    page = res.data.decode('utf-8')
+    # Falls back to an owner/title-based description instead of crashing
+    assert 'name="description"' in page
+    assert 'testuser 分享的 World of Dungeons 战报' in page
+
+
+def test_sitemap_xml(client, db):
+    from ohmywod.extensions import cache
+    rc = ReportController()
+    cat = rc.create_category("cat1", "Cat Desc", "someuser")
+    rc.create_report(cat.id, "myreport", "someuser")
+    report = Report.query.filter_by(name="myreport").first()
+
+    # The sitemap is cached for an hour; session-scoped app means the
+    # simple cache leaks across tests, so start from a clean slate.
+    cache.delete("sitemap_xml")
+
+    res = client.get('/sitemap.xml')
+    assert res.status_code == 200
+    assert res.mimetype == 'application/xml'
+    body = res.data.decode('utf-8')
+    assert '<urlset' in body
+    assert f'/r/report/{report.id}' in body
+    assert f'/r/category/{cat.id}' in body
+    assert '<lastmod>' in body
+
+    cache.delete("sitemap_xml")
+
+
+def test_sitemap_excludes_deleted_reports(client, db):
+    from ohmywod.extensions import cache
+    rc = ReportController()
+    cat = rc.create_category("cat1", "Cat Desc", "someuser")
+    rc.create_report(cat.id, "myreport", "someuser")
+    report = Report.query.filter_by(name="myreport").first()
+    rid = report.id
+    rc.delete_report(rid)
+
+    cache.delete("sitemap_xml")
+
+    res = client.get('/sitemap.xml')
+    assert res.status_code == 200
+    assert f'/r/report/{rid}' not in res.data.decode('utf-8')
+
+    cache.delete("sitemap_xml")
+
+
+def test_robots_txt_points_to_sitemap(client):
+    res = client.get('/robots.txt')
+    assert res.status_code == 200
+    assert 'Sitemap:' in res.data.decode('utf-8')
+    assert '/sitemap.xml' in res.data.decode('utf-8')

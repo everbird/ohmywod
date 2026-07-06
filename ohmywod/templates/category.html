@@ -2,6 +2,8 @@
 
 {% block title %}战报 - {{ category.title }}{% endblock %}
 
+{% block meta_description %}{% if category.description %}{{ category.description_rendered | striptags | truncate(160, True) }}{% else %}{{ category.owner }} 的 World of Dungeons 战报目录：{{ category.title }}。{% endif %}{% endblock %}
+
 {% block head %}
     {{ super() }}
 <link href="https://unpkg.com/filepond@^4/dist/filepond.css" rel="stylesheet" />

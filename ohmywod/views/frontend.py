@@ -28,6 +28,7 @@ from ohmywod.controllers.feedback import FeedbackController
 from ohmywod.controllers.report import ReportController
 from ohmywod.controllers.user import UserController
 from ohmywod.extensions import cache, ldap_manager
+from ohmywod.models.report import Report, ReportCategory
 
 
 frontend = Blueprint("frontend", __name__)
@@ -221,3 +222,25 @@ def ads_txt():
 @frontend.route("robots.txt")
 def robots_txt():
     return rt("robots.txt")
+
+
+@frontend.route("sitemap.xml")
+def sitemap_xml():
+    # Cached because it walks the whole report table and crawlers hit it
+    # repeatedly; 1h staleness is fine for a sitemap.
+    xml = cache.get("sitemap_xml")
+    if xml is None:
+        reports = (
+            Report.query
+            .filter(Report.status == None)
+            .order_by(Report.updated_at.desc())
+            .all()
+        )
+        categories = (
+            ReportCategory.query
+            .filter(ReportCategory.status == None)
+            .all()
+        )
+        xml = rt("sitemap.xml", reports=reports, categories=categories)
+        cache.set("sitemap_xml", xml, timeout=3600)
+    return current_app.response_class(xml, mimetype="application/xml")

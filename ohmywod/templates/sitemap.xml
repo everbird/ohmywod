@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>{{ url_for('frontend.landing_page', _external=True) }}</loc>
+  </url>
+  <url>
+    <loc>{{ url_for('wodreport.report_page', _external=True) }}</loc>
+  </url>
+  {%- for category in categories %}
+  <url>
+    <loc>{{ url_for('wodreport.view_category', category_id=category.id, _external=True) }}</loc>
+    {%- if category.updated_at %}
+    <lastmod>{{ category.updated_at.strftime('%Y-%m-%d') }}</lastmod>
+    {%- endif %}
+  </url>
+  {%- endfor %}
+  {%- for report in reports %}
+  <url>
+    <loc>{{ url_for('wodreport.view_report', report_id=report.id, _external=True) }}</loc>
+    {%- if report.updated_at %}
+    <lastmod>{{ report.updated_at.strftime('%Y-%m-%d') }}</lastmod>
+    {%- endif %}
+  </url>
+  {%- endfor %}
+</urlset>

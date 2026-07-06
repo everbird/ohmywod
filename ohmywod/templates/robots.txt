@@ -9,3 +9,5 @@ Disallow: /login*
 Disallow: /feedback
 Disallow: /register
 Disallow: /search
+
+Sitemap: {{ url_for('frontend.sitemap_xml', _external=True) }}

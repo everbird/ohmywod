@@ -4,6 +4,8 @@
         {% block head %}
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <meta name="csrf-token" content="{{ csrf_token() }}">
+        <meta name="description" content="{% block meta_description %}战报网 —— World of Dungeons（WoD）中文战报分享站，上传、浏览、搜索和收藏副本战报。{% endblock %}">
+        {% block meta_extra %}{% endblock %}
         <link rel="shortcut icon" href="{{ url_for('static', filename='img/favicon.ico') }}">
         <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
         <link rel="stylesheet" href="{{ url_for('static', filename='css/font-awesome-6.2.0-all.min.css' )}}">
