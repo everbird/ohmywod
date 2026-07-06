@@ -247,20 +247,40 @@
       setupCollapsibleCopy();
       $('button[data-bs-target="#pills-details"]').on("shown.bs.tab", setupCollapsibleCopy);
       
+      // The raw iframe is CSP-sandboxed (opaque origin), so its location
+      // and scroll position can't be read from here; a beacon injected by
+      // report_raw posts them instead (see READER_STATE_BEACON).
+      var reader_state = null;
+      window.addEventListener("message", function (ev) {
+          var frame = $("#report_iframe")[0];
+          if (frame && ev.source === frame.contentWindow &&
+                  ev.data && ev.data.wodReaderState) {
+              reader_state = ev.data.wodReaderState;
+          }
+      });
+
       $("#fullscreen-btn").on("click", function () {
-          var iframe_href = $("#report_iframe")[0].contentWindow.location.href;
           var raw_url = "{{ url_for("wodreport.report_raw", username=report.owner, category=report.category.name, name=report.name, subpath=subpath) }}";
           var replace_from = raw_url.substring(0, raw_url.lastIndexOf("/"));
           var reader_url = "{{ url_for('wodreport.report_reader', report_id=report.id) }}";
           var replace_to = reader_url.substring(0, reader_url.lastIndexOf("/"));
-          var reader_href = iframe_href.replace(replace_from, replace_to);
-          var scroll_top = $("#report_iframe")[0].contentWindow.document.body.scrollTop;
+
+          var reader_href = reader_url;
+          var scroll_top = 0;
+          if (reader_state && typeof reader_state.href === "string") {
+              // Only trust hrefs under our own raw path: the frame content
+              // is user-uploaded and could post a forged href.
+              var expected = window.location.origin + replace_from;
+              if (reader_state.href.indexOf(expected) === 0) {
+                  reader_href = replace_to + reader_state.href.substring(expected.length);
+                  scroll_top = parseInt(reader_state.scrollTop, 10) || 0;
+              }
+          }
           if (scroll_top > 0) {
               window.location.href = reader_href + "?scroll_top=" + scroll_top;
           } else {
               window.location.href = reader_href;
           }
-
       });
 
       $("#like-btn").on("click", function () {

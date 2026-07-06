@@ -98,6 +98,33 @@ def home():
     return rt("home.html", categories=categories, favor_reports=favor_reports)
 
 
+# The CSP sandbox below makes the iframe an opaque origin, so the parent
+# page can no longer read contentWindow.location (used by the 阅读模式
+# button to map the current sub-page + scroll position to the reader URL).
+# This beacon runs inside the frame and posts that state to the parent;
+# postMessage is allowed across the sandbox boundary.
+READER_STATE_BEACON = """
+<script>
+(function () {
+    if (window.parent === window) return;
+    function send() {
+        var d = document;
+        parent.postMessage({
+            wodReaderState: {
+                href: window.location.href,
+                scrollTop: (d.body && d.body.scrollTop) ||
+                    (d.documentElement && d.documentElement.scrollTop) || 0
+            }
+        }, '*');
+    }
+    window.addEventListener('scroll', send, {passive: true});
+    window.addEventListener('hashchange', send);
+    send();
+})();
+</script>
+"""
+
+
 # Used in iframe, username+cateogry+name should be uniqe
 @report.route("/raw/<username>/<category>/<name>/")
 @report.route("/raw/<username>/<category>/<name>/<path:subpath>")
@@ -127,7 +154,7 @@ def report_raw(username, category, name, subpath="index.html"):
         abort(503, description="Storage service is temporarily unavailable.")
 
     raw = raw.replace('http:', 'https:')
-    resp = make_response(raw)
+    resp = make_response(raw + READER_STATE_BEACON)
     resp.mimetype = 'text/html'
     # User-uploaded HTML is served verbatim; CSP sandbox makes the browser
     # treat it as an opaque origin so its scripts can't touch main-site

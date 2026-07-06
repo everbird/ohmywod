@@ -185,6 +185,40 @@ def test_report_raw_csp_sandbox(authenticated_client, app, db):
     assert 'allow-same-origin' not in csp
 
 
+def test_report_raw_injects_reader_state_beacon(authenticated_client, app, db):
+    # The CSP sandbox makes the iframe opaque, so the parent page relies on
+    # this postMessage beacon to know the frame's URL/scroll for 阅读模式.
+    rc = ReportController()
+    cat = rc.create_category("cat1", "Cat Desc", "testuser")
+    rc.create_report(cat.id, "myreport", "testuser")
+
+    report_dir = os.path.join(app.config['DATA_DIR'], 'testuser', 'cat1', 'myreport')
+    os.makedirs(report_dir, exist_ok=True)
+    with open(os.path.join(report_dir, 'index.html'), 'w', encoding='utf-8') as f:
+        f.write("<html><body>Beacon Host</body></html>")
+
+    res = authenticated_client.get('/r/raw/testuser/cat1/myreport/')
+    assert res.status_code == 200
+    page = res.data.decode('utf-8')
+    assert 'wodReaderState' in page
+    assert 'postMessage' in page
+
+
+def test_report_details_listens_for_reader_state(authenticated_client, db):
+    rc = ReportController()
+    cat = rc.create_category("cat1", "Cat Desc", "testuser")
+    rc.create_report(cat.id, "myreport", "testuser")
+    report = Report.query.filter_by(name="myreport").first()
+
+    res = authenticated_client.get(f'/r/report/{report.id}')
+    assert res.status_code == 200
+    page = res.data.decode('utf-8')
+    # Fullscreen button must not touch contentWindow.location (blocked by
+    # the sandbox); it consumes the beacon state instead.
+    assert 'wodReaderState' in page
+    assert 'contentWindow.location' not in page
+
+
 def test_new_category_requires_login(client):
     res = client.get('/r/new_category')
     assert res.status_code == 302
