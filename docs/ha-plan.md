@@ -191,9 +191,9 @@ redis-cli -p 6379 INFO persistence | grep -E 'aof_enabled|rewrite'
 
 `juicefs dump` / `juicefs load` 走文件系统语义导出导入（2026-07 迁移实际用过），与 Redis 层迁移互为备份手段；`--backup-meta` 的定期 dump 存于 bucket 的 `meta/` 目录，是最后的兜底。
 
-## 待线上确认（阶段 0 第 1 步）
+## 待线上确认（阶段 0 第 1 步）—— 2026-07-05 已确认
 
-- [ ] redis-store 的 AOF 状态
-- [ ] JuiceFS `--backup-meta` 是否启用
-- [ ] `/mnt/extra-report` 与本地 `report/` 的实际占用量（决定归一化后 bucket 容量档位）
-- [ ] redis-store 是否设了密码（备机复制走私网也建议 `requirepass`/`masterauth`）
+- [x] redis-store 的 AOF 状态：**原为 RDB-only，已按附录 D 流程热开启 AOF（everysec）**，配置模板待入库
+- [x] JuiceFS `--backup-meta`：**未开启**。待办：挂载参数显式加 `--backup-meta 1h` 写进 systemd unit，低峰时段重挂载生效
+- [x] 存储占用：本地 `report/` 6.2G + `/mnt/extra-report` 8.9G ≈ 15G——对象存储 250GB 起步档绰绰有余，归一化无容量顾虑
+- [x] redis-store 无 `requirepass`，且曾监听 `0.0.0.0`（幸有默认 `protected-mode yes` 拒绝了所有外部连接，未成事故）。**已修复**：线上两个 redis 均已 `bind 127.0.0.1 -::1` + 显式 `protected-mode yes` 并重启，配置模板同步更新。密码推迟到阶段 3 建复制前统一加（需同步改 flask-redis URL 与 juicefs meta URL）。教训：Linode Cloud Firewall（阶段 0 待办）作为此类失误的外层兜底

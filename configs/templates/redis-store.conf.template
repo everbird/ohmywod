@@ -6,6 +6,14 @@ pidfile $VAR_PATH/$APP_NAME/run/redis-store-$REDIS_STORE_PORT.pid
 logfile $VAR_PATH/$APP_NAME/log/redis-store-$REDIS_STORE_PORT.log
 dir $DATA_PATH/$APP_NAME/redis/store
 
+# Holds JuiceFS metadata (db 2) — must never accept remote connections
+# or lose more than ~1s of writes.
+bind 127.0.0.1 -::1
+protected-mode yes
+
 save 900 1
 save 300 10
 save 60 10000
+
+appendonly yes
+appendfsync everysec
