@@ -394,6 +394,27 @@ def test_sitemap_excludes_deleted_reports(client, db):
     cache.delete("sitemap_xml")
 
 
+def test_report_reader_has_tail_ad(authenticated_client, app, db):
+    rc = ReportController()
+    cat = rc.create_category("cat1", "Cat Desc", "testuser")
+    rc.create_report(cat.id, "myreport", "testuser")
+    report = Report.query.filter_by(name="myreport").first()
+
+    report_dir = os.path.join(app.config['DATA_DIR'], 'testuser', 'cat1', 'myreport')
+    os.makedirs(report_dir, exist_ok=True)
+    with open(os.path.join(report_dir, 'index.html'), 'w', encoding='utf-8') as f:
+        f.write("<html><body><div>Reader Content</div></body></html>")
+
+    res = authenticated_client.get(f'/r/report/{report.id}/reader/')
+    assert res.status_code == 200
+    page = res.data.decode('utf-8')
+    assert "Reader Content" in page
+    # Content-tail ad unit is present and comes after the report content
+    assert 'adsbygoogle' in page
+    assert 'data-ad-slot="6513178276"' in page
+    assert page.index('Reader Content') < page.index('reader-tail-ad')
+
+
 def test_robots_txt_points_to_sitemap(client):
     res = client.get('/robots.txt')
     assert res.status_code == 200
