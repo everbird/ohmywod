@@ -181,7 +181,10 @@ class ProfileForm(FlaskForm):
         old_password = field.data
         if old_password:
             result = ldap_manager.authenticate(current_user.username, old_password)
-            print(result.status)
+            current_app.logger.info(
+                "Old-password re-auth for %s: %s",
+                current_user.username, result.status
+            )
             if result.status != AuthenticationResponseStatus.success:
                 raise ValidationError("旧密码不匹配。")
         elif form.new_password1.data or form.new_password2.data:

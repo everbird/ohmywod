@@ -273,9 +273,10 @@ def delete_category(category_id):
 def view_report(report_id):
     rc = ReportController()
     report = rc.get_report(report_id)
-    report_presenter = ReportPresenter(report)
     if not report:
         abort(404)
+
+    report_presenter = ReportPresenter(report)
 
     rc.incr_views(report_id)
     details = report.details
@@ -394,6 +395,8 @@ def report_reader(report_id, subpath="index.html"):
 
     rc = ReportController()
     report = rc.get_report(report_id)
+    if not report:
+        abort(404)
 
     data_dir = current_app.config["DATA_DIR"]
     fpath_str = safe_join(data_dir, report.owner, report.category.name, report.name, subpath)
@@ -463,6 +466,7 @@ class NewCategoryForm(FlaskForm):
 
 
 @report.route("/new_category", methods=['GET', 'POST'])
+@login_required
 def new_category():
     form = NewCategoryForm()
     if form.validate_on_submit():
@@ -486,9 +490,11 @@ def ajax_like(report_id):
     rc = ReportController()
     report = rc.get_report(report_id)
     if report:
-        rc.like(username, report_id)
+        # sadd returns 1 only when the member is new; skip the counter
+        # otherwise so double-clicks/replays can't inflate it.
+        if rc.like(username, report_id):
+            rc.incr_likes_cnt(report_id)
         r = {"status": 0, "message": "点赞成功。"}
-        rc.incr_likes_cnt(report_id)
     else:
         r = {"status": 1, "message": f"战报 {report_id} 不存在。"}
     return jsonify(r)
@@ -501,9 +507,9 @@ def ajax_unlike(report_id):
     rc = ReportController()
     report = rc.get_report(report_id)
     if report:
-        rc.unlike(username, report_id)
+        if rc.unlike(username, report_id):
+            rc.decr_likes_cnt(report_id)
         r = {"status": 0, "message": "取消点赞成功。"}
-        rc.decr_likes_cnt(report_id)
     else:
         r = {"status": 1, "message": f"战报 {report_id} 不存在。"}
     return jsonify(r)
@@ -516,9 +522,10 @@ def ajax_add_favorite(report_id):
     rc = ReportController()
     report = rc.get_report(report_id)
     if report:
-        rc.add_favor(username, report_id)
+        if not rc.check_favor(username, report_id):
+            rc.add_favor(username, report_id)
+            rc.incr_favors(report_id)
         r = {"status": 0, "message": "收藏成功。"}
-        rc.incr_favors(report_id)
     else:
         r = {"status": 1, "message": f"战报 {report_id} 不存在。"}
     return jsonify(r)
@@ -531,9 +538,9 @@ def ajax_cancel_favorite(report_id):
     rc = ReportController()
     report = rc.get_report(report_id)
     if report:
-        rc.cancel_favor(username, report_id)
+        if rc.cancel_favor(username, report_id):
+            rc.decr_favors(report_id)
         r = {"status": 0, "message": "取消收藏成功。"}
-        rc.decr_favors(report_id)
     else:
         r = {"status": 1, "message": f"战报 {report_id} 不存在。"}
     return jsonify(r)

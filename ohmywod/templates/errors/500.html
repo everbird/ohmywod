@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+{# Standalone on purpose: base.html pulls in extensions (db/cache/session)
+   that may be the very thing that just failed. #}
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>500 - 战报网</title>
+    <style>
+        body { font-family: sans-serif; text-align: center; padding: 4rem 1rem; color: #333; }
+        h1 { font-size: 3rem; margin-bottom: 0.5rem; }
+        a { color: #0d6efd; }
+    </style>
+</head>
+<body>
+    <h1>500</h1>
+    <p>服务器开小差了，请稍后再试。</p>
+    <p><a href="/">返回首页</a></p>
+</body>
+</html>

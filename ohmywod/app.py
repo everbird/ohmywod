@@ -2,7 +2,9 @@
 # -*- coding: utf-8 -*-
 
 import click
-from flask import Flask, request, redirect, url_for, Response
+from flask import (
+    Flask, request, redirect, url_for, Response, current_app, render_template
+)
 from flask_admin.contrib import sqla
 from flask_ldap3_login import LDAP3LoginManager
 from flask_login import LoginManager
@@ -52,6 +54,7 @@ def create_app(config=None, app_name=None, modules=None):
 
     configure_extensions(app)
     configure_modules(app, modules)
+    configure_error_handlers(app)
     configure_cli(app)
 
     return app
@@ -197,6 +200,19 @@ def configure_modules(app, modules):
         app.register_blueprint(module, url_prefix=url_prefix)
 
 
+def configure_error_handlers(app):
+
+    @app.errorhandler(404)
+    def page_not_found(e):
+        return render_template("errors/404.html"), 404
+
+    @app.errorhandler(500)
+    def internal_server_error(e):
+        # errors/500.html is standalone (no base.html) so a broken
+        # extension/DB can't take the error page down with it.
+        return render_template("errors/500.html"), 500
+
+
 def configure_cli(app):
 
     @app.cli.command("init_db")
@@ -213,8 +229,8 @@ def load_user(dn):
     uc = UserController()
     try:
         return uc.get_ldap_user(dn)
-    except Exception as ex:
-        print(str(ex))
+    except Exception:
+        current_app.logger.exception(f"load_user failed for dn={dn}")
 
 
 @ldap_manager.save_user
