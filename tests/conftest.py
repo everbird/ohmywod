@@ -57,6 +57,18 @@ def app():
     shutil.rmtree(temp_ldap_db_dir, ignore_errors=True)
 
 
+@pytest.fixture(autouse=True)
+def _reset_login_state(app):
+    # The session-scoped app context above is reused by every test-client
+    # request (Flask only pushes a new app ctx if none is active for the
+    # app), so flask-login's cached g._login_user leaks across tests.
+    # Drop it so each test starts unauthenticated unless it logs in itself.
+    yield
+    from flask import g
+    if '_login_user' in g:
+        g.pop('_login_user')
+
+
 @pytest.fixture(scope='function')
 def db(app):
     _db.create_all()

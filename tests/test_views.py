@@ -166,6 +166,82 @@ def test_report_raw_retrieval(authenticated_client, app, db):
 
 
 
+def test_report_raw_csp_sandbox(authenticated_client, app, db):
+    rc = ReportController()
+    cat = rc.create_category("cat1", "Cat Desc", "testuser")
+    rc.create_report(cat.id, "myreport", "testuser")
+
+    report_dir = os.path.join(app.config['DATA_DIR'], 'testuser', 'cat1', 'myreport')
+    os.makedirs(report_dir, exist_ok=True)
+    with open(os.path.join(report_dir, 'index.html'), 'w', encoding='utf-8') as f:
+        f.write("<html><body>Sandboxed</body></html>")
+
+    res = authenticated_client.get('/r/raw/testuser/cat1/myreport/')
+    assert res.status_code == 200
+    csp = res.headers.get('Content-Security-Policy', '')
+    assert 'sandbox' in csp
+    assert 'allow-scripts' in csp
+    # Must NOT allow same-origin, that would defeat the sandbox
+    assert 'allow-same-origin' not in csp
+
+
+def test_new_category_requires_login(client):
+    res = client.get('/r/new_category')
+    assert res.status_code == 302
+    assert "login" in res.headers['Location']
+
+    # Anonymous POST used to 500 (AttributeError on current_user.username)
+    res = client.post('/r/new_category', data={'name': 'anoncat'})
+    assert res.status_code == 302
+    assert "login" in res.headers['Location']
+
+
+def test_missing_report_returns_404(client, db):
+    res = client.get('/r/report/99999')
+    assert res.status_code == 404
+
+    res = client.get('/r/report/99999/reader/')
+    assert res.status_code == 404
+
+
+def test_custom_404_page(client, db):
+    res = client.get('/no/such/page')
+    assert res.status_code == 404
+    assert "返回首页" in res.data.decode('utf-8')
+
+
+def test_like_unlike_counter_no_drift(authenticated_client, db):
+    rc = ReportController()
+    cat = rc.create_category("cat1", "Cat Desc", "testuser")
+    rc.create_report(cat.id, "myreport", "testuser")
+    rid = Report.query.filter_by(name="myreport").first().id
+
+    # Double like only counts once
+    authenticated_client.post(f'/r/report/{rid}/like')
+    authenticated_client.post(f'/r/report/{rid}/like')
+    assert int(rc.get_likes_cnt(rid)) == 1
+
+    # Double unlike doesn't go negative
+    authenticated_client.post(f'/r/report/{rid}/unlike')
+    authenticated_client.post(f'/r/report/{rid}/unlike')
+    assert int(rc.get_likes_cnt(rid)) == 0
+
+
+def test_favorite_counter_no_drift(authenticated_client, db):
+    rc = ReportController()
+    cat = rc.create_category("cat1", "Cat Desc", "testuser")
+    rc.create_report(cat.id, "myreport", "testuser")
+    rid = Report.query.filter_by(name="myreport").first().id
+
+    authenticated_client.post(f'/r/report/{rid}/add_favorite')
+    authenticated_client.post(f'/r/report/{rid}/add_favorite')
+    assert int(rc.get_favors(rid)) == 1
+
+    authenticated_client.post(f'/r/report/{rid}/cancel_favorite')
+    authenticated_client.post(f'/r/report/{rid}/cancel_favorite')
+    assert int(rc.get_favors(rid)) == 0
+
+
 def test_upload_flow(authenticated_client, app, db):
     rc = ReportController()
     cat = rc.create_category("cat1", "Cat Desc", "testuser")

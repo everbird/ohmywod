@@ -170,13 +170,17 @@ class MockRedis:
             self._data[key] = set()
         if not isinstance(self._data[key], set):
             self._data[key] = set([self._data[key]])
+        # Match real Redis: 1 only when the member was actually added
+        if str(member) in self._data[key]:
+            return 0
         self._data[key].add(str(member))
         return 1
-        
+
     def srem(self, key, member):
         if key in self._data and isinstance(self._data[key], set):
-            self._data[key].discard(str(member))
-            return 1
+            if str(member) in self._data[key]:
+                self._data[key].remove(str(member))
+                return 1
         return 0
         
     def smembers(self, key):
