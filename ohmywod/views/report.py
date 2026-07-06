@@ -129,6 +129,10 @@ def report_raw(username, category, name, subpath="index.html"):
     raw = raw.replace('http:', 'https:')
     resp = make_response(raw)
     resp.mimetype = 'text/html'
+    # User-uploaded HTML is served verbatim; CSP sandbox makes the browser
+    # treat it as an opaque origin so its scripts can't touch main-site
+    # cookies or issue same-origin requests. iframe embedding still works.
+    resp.headers['Content-Security-Policy'] = "sandbox allow-scripts allow-popups"
     return resp
 
 
