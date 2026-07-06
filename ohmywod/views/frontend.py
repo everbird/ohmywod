@@ -6,13 +6,15 @@ import os
 import shutil
 from pathlib import Path
 
+from sqlalchemy import text
+
 from flask import (
     Blueprint,
     flash,
     render_template as rt,
     render_template_string as rt_string,
     redirect,
-    url_for, current_app, g, session, request
+    url_for, current_app, g, session, request, jsonify
 )
 from flask_ldap3_login import AuthenticationResponseStatus
 from flask_ldap3_login.forms import LDAPLoginForm
@@ -27,7 +29,7 @@ from wtforms.widgets import TextArea
 from ohmywod.controllers.feedback import FeedbackController
 from ohmywod.controllers.report import ReportController
 from ohmywod.controllers.user import UserController
-from ohmywod.extensions import cache, ldap_manager
+from ohmywod.extensions import cache, db, ldap_manager, redis
 from ohmywod.models.report import Report, ReportCategory
 
 
@@ -212,6 +214,49 @@ def profile_page():
         flash("更新成功。")
         return redirect(url_for('frontend.profile_page'))
     return rt("profile.html", form=form)
+
+
+@frontend.route("healthz")
+def healthz():
+    checks = {}
+    http_status = 200
+
+    try:
+        db.session.execute(text("SELECT 1"))
+        checks["db"] = "ok"
+    except Exception:
+        current_app.logger.exception("healthz database check failed")
+        checks["db"] = "error"
+        http_status = 503
+
+    try:
+        redis.ping()
+        checks["redis"] = "ok"
+    except Exception:
+        current_app.logger.exception("healthz redis check failed")
+        checks["redis"] = "error"
+        http_status = 503
+
+    storage_checks = {}
+    storage_paths = current_app.config.get("HEALTHZ_STORAGE_PATHS") or (
+        current_app.config["DATA_DIR"],
+    )
+    for raw_path in storage_paths:
+        path = Path(raw_path)
+        try:
+            if path.is_dir() and os.access(path, os.R_OK):
+                storage_checks[str(path)] = "ok"
+            else:
+                storage_checks[str(path)] = "error"
+                http_status = 503
+        except OSError:
+            current_app.logger.exception("healthz storage check failed for %s", path)
+            storage_checks[str(path)] = "error"
+            http_status = 503
+    checks["storage"] = storage_checks
+
+    status = "ok" if http_status == 200 else "error"
+    return jsonify(status=status, checks=checks), http_status
 
 
 @frontend.route("ads.txt")

@@ -97,6 +97,16 @@ def test_profile_page_update(authenticated_client):
     assert "更新成功。" in res.data.decode('utf-8')
 
 
+def test_healthz_ok(client, app):
+    res = client.get('/healthz')
+    assert res.status_code == 200
+    payload = res.get_json()
+    assert payload['status'] == 'ok'
+    assert payload['checks']['db'] == 'ok'
+    assert payload['checks']['redis'] == 'ok'
+    assert payload['checks']['storage'][app.config['DATA_DIR']] == 'ok'
+
+
 def test_feedback_page(client):
     res = client.get('/feedback')
     assert res.status_code == 200
@@ -123,6 +133,30 @@ def test_view_category(authenticated_client, db):
     res = authenticated_client.get(f'/r/category/{cat.id}')
     assert res.status_code == 200
     assert "cat1" in res.data.decode('utf-8')
+
+
+def test_reorder_category_switches_to_manual_order(authenticated_client, db):
+    rc = ReportController()
+    cat = rc.create_category("cat1", "Cat Desc", "testuser")
+    cat.order_by = "ctime"
+    rc.create_report(cat.id, "first", "testuser")
+    rc.create_report(cat.id, "second", "testuser")
+    db.session.commit()
+
+    reports = Report.query.filter_by(category_id=cat.id).order_by(Report.id.asc()).all()
+    res = authenticated_client.post(
+        f'/r/category/{cat.id}/reorder',
+        data={
+            f'order-{reports[0].id}': '2',
+            f'order-{reports[1].id}': '1',
+        },
+    )
+
+    assert res.status_code == 200
+    db.session.refresh(cat)
+    assert cat.order_by == "customized"
+    assert db.session.get(Report, reports[0].id).order == 2
+    assert db.session.get(Report, reports[1].id).order == 1
 
 
 def test_sanitize_wod_report():

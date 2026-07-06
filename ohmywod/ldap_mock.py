@@ -145,6 +145,9 @@ class MockRedis:
     def __init__(self):
         self._data = {}
         
+    def ping(self):
+        return True
+
     def get(self, key):
         val = self._data.get(key)
         if val is None:

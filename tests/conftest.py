@@ -36,6 +36,7 @@ def app():
         DATA_DIR = temp_data_dir
         UPLOAD_DIR = temp_upload_dir
         DISK_USAGE_THRESHOLD = 0.99
+        HEALTHZ_STORAGE_PATHS = (temp_data_dir,)
         SECRET_KEY = 'test_secret_key'
 
         FLASK_ADMIN_USERNAME = "admin"

@@ -11,6 +11,11 @@ class DefaultConfig(object):
     # --- SQLAlchemy ---
     SQLALCHEMY_DATABASE_URI = "sqlite:////data/ohmywod/ohmywod_d.sqlite"
     SQLALCHEMY_ECHO = False
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        "connect_args": {
+            "timeout": 5,
+        },
+    }
 
     # --- FLASK-LDAP3-LOGIN ---
     LDAP_HOST = 'everbird.me'
@@ -35,6 +40,10 @@ class DefaultConfig(object):
     DATA_DIR = "/data/ohmywod/report"
     UPLOAD_DIR = "/data/ohmywod/upload"
     DISK_USAGE_THRESHOLD = 0.96
+    HEALTHZ_STORAGE_PATHS = (
+        DATA_DIR,
+        "/mnt/jfs",
+    )
 
 
     FLASK_ADMIN_SWATCH = "darkly"
