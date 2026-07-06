@@ -109,12 +109,22 @@ body {
     margin-right: 1rem;
 }
 
+/* Account row and collapse arrow share one flex row; the arrow used to be
+   absolutely pinned to the sidebar's bottom, which drifts away from the
+   account row once the sidebar content overflows (e.g. when the ad fills). */
+.sidebar-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
 #dismiss {
     width: 35px;
     height: 35px;
-    position: absolute;
-    bottom: 0.75rem;
-    right: 1rem;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 #content {

@@ -123,30 +123,32 @@
                     {% endblock %}
                 </div>
                 <hr>
-                {% if not current_user or current_user.is_anonymous %}
-                <div class="sidebar-account">
-                    <i class="fa-solid fa-user me-2"></i>
-                    <a href="{{ url_for("frontend.login") }}">登录</a>
-                </div>
-                {% else %}
-                <div class="dropdown sidebar-account">
-                    <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" id="dropdownUser1" data-bs-toggle="dropdown" aria-expanded="false">
+                <div class="sidebar-footer">
+                    {% if not current_user or current_user.is_anonymous %}
+                    <div class="sidebar-account">
                         <i class="fa-solid fa-user me-2"></i>
-                        <strong>{{ current_user.username }}</strong>
-                    </a>
-                    <ul class="dropdown-menu dropdown-menu-dark text-small shadow" aria-labelledby="dropdownUser1" style="">
-                        <li><a class="dropdown-item" href="{{ url_for("wodreport.new_category")  }}">新建目录</a></li>
-                        <li><a class="dropdown-item" href="{{ url_for("frontend.profile_page")  }}">设置</a></li>
-                        <li><a class="dropdown-item" href="{{ url_for("wodreport.favorite_reports")  }}">我的收藏</a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item" href="{{ url_for("frontend.logout") }}">登出</a></li>
-                    </ul>
-                </div>
-                {% endif %}
-                <div id="dismiss" class="text-end">
-                    <a href="#" class="text-white text-decoration-none" aria-label="收起侧边栏">
-                        <i class="fa-solid fa-chevron-left"></i>
-                    </a>
+                        <a href="{{ url_for("frontend.login") }}">登录</a>
+                    </div>
+                    {% else %}
+                    <div class="dropdown sidebar-account">
+                        <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" id="dropdownUser1" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fa-solid fa-user me-2"></i>
+                            <strong>{{ current_user.username }}</strong>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-dark text-small shadow" aria-labelledby="dropdownUser1" style="">
+                            <li><a class="dropdown-item" href="{{ url_for("wodreport.new_category")  }}">新建目录</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for("frontend.profile_page")  }}">设置</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for("wodreport.favorite_reports")  }}">我的收藏</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{{ url_for("frontend.logout") }}">登出</a></li>
+                        </ul>
+                    </div>
+                    {% endif %}
+                    <div id="dismiss">
+                        <a href="#" class="text-white text-decoration-none" aria-label="收起侧边栏">
+                            <i class="fa-solid fa-chevron-left"></i>
+                        </a>
+                    </div>
                 </div>
             </nav>
 
