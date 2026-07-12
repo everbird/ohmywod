@@ -18,28 +18,32 @@
 
 ## 执行顺序
 
-### 1. 建私有配置仓库骨架
+### 1. 建私有配置仓库骨架 —— 已完成（`ohmywod-ops`）
 
-建议结构：
+私有仓库 `ohmywod-ops`（github.com/everbird/ohmywod-ops）已建并搭好骨架。当前结构：
 
 ```text
-ohmywod-infra/
-  README.md
-  deploy.sh
-  secrets.env.enc
-  templates/
-    nginx.conf
-    supervisord.conf
-    redis-store.conf
-    redis-cache.conf
-    juicefs.service
-    litestream.yml
-    restic.env
-  scripts/
-    backup-ldap.sh
-    backup-restic.sh
-    restore-smoke.sh
+ohmywod-ops/
+  .sops.yaml                     age 公钥 + 加密规则
+  secrets/
+    secrets.env.example          schema（无真值）
+    secrets.env.enc              sops 密文（明文与 age 私钥不入库）
+  deploy/
+    deploy.sh                    裸机 → 服务就绪主脚本
+    bootstrap.sh                 apt 系统依赖
+    templates/ohmywod_local_config.py.tmpl   继承主仓库 config.py，只覆盖 4 个密钥
+  systemd/                       juicefs(--backup-meta) / litestream / restic / ldap-dump units+timers
+  nginx/wod.everbird.me.conf
+  litestream/litestream.yml
+  restic/restic.env.tmpl
+  scripts/                       backup-restic / backup-ldap / restore-smoke / switchover(阶段3)
+  firewall/cloud-firewall.md
+  docs/recovery.md
 ```
+
+**设计要点**：主仓库 `ohmywod/config.py` 是生产非密钥真值的唯一来源；生产 `ohmywod/local_config.py` 由 `deploy.sh` 渲染 = 继承 `config.py` + 只填 4 个密钥。`deploy.sh` clone 主仓库 `@APP_REF`（固定 commit，非 submodule）拼接两仓。
+
+**尚待收尾**：骨架里标 `# CONFIRM:` 处的值来自 docs 而非生产实测，首次部署前需逐条核对（尤以生产当前 `local_config.py` 实际内容、nginx `-T` 导出、JuiceFS 挂载来源为准）。
 
 验收标准：从一台裸 Ubuntu 24.04 机器开始，至少能按 README 复制出当前生产的 nginx、supervisord、redis、JuiceFS、应用配置。
 

@@ -19,7 +19,7 @@
 | 流量切换 | **Cloudflare 改源站 IP**（已是橙云代理，秒级生效） | 不依赖 DNS TTL；已就绪 |
 | 对象存储 | **AWS S3 → Linode Object Storage** | 用 Linode credit；同机房延迟更好。接受几分钟停写窗口做最终切换 |
 | LDAP | **退役**，认证收编进 Flask + SQLite，安排在搭建备机**之前** | N=1 应用付多应用成本；退役后 HA 拓扑少一个最难伺候的组件，切换脚本不用写带 slapd 的版本 |
-| Secrets | **sops + age**，加密进私有配置仓库 | 零运行时依赖；Vault/OpenBao 类在线服务对 N=1 项目是负资产（自身成为新单点，重启后 sealed——精确患上我们正在治的病） |
+| Secrets | **sops + age**，加密进私有配置仓库（`ohmywod-ops`） | 零运行时依赖；Vault/OpenBao 类在线服务对 N=1 项目是负资产（自身成为新单点，重启后 sealed——精确患上我们正在治的病） |
 | 找回密码邮件 | **Resend 免费档**（3000 封/月），发件域 `everbird.me` | 自定义域名是硬需求（gmail 地址发改密链接形同钓鱼）；应用侧只写标准 SMTP，凭据走 secrets.env，可随时换厂商 |
 
 ## 状态盘点：绑死单机的东西
