@@ -14,8 +14,8 @@
 | 2 | 固化 Redis（AOF / loopback） | ✅ 线上确认 | 运行态与模板一致 |
 | 3 | JuiceFS `--backup-meta 1h` | ✅ 已上 | role `juicefs`，进程 cmdline 确认 |
 | 4 | Litestream 备份 SQLite | ✅ 已上，**restore 演练过** | role `litestream` → Linode OS `ohmywod-backups`(jp-tyo-1)，已切 WAL |
-| 5 | restic 过渡备份（战报文件 / 块存储卷） | ⬜ 待做 | 复用同 bucket 不同前缀 |
-| 6 | LDAP 每日 dump | ⬜ 待做 | 阶段 2 退役后消亡 |
+| 5 | ~~restic 过渡备份（战报文件 / 块存储卷）~~ | ❌ 已砍（2026-07-12） | 归一化进 JuiceFS 后不做，接受无防误删备份风险，见 ha-plan.md "restic 决策" |
+| 6 | ~~LDAP 每日 dump~~ | ❌ 已砍（2026-07-12） | 阶段 2 就退役，过渡窗口不单建备份；接受 cutover 前账号无异地备份的窗口风险 |
 | 7 | 监控（UptimeRobot + Healthchecks） | ⬜ 待做 | `/healthz` 需先随 **app role** bump 生产到含该路由的 commit（现跑 `5c92e38`，healthz 404）|
 | 8 | Cloud Firewall | 🟡 部分 | 防火墙已存在、默认 Drop、放行 80/443/22 → **389/8013 已挡**；待办：80/443 收窄到 CF 段、SSH 限管理 IP（已用关密码登录缓解）|
 
@@ -24,7 +24,7 @@
 以下内容进 `ohmywod-ops`（密钥经 sops 加密），不提交本仓库：
 
 - 真实 `ohmywod/local_config.py`、`.env`、Redis 密码、Cloudflare/Linode/S3/Resend token。
-- nginx server block、certbot/Cloudflare DNS token、JuiceFS secret key、Litestream/restic repository password、对象存储 access/secret key。
+- nginx server block、certbot/Cloudflare DNS token、JuiceFS secret key、Litestream repository password、对象存储 access/secret key。
 - age 私钥（只放密码管理器；仓库只放 sops 密文）。
 
 ## 各项参考与验收
@@ -70,17 +70,17 @@ litestream restore -config /etc/litestream.yml -o /tmp/t.sqlite /data/ohmywod/oh
 
 已做过一次 restore 演练：恢复库行数与线上一致（report 13462）。
 
-### 5. restic 过渡备份 —— ⬜ 待做
+### 5. restic 过渡备份 —— ❌ 已砍（2026-07-12）
 
-阶段 1 存储归一化前备份 `/data/ohmywod/report` 本地实体 + `/mnt/extra-report` 块存储卷（不备份 JuiceFS 对象块本身，它由对象存储 + metadata backup 兜底）。可复用 `ohmywod-backups` bucket（不同前缀）。验收：定时运行 + Healthchecks 心跳 + 一次抽样 `restic restore`。
+不做。原意图是归一化完成前备份 `/data/ohmywod/report` 本地实体 + `/mnt/extra-report` 块存储卷。评估后决定：归一化进 JuiceFS 后战报靠 bucket 对象持久性 + JuiceFS 元数据备份兜底，接受"无独立防误删备份"风险（误删概率低 + 计划对写丢失容忍度高）。详见 ha-plan.md "restic 决策"。若日后不安，补救是周期性 `juicefs sync` 到第二 bucket。
 
-### 6. LDAP 每日 dump —— ⬜ 待做
+### 6. LDAP 每日 dump —— ❌ 已砍（2026-07-12）
 
-`slapcat -b "dc=everbird,dc=me"` 每日导出进 restic / 加密 bucket。阶段 2 退役 LDAP 后删除。
+不做。阶段 2 就把 LDAP 收编进 SQLite 退役，为过渡窗口单建 `slapcat` dump 不值当。**已知缺口**：阶段 2 cutover 前，OpenLDAP 账号无异地备份，此窗口内整机损坏会丢账号（SQLite/Litestream 尚未覆盖账号）；接受此风险，靠尽快推进阶段 2。
 
 ### 7. 监控 —— ⬜ 待做
 
-UptimeRobot 盯 `https://wod.everbird.me/healthz`；Healthchecks.io 每条备份任务（Litestream 巡检、restic、LDAP dump、JuiceFS meta）一条独立 check。**前置**：生产 bump 到含 `/healthz` 的 commit（app role）——现跑 `5c92e38` 早于该路由，直接监控会一直 404。
+UptimeRobot 盯 `https://wod.everbird.me/healthz`；Healthchecks.io 每条备份任务（Litestream 巡检、JuiceFS meta）一条独立 check。**前置**：生产 bump 到含 `/healthz` 的 commit（app role）——现跑 `5c92e38` 早于该路由，直接监控会一直 404。
 
 ### 8. Cloud Firewall —— 🟡 部分
 
@@ -91,8 +91,8 @@ UptimeRobot 盯 `https://wod.everbird.me/healthz`；Healthchecks.io 每条备份
 
 - [x] 私有配置仓库能复现服务配置（Ansible + molecule）
 - [x] Redis AOF ✅ · JuiceFS `--backup-meta` ✅ · Litestream ✅
-- [ ] restic、LDAP dump 待做；各备份接 Healthchecks 心跳待做
+- [x] restic ❌ 已砍、LDAP dump ❌ 已砍（均 2026-07-12，见上）；余下备份（Litestream/JuiceFS meta）接 Healthchecks 心跳待做
 - [ ] UptimeRobot 监控 `/healthz`（待 app role bump 生产版本）
-- [x] SQLite restore 抽样验证；[ ] restic restore 待做
+- [x] SQLite restore 抽样验证
 - [~] Cloud Firewall 已挡 389/8013；[ ] 80/443 收窄到 CF 段待做
 - [x] （额外）SSH 加固、开机自启已上并真实重启验证
