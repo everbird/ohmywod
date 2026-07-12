@@ -1,138 +1,98 @@
 # HA 阶段 0 执行手册（2026-07）
 
-本手册对应 `ha-plan.md` 的“阶段 0：单机加固”。目标是在不增加第二台机器的前提下，把当前单机从“坏了才知道、靠手工记忆恢复”推进到“有持续备份、有监控、有可复现配置、有恢复演练”。
+本手册对应 `ha-plan.md` 的“阶段 0：单机加固”。目标：把单机从“坏了才知道、靠手工记忆恢复”推进到“有持续备份、有监控、有可复现配置、有恢复演练”。
 
-## 当前仓库侧已完成
+**执行方式（2026-07-12 起）**：配置管理已从 bash 一键脚本转为 **Ansible**（`ohmywod-ops/ansible/`）。每个 role 先过 **molecule**（Docker + systemd 容器，本地验证 converge/幂等/断言）再对生产 `ansible-playbook site.yml` 收敛；密钥用 **sops+age**，由 **community.sops** vars 插件消费（非 ansible-vault）。**执行细节以 `ohmywod-ops` 为准，本文只跟踪阶段 0 各项状态**；下方保留的 bash 命令仅作参考/验收用。
 
-- `configs/templates/redis-store.conf.template` 已开启 `appendonly yes` 和 `appendfsync everysec`，并限制 `bind 127.0.0.1 -::1` + `protected-mode yes`。
-- 应用已提供 `/healthz`，检查 SQLite、Redis 和配置中的存储挂载路径；UptimeRobot 应监控这个端点而不是首页。
-- SQLite 连接已配置 5 秒 timeout，作为 Litestream/WAL 的应用侧配套。
+## 状态一览（2026-07-12）
+
+| # | 项 | 状态 | 落地 / 备注 |
+|---|---|---|---|
+| 1 | 私有配置仓库 + 可复现部署 | ✅ 骨架完成 | `ohmywod-ops`，Ansible roles + molecule |
+| + | SSH 加固（关密码登录、root 仅 key） | ✅ 已上并验证 | role `ssh_hardening`（体检新发现，原计划未列）|
+| + | 开机自启（supervisord+juicefs → systemd） | ✅ 已上，**真实重启验证** | roles `supervisord`/`juicefs`（修“重启=停机”，原计划未识别）|
+| 2 | 固化 Redis（AOF / loopback） | ✅ 线上确认 | 运行态与模板一致 |
+| 3 | JuiceFS `--backup-meta 1h` | ✅ 已上 | role `juicefs`，进程 cmdline 确认 |
+| 4 | Litestream 备份 SQLite | ✅ 已上，**restore 演练过** | role `litestream` → Linode OS `ohmywod-backups`(jp-tyo-1)，已切 WAL |
+| 5 | restic 过渡备份（战报文件 / 块存储卷） | ⬜ 待做 | 复用同 bucket 不同前缀 |
+| 6 | LDAP 每日 dump | ⬜ 待做 | 阶段 2 退役后消亡 |
+| 7 | 监控（UptimeRobot + Healthchecks） | ⬜ 待做 | `/healthz` 需先随 **app role** bump 生产到含该路由的 commit（现跑 `5c92e38`，healthz 404）|
+| 8 | Cloud Firewall | 🟡 部分 | 防火墙已存在、默认 Drop、放行 80/443/22 → **389/8013 已挡**；待办：80/443 收窄到 CF 段、SSH 限管理 IP（已用关密码登录缓解）|
 
 ## 不能进主仓库的内容
 
-以下内容应进入私有配置仓库，不要提交到本仓库：
+以下内容进 `ohmywod-ops`（密钥经 sops 加密），不提交本仓库：
 
 - 真实 `ohmywod/local_config.py`、`.env`、Redis 密码、Cloudflare/Linode/S3/Resend token。
-- nginx server block、certbot/Cloudflare DNS token、JuiceFS secret key、Litestream/restic repository password。
-- age 私钥。私钥只放密码管理器；私有配置仓库只放 sops 加密后的 secrets。
+- nginx server block、certbot/Cloudflare DNS token、JuiceFS secret key、Litestream/restic repository password、对象存储 access/secret key。
+- age 私钥（只放密码管理器；仓库只放 sops 密文）。
 
-## 执行顺序
+## 各项参考与验收
 
-### 1. 建私有配置仓库骨架 —— 已完成（`ohmywod-ops`）
+### 1. 私有配置仓库 + Ansible —— ✅
 
-私有仓库 `ohmywod-ops`（github.com/everbird/ohmywod-ops）已建并搭好骨架。当前结构：
+`ohmywod-ops`：`ansible/`（roles + molecule + `community.sops`）、`docs/apply-bootstart.md`（开机自启上线手册）、`docs/recovery.md`（恢复手册）。控制节点在 WSL，SSH 到生产；生产另 clone 于 `/var/ohmywod/ops`（供 systemd 脚本）。主仓库 `ohmywod/config.py` 是生产非密钥真值唯一来源；生产 `local_config.py` 将由 **app role** 用 sops 渲染（继承 config.py + 只覆盖 4 个密钥）。
+验收：从裸 Ubuntu 24.04 能用 `ansible-playbook` 复现 nginx/supervisord/redis/JuiceFS/应用配置。
 
-```text
-ohmywod-ops/
-  .sops.yaml                     age 公钥 + 加密规则
-  secrets/
-    secrets.env.example          schema（无真值）
-    secrets.env.enc              sops 密文（明文与 age 私钥不入库）
-  deploy/
-    deploy.sh                    裸机 → 服务就绪主脚本
-    bootstrap.sh                 apt 系统依赖
-    templates/ohmywod_local_config.py.tmpl   继承主仓库 config.py，只覆盖 4 个密钥
-  systemd/                       juicefs(--backup-meta) / litestream / restic / ldap-dump units+timers
-  nginx/wod.everbird.me.conf
-  litestream/litestream.yml
-  restic/restic.env.tmpl
-  scripts/                       backup-restic / backup-ldap / restore-smoke / switchover(阶段3)
-  firewall/cloud-firewall.md
-  docs/recovery.md
-```
+### SSH 加固 —— ✅（体检新增）
 
-**设计要点**：主仓库 `ohmywod/config.py` 是生产非密钥真值的唯一来源；生产 `ohmywod/local_config.py` 由 `deploy.sh` 渲染 = 继承 `config.py` + 只填 4 个密钥。`deploy.sh` clone 主仓库 `@APP_REF`（固定 commit，非 submodule）拼接两仓。
+关 `PasswordAuthentication`、`PermitRootLogin prohibit-password`（drop-in，role `ssh_hardening`）。已验证 key 登录正常、密码登录被拒。背景：体检发现 22 对全网开放且原开着密码登录 + root 登录 + 无 fail2ban。
 
-**尚待收尾**：骨架里标 `# CONFIRM:` 处的值来自 docs 而非生产实测，首次部署前需逐条核对（尤以生产当前 `local_config.py` 实际内容、nginx `-T` 导出、JuiceFS 挂载来源为准）。
+### 开机自启 —— ✅（体检新增）
 
-验收标准：从一台裸 Ubuntu 24.04 机器开始，至少能按 README 复制出当前生产的 nginx、supervisord、redis、JuiceFS、应用配置。
+生产 supervisord 与 JuiceFS 原为**手动启动**（无 systemd unit / fstab），机器重启后不会自动恢复（"重启=停机"陷阱）。roles `supervisord`/`juicefs` 收编为 systemd 服务并 enable；2026-07-12 做过一次**真实重启验证**：全链路自动恢复、首页 200、`reboot_required` 清除。cutover 顺序见 `ohmywod-ops/docs/apply-bootstart.md`（先停手动实例再交 systemd，避免抢端口）。
 
-### 2. 固化 Redis 配置
+### 2. 固化 Redis —— ✅
 
-主仓库模板已经包含 AOF 和本地 bind。线上要确认运行态和模板一致：
+线上确认（参考命令）：
 
 ```bash
 redis-cli -p 6379 CONFIG GET appendonly appendfsync bind protected-mode
-redis-cli -p 6379 INFO persistence | grep -E 'aof_enabled|aof_last_bgrewrite_status|aof_last_write_status'
-redis-cli -p 7379 CONFIG GET bind protected-mode maxmemory
+redis-cli -p 6379 INFO persistence | grep -E 'aof_enabled|aof_last_bgrewrite_status'
 ```
 
-验收标准：`redis-store` 显示 `aof_enabled:1`，`appendfsync everysec`，只监听 loopback。把最终 conf 放入私有配置仓库。
+结果：`aof_enabled:1`、`appendfsync everysec`、两个 redis 均只监听 loopback。
 
-### 3. 开 JuiceFS metadata 备份
+### 3. JuiceFS `--backup-meta` —— ✅
 
-线上当前待办是给 JuiceFS mount 显式加 `--backup-meta 1h`。步骤建议：
+role `juicefs` 的 unit：`juicefs mount redis://localhost:6379/2 /mnt/jfs --backup-meta 1h`（去掉原来的 `-d`，前台交 systemd 管；`After=ohmywod-supervisord`）。
 
-1. 找到当前挂载来源：`systemctl cat <juicefs-unit>` 或查看 fstab/supervisord/手工启动记录。
-2. 在私有配置仓库的 unit/template 中加入 `--backup-meta 1h`。
-3. 低峰期重挂载 JuiceFS。
-4. 验证挂载恢复后，打开几个老战报、上传一个小测试战报，再删除测试数据。
-5. 确认 bucket 里开始出现 metadata backup 文件。
+### 4. Litestream 备份 SQLite —— ✅
 
-回滚：恢复旧 unit/template，重挂载到原参数。该步骤不迁移数据，只改变定时 metadata dump。
+role `litestream`：装 v0.3.13 .deb、SQLite 切 WAL（幂等）、渲染 `/etc/litestream.yml`（sops 注入 key，`no_log`）、持续复制到 Linode OS。
 
-### 4. 接 Litestream 备份 SQLite
-
-建议先把 SQLite 切到 WAL，再启动 Litestream 持续复制到 Linode Object Storage。
-
-验证命令示例：
+参考/验收命令：
 
 ```bash
-sqlite3 /data/ohmywod/ohmywod_d.sqlite 'PRAGMA journal_mode; PRAGMA busy_timeout;'
-litestream replicate -config /etc/litestream.yml
 litestream snapshots -config /etc/litestream.yml /data/ohmywod/ohmywod_d.sqlite
+litestream restore -config /etc/litestream.yml -o /tmp/t.sqlite /data/ohmywod/ohmywod_d.sqlite
 ```
 
-验收标准：
+已做过一次 restore 演练：恢复库行数与线上一致（report 13462）。
 
-- `journal_mode` 为 `wal`。
-- Litestream 有最新 snapshot/generation。
-- 在临时目录 restore 一份库并能打开查询。
+### 5. restic 过渡备份 —— ⬜ 待做
 
-回滚：停止 Litestream 不影响应用；如 WAL 切换后异常，低峰期停应用并按 SQLite 官方流程切回 DELETE journal。
+阶段 1 存储归一化前备份 `/data/ohmywod/report` 本地实体 + `/mnt/extra-report` 块存储卷（不备份 JuiceFS 对象块本身，它由对象存储 + metadata backup 兜底）。可复用 `ohmywod-backups` bucket（不同前缀）。验收：定时运行 + Healthchecks 心跳 + 一次抽样 `restic restore`。
 
-### 5. 接 restic 过渡备份
+### 6. LDAP 每日 dump —— ⬜ 待做
 
-阶段 1 存储归一化前，仍需备份：
+`slapcat -b "dc=everbird,dc=me"` 每日导出进 restic / 加密 bucket。阶段 2 退役 LDAP 后删除。
 
-- `/data/ohmywod/report` 本地实体文件。
-- `/mnt/extra-report` 块存储卷内容。
+### 7. 监控 —— ⬜ 待做
 
-不需要备份 JuiceFS 对象块本身；它会迁到 Linode Object Storage，并由 JuiceFS metadata backup 兜底。
+UptimeRobot 盯 `https://wod.everbird.me/healthz`；Healthchecks.io 每条备份任务（Litestream 巡检、restic、LDAP dump、JuiceFS meta）一条独立 check。**前置**：生产 bump 到含 `/healthz` 的 commit（app role）——现跑 `5c92e38` 早于该路由，直接监控会一直 404。
 
-验收标准：restic backup 定时运行，Healthchecks.io 能看到成功心跳，且完成一次 `restic restore --target /tmp/ohmywod-restore-test latest` 抽样验证。
+### 8. Cloud Firewall —— 🟡 部分
 
-### 6. 接 LDAP 过渡备份
+现状（浏览器核实）：Linode 防火墙 `ohmywod` 已启用、**入站默认 Drop**、仅放行 80/443/22 → 389(slapd)/8013(gunicorn) 从公网已挡住。
+待办：80/443 源收窄到 **Cloudflare IP 段**（也是限流信任 `CF-Connecting-IP` 的前提）；SSH 22 目前对全网开放（已用关密码登录缓解，可选再按固定管理 IP 收窄）。
 
-LDAP 退役前，每日导出：
+## 阶段 0 完成定义（勾选）
 
-```bash
-slapcat -b "dc=everbird,dc=me" > ldap-$(date +%F).ldif
-```
-
-导出的 LDIF 进 restic 或加密 bucket，不进主仓库。阶段 2 退役 LDAP 后删除这条备份任务。
-
-### 7. 接监控
-
-- UptimeRobot 监控：`https://wod.everbird.me/healthz`。
-- Healthchecks.io：每个 cron 或 systemd timer 一条独立 check，包括 Litestream 备份巡检、restic、LDAP dump、JuiceFS metadata 备份检查。
-
-验收标准：手动停掉一个非破坏性依赖或临时指向不存在的 storage path 时，`/healthz` 返回 503；恢复后回到 200。
-
-### 8. Linode Cloud Firewall
-
-Cloudflare 橙云代理已经启用后，源站入站应限制为：
-
-- HTTP/HTTPS：只允许 Cloudflare IP 段。
-- SSH：只允许你的固定管理 IP 或临时手动开放。
-- Redis、supervisord、JuiceFS metadata Redis：不对公网开放。
-
-验收标准：公网无法直接访问源站 IP 的 80/443；Cloudflare 域名访问正常。
-
-## 阶段 0 完成定义
-
-- 私有配置仓库能复现当前服务配置。
-- Redis AOF、JuiceFS `--backup-meta`、Litestream、restic、LDAP dump 都有监控心跳。
-- UptimeRobot 监控 `/healthz`。
-- 至少做过一次 SQLite restore 和 restic restore 抽样验证。
-- Cloud Firewall 已限制源站入口。
+- [x] 私有配置仓库能复现服务配置（Ansible + molecule）
+- [x] Redis AOF ✅ · JuiceFS `--backup-meta` ✅ · Litestream ✅
+- [ ] restic、LDAP dump 待做；各备份接 Healthchecks 心跳待做
+- [ ] UptimeRobot 监控 `/healthz`（待 app role bump 生产版本）
+- [x] SQLite restore 抽样验证；[ ] restic restore 待做
+- [~] Cloud Firewall 已挡 389/8013；[ ] 80/443 收窄到 CF 段待做
+- [x] （额外）SSH 加固、开机自启已上并真实重启验证
