@@ -15,3 +15,9 @@ redis-store.conf
 .coverage
 .pytest_cache/
 .claude
+
+# secrets —— 私钥/密钥文件绝不入库（app 仓是公开的）
+keys.txt
+*.age
+age-key*.txt
+secrets.env
