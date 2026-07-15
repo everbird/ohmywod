@@ -79,8 +79,16 @@ while IFS= read -r cat; do
       echo "  ⚠ 目标已存在，跳过 mv（人工确认）：$dest"
     else
       log "归位: $cat  ->  $owner/$cat"
-      run "mkdir -p \"$dest_dir\""
-      run "mv \"$src\" \"$dest\""
+      if [ "$owner" = "$cat" ]; then
+        # owner 与 category 同名：不能把目录 mv 进自身子目录，先移到临时名中转
+        tmp="$JFS/.backfill-tmp-$cat.$$"
+        run "mv \"$src\" \"$tmp\""
+        run "mkdir -p \"$dest_dir\""
+        run "mv \"$tmp\" \"$dest\""
+      else
+        run "mkdir -p \"$dest_dir\""
+        run "mv \"$src\" \"$dest\""
+      fi
       moved=$((moved+1))
     fi
   fi
