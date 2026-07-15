@@ -4,7 +4,7 @@
 
 **执行方式（2026-07-12 起）**：配置管理已从 bash 一键脚本转为 **Ansible**（`ohmywod-ops/ansible/`）。每个 role 先过 **molecule**（Docker + systemd 容器，本地验证 converge/幂等/断言）再对生产 `ansible-playbook site.yml` 收敛；密钥用 **sops+age**，由 **community.sops** vars 插件消费（非 ansible-vault）。**执行细节以 `ohmywod-ops` 为准，本文只跟踪阶段 0 各项状态**；下方保留的 bash 命令仅作参考/验收用。
 
-## 状态一览（2026-07-12）
+## 状态一览（2026-07-15）
 
 | # | 项 | 状态 | 落地 / 备注 |
 |---|---|---|---|
@@ -16,8 +16,8 @@
 | 4 | Litestream 备份 SQLite | ✅ 已上，**restore 演练过** | role `litestream` → Linode OS `ohmywod-backups`(jp-tyo-1)，已切 WAL |
 | 5 | ~~restic 过渡备份（战报文件 / 块存储卷）~~ | ❌ 已砍（2026-07-12） | 归一化进 JuiceFS 后不做，接受无防误删备份风险，见 ha-plan.md "restic 决策" |
 | 6 | ~~LDAP 每日 dump~~ | ❌ 已砍（2026-07-12） | 阶段 2 就退役，过渡窗口不单建备份；接受 cutover 前账号无异地备份的窗口风险 |
-| 7 | 监控（UptimeRobot + Healthchecks） | ⬜ 待做 | `/healthz` 需先随 **app role** bump 生产到含该路由的 commit（现跑 `5c92e38`，healthz 404）|
-| 8 | Cloud Firewall | 🟡 部分 | 防火墙已存在、默认 Drop、放行 80/443/22 → **389/8013 已挡**；待办：80/443 收窄到 CF 段、SSH 限管理 IP（已用关密码登录缓解）|
+| 7 | 监控（UptimeRobot + Healthchecks） | ✅ 已上 | UptimeRobot 监控 `/healthz`；Healthchecks 已接 Litestream 与 JuiceFS meta 巡检 |
+| 8 | Cloud Firewall | ✅ 已收口 | 入站默认 Drop；80/443 已收窄到 Cloudflare IP 段；389/8013 不对公网开放；SSH 仅作管理入口 |
 
 ## 不能进主仓库的内容
 
@@ -78,21 +78,20 @@ litestream restore -config /etc/litestream.yml -o /tmp/t.sqlite /data/ohmywod/oh
 
 不做。阶段 2 就把 LDAP 收编进 SQLite 退役，为过渡窗口单建 `slapcat` dump 不值当。**已知缺口**：阶段 2 cutover 前，OpenLDAP 账号无异地备份，此窗口内整机损坏会丢账号（SQLite/Litestream 尚未覆盖账号）；接受此风险，靠尽快推进阶段 2。
 
-### 7. 监控 —— ⬜ 待做
+### 7. 监控 —— ✅
 
-UptimeRobot 盯 `https://wod.everbird.me/healthz`；Healthchecks.io 每条备份任务（Litestream 巡检、JuiceFS meta）一条独立 check。**前置**：生产 bump 到含 `/healthz` 的 commit（app role）——现跑 `5c92e38` 早于该路由，直接监控会一直 404。
+UptimeRobot 已监控 `https://wod.everbird.me/healthz`。Healthchecks.io 已为备份链路建立独立 check：Litestream 巡检与 JuiceFS meta dump 巡检各一条，生产侧由 `ohmywod-ops` 的 monitoring role 渲染脚本与 systemd timer 负责定时 ping。职责边界保持不变：UptimeRobot 看“站点现在是否可用”，Healthchecks 看“备份/巡检任务是否按时回报”。
 
-### 8. Cloud Firewall —— 🟡 部分
+### 8. Cloud Firewall —— ✅
 
-现状（浏览器核实）：Linode 防火墙 `ohmywod` 已启用、**入站默认 Drop**、仅放行 80/443/22 → 389(slapd)/8013(gunicorn) 从公网已挡住。
-待办：80/443 源收窄到 **Cloudflare IP 段**（也是限流信任 `CF-Connecting-IP` 的前提）；SSH 22 目前对全网开放（已用关密码登录缓解，可选再按固定管理 IP 收窄）。
+Linode 防火墙 `ohmywod` 已启用并收口：入站默认 Drop，80/443 仅放行 Cloudflare IP 段，389(slapd)/8013(gunicorn) 不对公网开放；SSH 仍是管理入口，配合已完成的关密码登录/root 仅 key 使用。80/443 收窄后，应用侧读取 `CF-Connecting-IP` 做限流/日志归因才有可信边界。
 
 ## 阶段 0 完成定义（勾选）
 
 - [x] 私有配置仓库能复现服务配置（Ansible + molecule）
 - [x] Redis AOF ✅ · JuiceFS `--backup-meta` ✅ · Litestream ✅
-- [x] restic ❌ 已砍、LDAP dump ❌ 已砍（均 2026-07-12，见上）；余下备份（Litestream/JuiceFS meta）接 Healthchecks 心跳待做
-- [ ] UptimeRobot 监控 `/healthz`（待 app role bump 生产版本）
+- [x] restic ❌ 已砍、LDAP dump ❌ 已砍（均 2026-07-12，见上）；Litestream/JuiceFS meta 巡检已接 Healthchecks 心跳
+- [x] UptimeRobot 监控 `/healthz`
 - [x] SQLite restore 抽样验证
-- [~] Cloud Firewall 已挡 389/8013；[ ] 80/443 收窄到 CF 段待做
+- [x] Cloud Firewall 已收口：389/8013 已挡，80/443 已收窄到 CF 段
 - [x] （额外）SSH 加固、开机自启已上并真实重启验证
