@@ -8,6 +8,7 @@ from lxml import html
 import pytest
 
 from ohmywod.controllers.report import ReportController
+from ohmywod.config import DefaultConfig
 from ohmywod.models.report import Report, ReportCategory
 from ohmywod.views.report import sanitize_wod_report
 
@@ -105,6 +106,21 @@ def test_healthz_ok(client, app):
     assert payload['checks']['db'] == 'ok'
     assert payload['checks']['redis'] == 'ok'
     assert payload['checks']['storage'][app.config['DATA_DIR']] == 'ok'
+
+
+def test_default_report_storage_is_juicefs_only():
+    assert DefaultConfig.DATA_DIR == '/mnt/jfs/reports'
+    assert DefaultConfig.HEALTHZ_STORAGE_PATHS == (DefaultConfig.DATA_DIR,)
+
+
+def test_usage_page_has_no_legacy_extra_mount(client):
+    res = client.get('/usage')
+    assert res.status_code == 200
+    assert b'/mnt/extra-report' not in res.data
+    page = res.data.decode('utf-8')
+    assert '文件系统已用' in page
+    assert '估算 S3 占用' not in page
+    assert '不代表 Linode Object Storage' in page
 
 
 def test_feedback_page(client):

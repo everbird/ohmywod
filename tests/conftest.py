@@ -35,7 +35,7 @@ def app():
         MOCK_LDAP_DB = mock_ldap_db_path
         DATA_DIR = temp_data_dir
         UPLOAD_DIR = temp_upload_dir
-        DISK_USAGE_THRESHOLD = 0.99
+        UPLOAD_DISK_USAGE_THRESHOLD = 0.99
         HEALTHZ_STORAGE_PATHS = (temp_data_dir,)
         SECRET_KEY = 'test_secret_key'
 

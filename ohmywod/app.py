@@ -81,55 +81,23 @@ def configure_app(app, config):
                 'percent': round((used / total) * 100, 2)
             }
             
-            # Extra disk usage check for /mnt/extra-report
-            extra_path = "/mnt/extra-report"
-            if os.path.exists(extra_path):
-                try:
-                    e_total, e_used, e_free = shutil.disk_usage(extra_path)
-                    disk_info['extra'] = {
-                        'total': e_total,
-                        'used': e_used,
-                        'free': e_free,
-                        'percent': round((e_used / e_total) * 100, 2),
-                        'available': True
-                    }
-                except Exception:
-                    disk_info['extra'] = {
-                        'total': 0,
-                        'used': 0,
-                        'free': 0,
-                        'percent': 0.0,
-                        'available': False
-                    }
-            else:
-                disk_info['extra'] = {
-                    'total': 0,
-                    'used': 0,
-                    'free': 0,
-                    'percent': 0.0,
-                    'available': False
-                }
-
-            # JuiceFS disk usage check for /mnt/jfs
-            jfs_path = "/mnt/jfs"
+            # Reports are stored under JuiceFS; this is separate from local zip staging.
+            jfs_path = app.config['DATA_DIR']
             try:
                 if os.path.exists(jfs_path):
                     _, j_used, _ = shutil.disk_usage(jfs_path)
                     disk_info['jfs'] = {
                         'used': j_used,
-                        'est_s3': j_used * 2,
                         'available': True
                     }
                 else:
                     disk_info['jfs'] = {
                         'used': 0,
-                        'est_s3': 0,
                         'available': False
                     }
             except Exception:
                 disk_info['jfs'] = {
                     'used': 0,
-                    'est_s3': 0,
                     'available': False
                 }
 

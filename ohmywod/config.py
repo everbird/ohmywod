@@ -37,13 +37,11 @@ class DefaultConfig(object):
     LDAP_READONLY = False
 
     # --- Upload ---
-    DATA_DIR = "/data/ohmywod/report"
+    # Reports are persisted in JuiceFS; UPLOAD_DIR is only local staging for zips.
+    DATA_DIR = "/mnt/jfs/reports"
     UPLOAD_DIR = "/data/ohmywod/upload"
-    DISK_USAGE_THRESHOLD = 0.96
-    HEALTHZ_STORAGE_PATHS = (
-        DATA_DIR,
-        "/mnt/jfs",
-    )
+    UPLOAD_DISK_USAGE_THRESHOLD = 0.96
+    HEALTHZ_STORAGE_PATHS = (DATA_DIR,)
 
 
     FLASK_ADMIN_SWATCH = "darkly"

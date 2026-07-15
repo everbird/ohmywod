@@ -51,12 +51,12 @@ def process(category_id):
 
     try:
         total, used, free = shutil.disk_usage(current_app.config['UPLOAD_DIR'])
-        threshold = current_app.config.get('DISK_USAGE_THRESHOLD', 0.96)
+        threshold = current_app.config.get('UPLOAD_DISK_USAGE_THRESHOLD', 0.96)
         if (used / total) >= threshold:
-            return f"上传失败：服务器磁盘使用率已达 {int(threshold * 100)}% 或更高，为保证稳定运行已暂停上传功能。", 400
+            return f"上传失败：本地临时上传空间使用率已达 {int(threshold * 100)}% 或更高，为保证稳定运行已暂停上传功能。", 400
     except OSError as e:
-        current_app.logger.error(f"Failed to check disk usage on UPLOAD_DIR: {e}")
-        return "上传失败：存储服务未连接，请联系管理员", 503
+        current_app.logger.error(f"Failed to check local upload staging space: {e}")
+        return "上传失败：本地临时上传空间不可用，请联系管理员", 503
 
     if 'filepond' not in request.files:
         return "上传失败：请求中缺少文件内容", 400
