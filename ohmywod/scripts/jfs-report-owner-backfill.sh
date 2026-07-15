@@ -45,6 +45,7 @@ for base in "${REPORT_TREES[@]}"; do
     tgt="$(readlink "$link" 2>/dev/null || true)"
     case "$tgt" in
       "$JFS"/*)
+        tgt="${tgt%/}"                    # 去掉可能的结尾斜杠（否则 rel 含 "/" 被误判为已 nested）
         rel="${tgt#"$JFS"/}"
         # rel 里若含 "/" 说明已是 <owner>/<cat>，跳过；只要单段的
         if [[ "$rel" != */* ]]; then
