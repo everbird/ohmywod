@@ -1,4 +1,12 @@
+---
+document_status: archived
+archived_at: "2026-07-16"
+superseded_by: "../maintenance-support-plan.md"
+---
+
 # 广告展示优化方案（2026-07）
+
+> **归档说明**：本方案已于 2026-07-16 被[站点维护成本支持计划](../maintenance-support-plan.md)取代，不再作为实施依据。方案撰写后，阅读模式页尾部广告曾经落地，因此下文“尚未实施”和现状描述只代表当时判断，不代表归档时的代码状态。
 
 目标：提高 AdSense 的 coverage 和 impression，同时不破坏作为工具网站的使用体验。本文档是方案记录，截至撰写时**尚未实施**。
 
