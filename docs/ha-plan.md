@@ -1,207 +1,460 @@
-# 高可用计划（2026-07 定稿）
+---
+document_id: ohmywod-ha-plan
+schema_version: 1
+document_status: active
+source_of_truth_for: "HA/DR direction, implementation gates, work item status, and wave changelog"
+language: zh-CN
+created_at: "2026-07-05"
+last_updated: "2026-07-18"
+review_commit: "app 0f52bf9; ops 5988138; production app 0512c83"
+review_worktree: "clean before this documentation wave"
+next_item_id: "HA-011"
+---
 
-单点 Linode VPS → 双机温备架构的完整计划。目标不是业界标准的"真 HA"（多活 + 自动 failover），而是用最小成本达成两件事：
+# 高可用与灾难恢复计划
 
-1. **迁移和大改动不再造成服务不可用**——所有升级变成蓝绿部署：备机先做、先验证、再切流量。
-2. **物理机重启/宕机可控**——从"听天由命等 Linode"变成"收到告警后一条命令切换，1~2 分钟恢复"。
+> 本文是 ohmywod 可用性、备份恢复和温备建设方向的工作计划，不是可以直接复制到生产执行的 runbook。具体生产真值和恢复步骤以私有仓库 `ohmywod-ops/docs/recovery.md` 为准，ops 整改细节以 `ohmywod-ops/docs/ops-review-plan.md` 为准。
+>
+> **当前结论：生产仍是单机。已完成单机加固、SQLite 持续复制、对象存储迁移和战报存储归一化，但冷恢复闭环尚未成立，双机温备也尚未建设。因此当前能力应称为“使用外部对象存储和持续数据库复制的单机部署”，不能称为 HA，也不再宣称 20 分钟可重建。温备仍是目标方向，但必须先关闭恢复顺序、服务依赖和身份恢复缺口。**
 
-预算上限 $100/月，方案实际成本约 $30/月。
+## 1. 边界、现状与目标
 
-前置阅读：[vps-migration-2026-07.md](archive/vps-migration-2026-07.md)（当前生产拓扑以它为准）。
+### 1.1 本文负责什么
 
-## 已拍板的决策
+- 记录可用性与恢复方向、已拍板架构约束、事项状态和完成证据。
+- 维护 `HA-NNN` 级跨仓事项；一个事项可以在 app 和 ops 两个仓库分别落地。
+- 不复制生产 IP、bucket、monitor ID、密钥字段和逐条恢复命令；这些真值只放在私有 ops 仓库。
+- 不替代 `ohmywod-ops/docs/ops-review-plan.md`。后者负责具体 ops 缺陷，本文负责把它们映射到整体 HA/DR 路线。
+- 应用安全、体验和性能改进归 [站点改进计划](improvement-plan-2026-07.md)；维护成本支持归 [站点维护成本支持计划](maintenance-support-plan.md)。
 
-| 决策 | 结论 | 理由 |
+### 1.2 2026-07-18 生产只读盘点
+
+| 能力 | 当前状态 | 证据与边界 |
 |---|---|---|
-| 架构 | **温备（active-passive），不做多活** | 读多写少、写丢失容忍度高；多活需要 SQLite→PG、NodeBalancer 等，成本翻倍只为把"1 分钟手动切换"变成 0 秒 |
-| 备机位置 | **同机房** | JuiceFS/Redis 复制延迟敏感 + 免费私网 VLAN + Block Storage 卷只能同机房漂移；防宿主机故障两台不同宿主机已覆盖，机房级灾难靠 bucket 备份异地重建兜底 |
-| 切换方式 | **告警后手动触发脚本**，不做自动 failover | 自动切换的脑裂风险（双写 SQLite/Redis）> 收益；个人项目可接受几分钟人工响应 |
-| 流量切换 | **Cloudflare 改源站 IP**（已是橙云代理，秒级生效） | 不依赖 DNS TTL；已就绪 |
-| 对象存储 | **AWS S3 → Linode Object Storage** | 用 Linode credit；同机房延迟更好。接受几分钟停写窗口做最终切换 |
-| LDAP | **退役**，认证收编进 Flask + SQLite，安排在搭建备机**之前** | N=1 应用付多应用成本；退役后 HA 拓扑少一个最难伺候的组件，切换脚本不用写带 slapd 的版本 |
-| Secrets | **sops + age**，加密进私有配置仓库（`ohmywod-ops`） | 零运行时依赖；Vault/OpenBao 类在线服务对 N=1 项目是负资产（自身成为新单点，重启后 sealed——精确患上我们正在治的病） |
-| 找回密码邮件 | **Resend 免费档**（3000 封/月），发件域 `everbird.me` | 自定义域名是硬需求（gmail 地址发改密链接形同钓鱼）；应用侧只写标准 SMTP，凭据走 secrets.env，可随时换厂商 |
-| 配置管理 | **Ansible + molecule + sops**（2026-07-12 定） | 声明式幂等、主机/备机同一 playbook 保证一致；molecule（Docker + systemd 容器）本地验证每个 role 上线前必过；密钥经 `community.sops` 消费，非 ansible-vault。取代原设想的 bash 一键脚本 |
+| 计算 | 单台 Linode 1 vCPU / 961 MiB，无私网 IPv4 | Redis `role:master`、`connected_slaves:0`；没有备机 inventory |
+| 应用版本 | 生产 `0512c83`，本仓 `0f52bf9` | 生产工作树 `git describe` 为 `v1.7-28-g0512c83` |
+| SQLite | WAL，完整性检查通过 | Litestream 0.3.13 active；这只证明持续复制进程运行，不证明冷恢复可用 |
+| 战报文件 | 已全部归一到 `/mnt/jfs/reports` | JuiceFS 当前约 104 GiB；旧 `/data/ohmywod/report` 和 `/mnt/extra-report` 已不存在 |
+| JuiceFS | Linode Object Storage + Redis db 2 metadata | `--backup-meta` 巡检 timer 最近执行成功；没有 Redis replica |
+| 外部监控 | `/healthz` 经 Cloudflare 返回 200 | UptimeRobot 与两个 Healthchecks timer 已配置；仍需验证备份新鲜度和真实可恢复性 |
+| 开机恢复 | 相关 systemd unit enabled，曾做真实重启验证 | 当前 `ohmywod-supervisord` 明确排在 JuiceFS 前，web 仍可能早于挂载启动 |
+| 身份 | OpenLDAP 仍 active | LDAP 无独立异地 dump；计划退役但尚未开始 |
+| 切换 | Cloudflare 可作为流量切换面 | `scripts/switchover.sh` 仍是会 `exit 1` 的占位骨架，未演练 |
 
-## 状态盘点：绑死单机的东西
+### 1.3 风险结论
 
-| 状态 | 位置 | 关键程度 | 归宿 |
-|---|---|---|---|
-| SQLite 主库 | `/data/ohmywod/ohmywod_d.sqlite` | 高 | Litestream 持续复制 → Linode OS bucket ✅ 已上（2026-07-12，WAL + restore 演练过） |
-| JuiceFS metadata | redis-store **db 2** | **最高**（丢了 = 整个 JuiceFS 报废，S3 块变废纸） | AOF + 备机 replica + `--backup-meta` 兜底 |
-| 点赞/浏览计数 | redis-store 其他 db（`/stats/report/*`） | 低 | 随整实例复制，丢了可忍 |
-| 战报文件（本地） | `/data/ohmywod/report`（含软链接） | 高 | 归一化进 JuiceFS（见下）；不做独立文件级备份（见下"restic 决策"） |
-| 战报文件（块存储） | Block Storage 卷 `/mnt/extra-report` | 高 | 同上归一化；未归一化前靠卷漂移兜底 |
-| 战报文件（JuiceFS） | `/mnt/jfs`（S3 后端） | 高 | 后端迁 Linode OS；数据本身已在对象存储 ✓ |
-| 用户账号 | 本机 OpenLDAP | 高 | 退役进 SQLite（随 Litestream 走） |
-| Session | redis（Flask-Session） | 可丢（重新登录） | 不处理 |
-| 真实配置/secrets | 线上手工维护的 `local_config.py` 等 | 高 | 反向工程入私有 git 仓库 + sops 加密 ✅ `ohmywod-ops`（Ansible + community.sops；app role 落地 local_config 渲染中） |
+当前最大的风险不是“少一台机器”，而是已有恢复材料还没有组成安全闭环：
 
-**存储归一化（推荐，新增提议）**：战报目前横跨本地盘、块存储卷、JuiceFS 三处靠软链接粘合。建议全部归并进 JuiceFS——后端换成 Linode OS 后容量便宜（$0.02/GB vs 块存储 $0.10/GB，且有 credit），本地盘只留 JuiceFS cache。收益：文件层变成"近乎无状态"，failover 不再需要块存储卷的 detach/attach 舞蹈，`DISK_USAGE_THRESHOLD` 溢出逻辑和三处软链接的复杂度全部消亡。做完后卷可释放，省 $ 也省心。
+1. ops 的完整 playbook 会先启动应用和 Litestream，再恢复数据；缺库检查还可能创建空 SQLite。
+2. Redis meta、JuiceFS、web 的 systemd 依赖方向不满足“挂载未就绪时 web 不得写入”。
+3. 裸机 bootstrap、目录、证书、DNS、Cloud Firewall、密钥真值和 LDAP 身份恢复仍有缺口。
+4. 监控目前能证明进程和定时任务在运行，不能单独证明最近副本可恢复。
+5. ops 渲染的生产 `local_config.py` 是全量替换类，已经遗漏 app 默认配置中的 SQLite timeout；配置真值漂移会让“代码已完成”不等于“生产已生效”。
+6. 如果现在直接增加备机，只会把未验证的恢复与启动问题复制到两台机器，并增加脑裂面。
 
-**restic 决策（2026-07-12 定：不做）**：restic 原本只是归一化完成前的过渡文件级备份。归一化后战报以 JuiceFS 块存在 Linode bucket，恢复依赖 JuiceFS 元数据完整性（`--backup-meta` dump + AOF + 阶段3 replica）+ bucket 对象持久性——**机器/宿主机故障这层已够**。restic 额外提供的是「独立失败域 + 防误删/防 `juicefs rmr` 的文件级版本化」，是「复制不是备份」的那层兜底。评估后判定战报误删概率极低、且计划本身对写丢失容忍度高，**接受此风险，不做 restic，也不做替代的第二 bucket sync**。留档：战报无防误删备份，若日后出现误删事故或觉得不安，最省事的补救是周期性 `juicefs sync` 到第二 bucket（半小时的事，不锁死现在的决定）。<br>**连带影响**：`backup-ldap.sh` / `restore-smoke.sh` 原写入 restic repo。**LDAP 每日 dump 也一并不做**（2026-07-12 定）——阶段2 就退役 LDAP，为过渡窗口单建 dump 不值当。已知缺口：**阶段2 cutover 前，OpenLDAP 账号无异地备份**，此窗口内整机损坏会丢账号（SQLite/Litestream 尚未覆盖账号）；接受此风险，靠尽快推进阶段2 收敛。
+### 1.4 已拍板的原则
 
-## 目标拓扑
+1. 先完成可靠的单机 DR，再建设双机温备；备机不能替代恢复演练。
+2. 目标架构是 active-passive，不做多活；SQLite 和 Redis 不允许双主写入。
+3. 故障切换由告警触发、人工确认、一条命令执行，不做自动 failover。
+4. 备机与主机优先同区域、不同宿主机，用私网 VLAN 复制；区域级故障靠对象存储和从零恢复兜底。
+5. 流量切换继续使用 Cloudflare 源站变更，不为这个体量引入 NodeBalancer。
+6. 配置管理使用 Ansible，密钥使用 sops + age；不引入 Vault/OpenBao 一类新的在线单点。
+7. 战报不做 restic 或第二 bucket 副本。接受暂时没有防误删版本化备份的风险；触发条件见 HA-007。
+8. LDAP 在建设备机前退役，避免为过渡组件设计复制和切换。
+9. 所有 RPO/RTO 只能来自演练记录，不能从组件宣传或脚本目标推导。
 
+### 1.5 成功判断
+
+计划分两层成立：
+
+- **DR 层成立**：从隔离的空白机器恢复时，不会创建并复制空库，不会向未挂载目录写数据；SQLite、JuiceFS metadata、战报、身份、证书、入口网络和监控均有可复核恢复证据，并记录实际 RPO/RTO。
+- **温备层成立**：主机与备机角色明确，只有一端可写；真实切换和回切都演练成功，旧主重新加入前经过防脑裂检查；日常升级能按同一套蓝绿流程完成。
+
+## 2. 这份计划怎么维护
+
+这是个人兴趣项目，不需要 owner、RACI 或复杂发布委员会。后续通常由一个 AI 工具推进，再由另一个 AI 工具独立检查。涉及生产写入、停机、DNS、云资源和持续成本时，由用户做最后决定。
+
+每个事项有两个可选角色：
+
+- `Drive AI`：调查现状、提出选项、实施改动，并更新本文和 changelog。
+- `Review AI`：独立检查假设、diff、演练证据和剩余风险，不只复述 Drive AI 的结论。
+
+角色可以写工具名，例如 `Codex` 或 `Claude Code`；尚未分配时写 `unassigned`。
+
+### 2.1 状态枚举
+
+工作项的 `状态` 只能使用以下值：
+
+- `todo`：方向已确认，尚未开始
+- `assessing`：仍需调查、成本确认或用户选择，尚不能直接实施
+- `in_progress`：正在调查或实施
+- `blocked`：存在明确阻塞；必须写明解除方式
+- `done`：完成判断已经满足，并有可复核证据
+- `cancelled`：明确决定不做；记录理由和重新考虑的触发条件
+
+### 2.2 更新规则
+
+1. 每个 `HA-NNN` ID 永久不变、不可复用。新增事项使用 front matter 的 `next_item_id`，并同步递增。
+2. 开始工作前先读本文、两个仓库的 `git status` 和 ops 审查计划，保留用户或其他工具的未提交改动。
+3. `状态` 是事项主真值。状态变化、实现改动和 changelog 放在同一波变更里。
+4. app 仓只维护跨仓目标和应用侧证据；具体 ops 子问题继续使用既有 `OPS-NNN`，不要在这里复制一份独立状态。
+5. `done` 必须满足完成判断。进程 active、Molecule 通过、脚本写完或监控为绿，都不能单独证明恢复/切换完成。
+6. 生产写入、停服务、重启、DNS、防火墙、密钥、实例创建或删除必须先获得用户明确授权。
+7. 证据不得包含 token、口令、SOPS 明文、完整 capability URL 或个人信息。
+8. RPO/RTO、费用和供应商能力容易变化；记录日期和来源，不把估算写成长期承诺。
+9. 每波改动在文末按时间正序追加 changelog。旧记录不重写，纠错时追加 correction wave。
+10. 每次变更更新 front matter 的 `last_updated`。
+
+### 2.3 固定工作项格式
+
+新增事项使用同一套结构：
+
+- 元信息：`状态`、`优先级`、`波次`、`Drive AI`、`Review AI`、`依赖`、`最后更新`、`结论置信度`
+- 内容：`问题与影响`、`证据`、`方向与要点`、`完成判断`、`Review 关注`、`执行证据`
+
+优先级定义：
+
+- `P0`：可能造成数据损坏、空库进入备份链、恢复失败或恢复期间错误对外服务
+- `P1`：显著影响可恢复性、切换能力、安全性或变更成功率
+- `P2`：成本、治理和长期维护性问题
+
+## 3. 建议推进顺序
+
+### Wave 0：把现有单机恢复路径变安全
+
+范围：HA-004、HA-005。
+
+方向：先解决空库、服务启动顺序和未挂载目录写入风险。完成前不执行完整冷恢复，也不创建长期备机。
+
+### Wave 1：建立可验证的 DR 闭环
+
+范围：HA-006、HA-007、HA-008。
+
+方向：补齐裸机、身份、证书、网络和备份证据，在隔离新机做一次端到端恢复并测量 RPO/RTO。LDAP 退役后，SQLite/Litestream 才能覆盖完整账号真值。
+
+### Wave 2：建设并演练温备
+
+范围：HA-009、HA-010。
+
+方向：通过 DR gate 后再创建备机、复制 Redis metadata、实现切换与回切。第一轮使用临时或可按小时计费的实例验证，结果和成本都可接受后再决定长期保留。
+
+## 4. 工作项
+
+### HA-001 — 单机宿主加固与外部存活监控
+
+- 状态：`done`
+- 优先级：`P1`
+- 波次：历史基线
+- Drive AI：`unassigned`
+- Review AI：`unassigned`
+- 依赖：无
+- 最后更新：2026-07-18
+- 结论置信度：`confirmed`
+
+问题与影响：旧生产机的 SSH、Redis 暴露、开机自启和外部存活监控都依赖手工状态，重启可能直接变成停机。
+
+证据：ops 仓已经落地 SSH hardening、Cloud Firewall、systemd 受管服务、nginx、UptimeRobot `/healthz` 和 Healthchecks timer；2026-07-12 做过真实重启验证。2026-07-18 只读检查确认相关 unit enabled/active、公开 `/healthz` 返回 200。
+
+方向与要点：保留现有能力；后续的恢复顺序和服务依赖缺口由 HA-004、HA-005 处理，不反向改写本项状态。
+
+完成判断：现有主机重启后基础服务可恢复，公网入口只暴露预期端口，站点和备份巡检有外部告警。
+
+Review 关注：本项 `done` 不等于冷恢复可用，也不证明 JuiceFS 先于 web 启动。
+
+执行证据：`ohmywod-ops` roles：`ssh_hardening`、`supervisord`、`juicefs`、`monitoring`、`nginx`；生产只读复核日期 2026-07-18。
+
+### HA-002 — 战报存储归一化并迁入 Linode Object Storage
+
+- 状态：`done`
+- 优先级：`P1`
+- 波次：历史基线
+- Drive AI：`unassigned`
+- Review AI：`unassigned`
+- 依赖：HA-001
+- 最后更新：2026-07-18
+- 结论置信度：`confirmed`
+
+问题与影响：战报曾分散在本地盘、Block Storage 和 JuiceFS，靠软链接拼接；任何切换都要同时搬运三种存储状态。
+
+证据：app 的 `DATA_DIR` 已收敛为 `/mnt/jfs/reports`，usage、上传阈值和 `/healthz` 已删除旧存储语义；ops 的 JuiceFS 后端已切到 Linode Object Storage。生产只读检查确认旧本地 report 目录和 `/mnt/extra-report` 均不存在，约 104 GiB 战报位于 JuiceFS。
+
+方向与要点：继续把 JuiceFS metadata 视为最高价值恢复对象；对象块存在不等于文件系统可恢复。
+
+完成判断：生产读写只使用 JuiceFS 战报目录，旧 Block Storage 已释放，应用和运维配置不再依赖旧路径。
+
+Review 关注：避免重新引入三路径容量显示、软链接或迁移脚本。
+
+执行证据：app `0512c83`；ops `c5ee2b8`/`470ba2f`；2026-07-18 生产挂载与目录检查。
+
+### HA-003 — SQLite WAL、持续复制与基础巡检
+
+- 状态：`done`
+- 优先级：`P1`
+- 波次：历史基线
+- Drive AI：`unassigned`
+- Review AI：`unassigned`
+- 依赖：HA-001
+- 最后更新：2026-07-18
+- 结论置信度：`confirmed, replication only`
+
+问题与影响：单机 SQLite 没有持续副本时，主机损坏会同时丢应用数据。
+
+证据：生产数据库为 WAL，`PRAGMA integrity_check` 返回 `ok`；Litestream 0.3.13 active，Healthchecks timer 最近执行成功，历史上做过一次 restore smoke。应用锁等待的生产漂移单独由 IMP-003 处理。
+
+方向与要点：本项只确认“持续复制链已建立”。恢复安全、备份新鲜度和冷恢复由 HA-004、HA-006、HA-007 验收。
+
+完成判断：生产数据库稳定运行在 WAL，Litestream 连续复制，基础失败能被巡检发现。
+
+Review 关注：不要用 service active 或能列出旧 generation 代替最新恢复验证。
+
+执行证据：app `8fb058e`；ops Litestream role 与 monitoring role；2026-07-18 生产只读检查。
+
+### HA-004 — 重排冷恢复流程，阻止空库上线或进入备份链
+
+- 状态：`todo`
+- 优先级：`P0`
+- 波次：Wave 0
+- Drive AI：`unassigned`
+- Review AI：`unassigned`
+- 依赖：HA-003
+- 最后更新：2026-07-18
+- 结论置信度：`confirmed`
+
+问题与影响：现有恢复文档先运行完整 playbook，再恢复数据。Litestream role 的 SQLite 检查会在缺库时创建空文件，app、nginx 和 Litestream 也可能过早启动。
+
+证据：`ohmywod-ops/docs/ops-review-plan.md` 的 OPS-001、OPS-002；`docs/recovery.md` 当前顺序；Litestream role 使用默认 `sqlite3.connect()`。
+
+方向与要点：拆分“准备机器、恢复数据、验证、激活流量”；缺库检查必须使用不创建文件的只读打开；恢复完成前禁止 app 和 Litestream 写入/复制目标。
+
+完成判断：空白机和常见失败路径都不会创建空业务库、污染最后恢复点或提前对外服务；`--check` 不产生业务数据副作用。
+
+Review 关注：Litestream generation 选择、失败清理和重复执行是否仍有污染路径。
+
+执行证据：尚无；具体执行状态跟踪 OPS-001、OPS-002。
+
+### HA-005 — 修正 Redis meta、JuiceFS、web 和 nginx 的服务依赖
+
+- 状态：`todo`
+- 优先级：`P0`
+- 波次：Wave 0
+- Drive AI：`unassigned`
+- Review AI：`unassigned`
+- 依赖：HA-004
+- 最后更新：2026-07-18
+- 结论置信度：`confirmed`
+
+问题与影响：Redis store、Redis cache 和 web 同属一个 Supervisor unit。JuiceFS 必须等 Redis store，但 web 又必须等 JuiceFS，当前 unit 粒度形成错误依赖，重启时 web 可能写进挂载点的底层目录。
+
+证据：生产 `systemctl show` 显示 `ohmywod-supervisord Before=juicefs.service`；app Supervisor 模板同时管理 web 和两个 Redis；OPS-003 已记录同一问题。
+
+方向与要点：重建启动/停止关系，保证 Redis meta → JuiceFS ready → web → nginx；具体选择拆 unit、拆 Supervisor 或增加可靠 gate，实施时评估。
+
+完成判断：正常重启、JuiceFS 挂载失败和短暂对象存储故障下，web 都不会向未挂载目录写入；依赖可由自动测试和真实重启复现。
+
+Review 关注：循环依赖、停止顺序、挂载假活和 nginx 过早接流量。
+
+执行证据：尚无；具体执行状态跟踪 OPS-003。
+
+### HA-006 — 补齐裸机恢复前提并完成端到端演练
+
+- 状态：`todo`
+- 优先级：`P1`
+- 波次：Wave 1
+- Drive AI：`unassigned`
+- Review AI：`unassigned`
+- 依赖：HA-004、HA-005
+- 最后更新：2026-07-18
+- 结论置信度：`confirmed`
+
+问题与影响：bootstrap、运行目录、Supervisor 来源、证书、DNS、Cloud Firewall、新 inventory 和工具安装尚未形成空白 Ubuntu 可重复流程。现有 smoke 只恢复 SQLite 到临时目录。
+
+证据：OPS-002、OPS-004、OPS-007、OPS-010 至 OPS-012；2026-07-18 生产也确认系统没有 `sqlite3` CLI，说明文档中的隐含工具前提不成立。
+
+方向与要点：在隔离新机从信任根开始，恢复 SQLite、JuiceFS metadata/战报、身份、证书、入口网络和监控；验证后再切测试流量。记录每一步耗时和恢复点时间。
+
+完成判断：一台空白 Ubuntu 能安全到达“数据已恢复但未上线”，再经显式激活对外服务；至少一次完整演练记录真实 RPO/RTO、回退和遗留手工步骤。
+
+Review 关注：是否偷用了旧主机文件、个人 shell、已存在 DNS/证书或未入库凭据。
+
+执行证据：尚无；详细子项跟踪 OPS-002、OPS-004、OPS-007、OPS-010、OPS-011、OPS-012。
+
+### HA-007 — 验证备份新鲜度、保留策略与误删风险边界
+
+- 状态：`assessing`
+- 优先级：`P1`
+- 波次：Wave 1
+- Drive AI：`unassigned`
+- Review AI：`unassigned`
+- 依赖：HA-006
+- 最后更新：2026-07-18
+- 结论置信度：`confirmed gap, solution assessing`
+
+问题与影响：当前 timer 成功只证明脚本返回 0；战报对象和 metadata 也没有独立、不可变、可回到误删前的副本。
+
+证据：OPS-005、OPS-006；当前设计明确不做 restic 和第二 bucket，JuiceFS `TrashDays` 为 1。
+
+方向与要点：先让监控校验最新可恢复点的年龄，并用定期隔离恢复证明副本可用。是否增加对象版本化、第二 bucket 或更长 trash 保留，只按真实误删风险、供应商能力和成本评估。
+
+完成判断：SQLite 和 JuiceFS metadata 的新鲜度阈值明确且会告警；恢复演练能读取最新副本；用户已明确接受或收窄战报误删风险。
+
+Review 关注：复制与备份边界、同账号/同区域故障域、告警被静默禁用、恢复验证污染生产。
+
+执行证据：尚无；详细子项跟踪 OPS-005、OPS-006。
+
+### HA-008 — 退役 LDAP，把身份真值纳入 SQLite 恢复链
+
+- 状态：`todo`
+- 优先级：`P1`
+- 波次：Wave 1
+- Drive AI：`unassigned`
+- Review AI：`unassigned`
+- 依赖：HA-003、HA-006
+- 最后更新：2026-07-18
+- 结论置信度：`recommended`
+
+问题与影响：OpenLDAP 仍是本机单点且没有异地 dump；如果先建设备机，就要为一个计划退役的组件额外设计复制、恢复和切换。
+
+证据：生产 `slapd` active；应用仍使用 `flask-ldap3-login`，admin 仍是独立 Basic Auth；OPS-008 指出 LDAP 身份与“两个信任根”说法尚未闭环。
+
+方向与要点：把 SSHA 哈希迁入 user 表，登录成功惰性升级到 argon2id；补找回密码、统一失败提示、登录限速和 session 吊销；双轨只读观察后再停 LDAP。邮件只使用标准 SMTP 接口，供应商在实施时复核。
+
+完成判断：现有用户无需统一重设密码；注册、登录、改密、找回密码和 admin 权限有测试与迁移/回退记录；LDAP 停止后，账号可随 SQLite/Litestream 恢复。
+
+Review 关注：SSHA 兼容实现、token 失效、用户枚举、邮件失败、管理员迁移和双轨期间的真值冲突。
+
+执行证据：尚无。
+
+### HA-009 — 通过 DR gate 后建立同区域温备
+
+- 状态：`assessing`
+- 优先级：`P1`
+- 波次：Wave 2
+- Drive AI：`unassigned`
+- Review AI：`unassigned`
+- 依赖：HA-006、HA-007、HA-008
+- 最后更新：2026-07-18
+- 结论置信度：`direction confirmed, sizing pending`
+
+问题与影响：单机仍会受宿主机故障和维护窗口影响；但当前 1 GiB 主机已有 swap 压力，直接复制现有形状会把资源和恢复问题一起复制。
+
+证据：生产内存约 961 MiB，2026-07-18 已使用 swap；没有私网 IPv4、standby inventory 或 Redis replica。温备脚本仍是占位。
+
+方向与要点：先用临时新机验证 Ansible 与 DR，再决定长期主备规格。候选是同区域两台至少 2 GiB、不同宿主机、私网 VLAN；Redis store 单向复制，备机 cache 独立，应用常驻但不接公网流量。
+
+完成判断：DR gate 全部通过；实例规格由实测内存和成本确认；主备配置一致，角色和唯一写入端明确，复制延迟与故障行为有记录。
+
+Review 关注：同宿主机放置、私网认证、Redis 全量同步内存峰值、备机误接生产流量和持续费用。
+
+执行证据：尚无。创建实例和持续成本必须由用户确认。
+
+### HA-010 — 实现并演练切换、回切和日常蓝绿发布
+
+- 状态：`todo`
+- 优先级：`P1`
+- 波次：Wave 2
+- Drive AI：`unassigned`
+- Review AI：`unassigned`
+- 依赖：HA-009
+- 最后更新：2026-07-18
+- 结论置信度：`recommended`
+
+问题与影响：没有演练过的切换脚本不能降低故障恢复时间；当前占位脚本只打印 TODO 并退出。
+
+证据：`ohmywod-ops/scripts/switchover.sh` 当前 `exit 1`；没有回切脚本、真实 Cloudflare 切流记录或防脑裂 gate。
+
+方向与要点：脚本先 fencing/确认旧主不可写，再提升 Redis、恢复 SQLite、重挂 JuiceFS、运行本机健康与业务冒烟，最后显式切 Cloudflare；回切走相同的重新同步和唯一主校验。日常发布复用同一流程。
+
+完成判断：低峰真实切换和回切各成功一次；记录告警到人工确认、脚本执行、流量恢复和数据新鲜度；任一步失败能安全停住并回退。
+
+Review 关注：旧主复活、Cloudflare API 部分成功、SQLite 写入窗口、Redis replication offset、DNS/证书和脚本重复执行。
+
+执行证据：尚无。
+
+## 5. 目标拓扑与成本 gate
+
+### 5.1 目标拓扑
+
+```text
+                    Cloudflare（唯一公开入口）
+                         │ 人工确认后切源站
+               ┌─────────┴─────────┐
+               ▼                   ▼（平时不接流量）
+         ┌───────────┐       ┌───────────┐
+         │ active     │       │ standby    │
+         │ nginx/web  │       │ nginx/web  │
+         │ SQLite     │       │ SQLite 恢复副本 │
+         │ Redis meta │──────▶│ Redis replica │
+         │ JuiceFS    │       │ JuiceFS     │
+         └─────┬─────┘       └─────┬─────┘
+               └────────┬──────────┘
+                        ▼
+              Linode Object Storage
+              战报块 + meta dump + Litestream
 ```
-                     Cloudflare（橙云代理，已就绪）
-                       │  切换 = API 改源站 IP，秒级
-              ┌────────┴────────┐
-              ▼                 ▼（平时不接流量）
-        ┌──────────┐      ┌──────────┐
-        │ 主机 2GB  │      │ 备机 2GB  │   同机房，私网 VLAN 互联
-        │ nginx     │      │ nginx     │
-        │ gunicorn  │      │ gunicorn（常驻）
-        │ redis-    │─────▶│ redis-store replica（实时）
-        │  store    │ 复制  │ redis-cache（独立）
-        │ redis-    │      │ juicefs mount（指向主 redis）
-        │  cache    │      │ sqlite（Litestream 定时 restore）
-        │ juicefs   │      └──────────┘
-        │ sqlite ───┼─Litestream─┐
-        └──────────┘            ▼
-                    Linode Object Storage bucket
-                    （JuiceFS 块 + Litestream 副本 + juicefs meta dump）
+
+只有 active 可以处理业务写入。standby 提升为 active 前必须确认旧主不可写；旧主恢复后不能自动重新加入。
+
+### 5.2 成本规则
+
+- 月预算上限仍为 100 美元，但不是“有预算就必须花完”。
+- 当前 Object Storage 计费和实例价格在实施时从 Cloud Manager / [Akamai Cloud 官方价格页](https://www.akamai.com/cloud/pricing) 复核；价格与区域可能变化，不在本文把约 29 美元的旧估算当作真值。
+- HA-009 第一轮优先使用按小时计费的临时实例完成恢复和容量验证，再决定是否长期保留两台。
+- 2 GiB 是当前候选下限，不是永久规格。判断依据是 Redis 全量同步、JuiceFS cache、gunicorn 和恢复过程的峰值内存，而不是稳定态平均值。
+- 不再为旧 `/mnt/extra-report` 支付 Block Storage；若账单仍存在该卷，需在云端确认数据已释放后单独清理。
+
+## 6. 明确不做
+
+- 不做多活、SQLite 多主、Redis 双主或自动 failover。
+- 不为现有体量引入 Kubernetes、NodeBalancer、Consul、etcd、Vault/OpenBao 或独立 PostgreSQL 集群。
+- 不把 service active、timer success、Molecule green 或脚本存在写成“可恢复”证据。
+- 不在 app 公共仓库复制生产 IP、bucket、monitor ID、密钥 schema 明文或完整恢复命令。
+- 不在 HA-004 至 HA-008 未通过前购买并长期运行备机。
+- 不承诺尚未演练出的 20 分钟冷恢复或 1 分钟切换目标。
+- 不默认增加 restic 或第二 bucket；只有 HA-007 的风险/能力评估给出明确收益时再重看。
+
+## 7. 待决策清单
+
+以下问题按对应事项处理，不阻塞 Wave 0：
+
+1. HA-007：是否继续接受战报无独立防误删备份，以及 JuiceFS trash 保留多久。
+2. HA-008：找回密码邮件供应商和发件域最终设置。
+3. HA-009：实测后选择长期 2 GiB ×2，还是保留单机 + 临时恢复机模式。
+4. HA-009：是否需要供应商级 placement group 来明确主备分散到不同宿主机。
+5. HA-010：可接受的人工响应窗口，以及真实切换演练的低峰时间。
+
+## 8. Changelog（append-only，旧 -> 新）
+
+> 每波改动在本节末尾追加。不得改写旧记录；旧版文档在引入 changelog 前的历史仍可从 Git 追溯。
+
+### Changelog 条目模板
+
+```markdown
+### WAVE-YYYYMMDD-NN — 简短标题
+
+- 日期：YYYY-MM-DD
+- Drive AI：工具名称；未使用则写“无”
+- Review AI：工具名称；尚未 review 则写 `unassigned`
+- 关联事项：HA-NNN, HA-NNN
+- 状态变化：例如 HA-004 `todo` -> `in_progress` -> `done`
+- 改动：文件、基础设施或运行手册摘要
+- 关键取舍：选择和理由；无则写“无”
+- 验证：检查、测试或演练摘要，不含密钥和个人信息
+- 发生的问题：无则写“无”
+- 剩余风险：本波未解决的内容
+- 下一步：下一事项或需要用户决定的问题
 ```
 
-LDAP 退役后拓扑中没有 slapd。恢复的信任根只有两个：**私有配置仓库**（含 sops 加密的 secrets）+ **密码管理器里的 age 私钥**，两者在手可从零重建一切。
+### WAVE-20260718-01 — 按当前实现重建 HA/DR 计划真值
 
-## 实施阶段
-
-每步独立有价值，做到哪停到哪都行。
-
-### 阶段 0：单机加固（不加机器）
-
-历史执行记录见 [ha-phase0-runbook.md](archive/ha-phase0-runbook.md)。
-
-**进展（2026-07-15，已 Ansible 化）**：配置管理转为 Ansible（`ohmywod-ops/ansible/` roles + molecule 本地验证 + community.sops）。**已完成并验证**：SSH 加固（关密码登录）、开机自启（supervisord/juicefs → systemd，真实重启验证——这是原计划未识别的“重启=停机”陷阱）、Redis 固化确认、JuiceFS `--backup-meta`、**Litestream**（WAL + Linode OS bucket `ohmywod-backups`，restore 演练过）、监控（UptimeRobot `/healthz` + Healthchecks 的 Litestream/JuiceFS meta 巡检）、Cloud Firewall 收口（389/8013 不对公网开放，80/443 仅放行 Cloudflare IP 段）。**已砍**：restic、LDAP dump（均 2026-07-12 定不做，见上“restic 决策”）。
-
-1. **线上体检**（两条命令的事，先做）：
-   - redis-store 是否开了 AOF？没有则加 `appendonly yes` + `appendfsync everysec`（metadata 实例 RDB-only 意味着最坏丢 15 分钟 JuiceFS 元数据 = 近期上传变孤儿块）。
-   - JuiceFS 挂载是否带 `--backup-meta`（定期 dump 元数据到 bucket）？没有则加上，或配 `juicefs dump` 的 cron。
-2. **配置反向工程入库**：线上真实的 redis conf、juicefs 挂载参数（systemd unit / fstab）、nginx server block、supervisord、certbot 配置收进私有 git 仓库；secrets 用 sops+age 加密（`secrets.env.enc`），age 私钥存密码管理器。目标：从裸 Ubuntu 24.04 到服务就绪的一键部署脚本（迁移记录里的 8 步固化成代码）。
-3. **备份链路**：
-   - SQLite：Litestream 持续复制 → Linode OS bucket（秒级 RPO，零代码侵入）。
-   - `report/` 本地部分 + 块存储卷：**不做 restic**（2026-07-12 定，见上"restic 决策"）——归一化进 JuiceFS 后靠 bucket 对象持久性 + JuiceFS 元数据备份，接受"无防误删备份"风险。
-   - LDAP：**不做 dump**（2026-07-12 定）——阶段2 就退役，过渡窗口不单建备份，接受 cutover 前账号无异地备份的窗口风险。
-   - Litestream 与 JuiceFS meta 巡检已接 Healthchecks.io（免费）——备份最怕静默失败。
-4. UptimeRobot（免费）已监控 `https://wod.everbird.me/healthz`。
-
-**阶段 0 完成态**：机器整个炸了也能 20 分钟在任何 VPS 商重建，数据丢失以秒计。已解决 80% 风险。
-
-### 阶段 1：S3 → Linode Object Storage
-
-1. 建 bucket（与 VPS 同机房）。
-2. `juicefs sync` 把块数据 S3 → Linode OS（服务照常跑，可多轮增量）。
-3. 停写窗口（浏览不受影响，仅暂停上传）：最后一轮增量 sync → `juicefs config --bucket` 指向新 bucket → 重挂载 → 验证 → 恢复写入。窗口预计几分钟。
-4. 观察数日后清空 AWS S3，退订。
-5. **（推荐同期做）存储归一化**：本地 `report/` 实体文件与 `/mnt/extra-report` 内容 `juicefs sync`/cp 进 `/mnt/jfs`，软链接改指或直接换成 JuiceFS 路径，验证后释放块存储卷。
-
-### 阶段 2：LDAP 退役 + 密码体系（代码改动，详设见附录 A）
-
-1. user 表加密码哈希等字段；`slapcat` 导出，`{SSHA}` 哈希原样导入——passlib/libpass 可直接校验，**用户无感知，无需重设密码**。
-2. 登录换 CryptContext（argon2 首选 + SSHA 兼容），登录成功惰性升级哈希。
-3. 新增找回密码流程（Resend + itsdangerous 限时 token）。
-4. Flask-Limiter 登录限速；改密后吊销该用户全部 session。
-5. admin 后台并入同一套认证（user 表加 `is_admin`），删除 `FLASK_ADMIN_USERNAME/PASSWD` 配置对。
-6. 双轨观察 1~2 周（LDAP 只读兜底）→ 停 slapd → 删 flask-ldap3-login 依赖。
-
-### 阶段 3：备机 + 切换能力
-
-1. 开同机房 Linode 2GB ×2（现 nano 1GB 跑双 redis + JuiceFS cache + gunicorn 太挤，借机升配；主机用一键部署脚本重建为 2GB，本身就是对脚本的第一次实战演练 + 第一次蓝绿切换）。
-2. 备机常态：
-   - redis-store 作 replica（走私网 VLAN，`replicaof <主机私网IP> 6379`，设 `masterauth`）；
-   - Litestream 每 5 分钟 restore 最新 SQLite 到本地；
-   - JuiceFS 挂载指向主机 redis（只读用途）；
-   - 应用进程常驻（随时可接流量）。
-3. **切换脚本**（一条命令）：备机 redis `REPLICAOF NO ONE` → JuiceFS 重挂到本地 redis → restore 最新 SQLite → 冒烟检查 → Cloudflare API 改源站 IP。目标 1 分钟内。
-4. **演练一次真实切换**（周末低峰），并把回切也演练了。没演练过的 failover 等于没有。
-
-### 日常运维模式（阶段 3 之后）
-
-- **升级/迁移** = 蓝绿：备机上先做 → hosts 指过去全链路验证 → 切流量 → 老主机变新备机。
-- **宿主机故障** = UptimeRobot 告警 → 确认主机确实不可用 → 跑切换脚本。
-- 每次大版本升级顺便就是一次 failover 演练，能力不会锈掉。
-
-## 成本
-
-| 项目 | 月费 |
-|---|---|
-| Linode 2GB ×2 | $24 |
-| Linode Object Storage 250GB | $5（credit 可抵） |
-| Block Storage 卷 | $0（归一化后释放） |
-| Cloudflare / UptimeRobot / Healthchecks / Litestream / sops / Resend | $0 |
-| **合计** | **≈ $29**（预算 $100 的三成） |
-
-结余预算刻意不花：留作数据增长后升配，不为"最佳实践"加机器。
-
-## 附录 A：密码与认证详设
-
-- **哈希**：argon2id。用 `CryptContext(schemes=["argon2", "ldap_salted_sha1"], deprecated="auto")` 的 `verify_and_update()` 实现 SSHA 惰性升级。注意 passlib 已停维护，用兼容 fork **libpass**（或 argon2-cffi + 手写 20 行 SSHA 校验）。
-- **策略**（NIST 800-63B）：仅最小长度 ≥10，不强制字符组合、不强制定期改密，最大长度 ≥64。可选：HIBP k-匿名 API 拒绝已泄露密码。
-- **防爆破**：Flask-Limiter（存储用现有 redis-cache），按 `CF-Connecting-IP` + 用户名双维度各 5 次/分钟；Cloudflare 免费 rate limiting rule 指向 `/login`；登录失败统一提示"用户名或密码错误"。
-- **找回密码**：itsdangerous 签发 30 分钟限时 token，payload 含 user_id + 当前密码哈希指纹（密码一改旧 token 自动失效，无需存库）；页面对不存在的邮箱同样显示"已发送"（防枚举）；发送失败记日志并告警（低频功能最怕坏了没人知道）。
-- **Session**：改密/重置成功后删除该用户在 redis 中的全部 session。
-- **明确不做**：强制 2FA。admin 账号可选 pyotp TOTP，优先级最低。
-
-## 附录 B：Secrets 管理（sops + age）
-
-```bash
-age-keygen -o ~/.config/sops/age/keys.txt   # 私钥进密码管理器
-sops -e secrets.env > secrets.env.enc        # 密文进私有配置仓库
-# 部署时：sops -d secrets.env.enc > /etc/ohmywod/.env && chmod 600
-```
-
-不引入 Vault/OpenBao：在线秘密服务自身需要 HA、重启后 sealed、为 ~10 个静态字符串引入 24/7 依赖，N=1 场景全是负资产。若未来服务数量增长或 Akamai 推出托管 OpenBao，再评估迁移（sops → 任何方案都是半小时的事，现在的选择不锁死未来）。
-
-## 附录 C：邮件（Resend）
-
-- 免费档 3000 封/月；`everbird.me` 配 DKIM/SPF/DMARC（DNS 在 Cloudflare，顺手）。
-- 应用只写标准 SMTP（Flask-Mail/smtplib），host/凭据走 secrets.env——换厂商 = 改 4 个环境变量，不用任何厂商 SDK。
-- 备选：Brevo（300 封/天）、SES（最便宜但 sandbox 审核 + 与撤离 AWS 方向相反）。不自建 SMTP（Linode 封 25 端口 + IP 信誉无底洞）。
-- Cloudflare Email Routing 只管收信，顺手配 `noreply@` 回信转发，与发信互补。
-
-## 附录 D：Redis 迁移与恢复操作手册
-
-### 开启 AOF（从 RDB-only 切换，零丢失）
-
-数据真身在内存，RDB/AOF 只是落盘格式。热开启以当前内存为起点生成 AOF，不读旧 dump.rdb，零丢失；RDB 的 save 规则继续生效，之后是双持久化并存，重启时优先加载 AOF。
-
-```bash
-# 1. 热开启（无中断）
-redis-cli -p 6379 CONFIG SET appendonly yes
-redis-cli -p 6379 CONFIG SET appendfsync everysec
-# 2. 确认：aof_enabled:1、aof_rewrite_in_progress:0、aof_last_bgrewrite_status:ok
-redis-cli -p 6379 INFO persistence | grep -E 'aof_enabled|rewrite'
-# 3. 把 appendonly yes / appendfsync everysec 写进配置模板（gen.py 的源头，不是线上产物）
-```
-
-**脚枪警告**：不要跳过热开启、直接改配置文件重启——老版本 Redis 发现"配置有 AOF 但磁盘上没有"时会建空 AOF 且不加载 RDB，等于清库。永远先 `CONFIG SET` 再改文件。
-
-### 未来迁移：首选复制，不拷文件
-
-```
-新机器 redis 启动 → REPLICAOF <老机器IP> 6379 → 等全量+增量同步完成
-→ 各 db 的 DBSIZE 对比一致 → 应用切换 → 新机器 REPLICAOF NO ONE
-```
-
-复制协议内部自己传 RDB 流并实时追增量，源端 AOF 开关无关，服务不停。迁移 = 一次演练过的 failover。
-
-### 拷文件迁移（仅当两机网络不通时的退路）
-
-**RDB 是搬家格式，AOF 是本机续命日志，不要搬 AOF**（appendonlydir 需源端完全停机才能一致拷贝，约束多收益零）。
-
-1. 源端 `redis-cli --rdb dump.rdb`（走复制协议取快照，不受 AOF 影响）；
-2. 目标机 redis 以 `appendonly no` 启动加载 dump.rdb（文件名必须是 dump.rdb，且在首次启动前放进 dir）；
-3. 验证 `DBSIZE` 后按上面流程热开启 AOF，再写回配置。
-
-### JuiceFS 元数据（db 2）的专属通道
-
-`juicefs dump` / `juicefs load` 走文件系统语义导出导入（2026-07 迁移实际用过），与 Redis 层迁移互为备份手段；`--backup-meta` 的定期 dump 存于 bucket 的 `meta/` 目录，是最后的兜底。
-
-## 待线上确认（阶段 0 第 1 步）—— 2026-07-05 已确认
-
-- [x] redis-store 的 AOF 状态：**原为 RDB-only，已按附录 D 流程热开启 AOF（everysec）**；`configs/templates/redis-store.conf.template` 已同步 `appendonly yes` + `appendfsync everysec`
-- [x] JuiceFS `--backup-meta`：**未开启**。待办：挂载参数显式加 `--backup-meta 1h` 写进 systemd unit，低峰时段重挂载生效
-- [x] 存储占用：本地 `report/` 6.2G + `/mnt/extra-report` 8.9G ≈ 15G——对象存储 250GB 起步档绰绰有余，归一化无容量顾虑
-- [x] redis-store 无 `requirepass`，且曾监听 `0.0.0.0`（幸有默认 `protected-mode yes` 拒绝了所有外部连接，未成事故）。**已修复**：线上两个 redis 均已 `bind 127.0.0.1 -::1` + 显式 `protected-mode yes` 并重启，配置模板同步更新。密码推迟到阶段 3 建复制前统一加（需同步改 flask-redis URL 与 juicefs meta URL）。教训：Linode Cloud Firewall 已作为外层兜底收口，避免类似误配置直接暴露到公网
-- [x] 应用侧 `/healthz` 已落地，检查 SQLite、Redis、`DATA_DIR` 和 `/mnt/jfs`；UptimeRobot 改监控该端点
+- 日期：2026-07-18
+- Drive AI：Codex
+- Review AI：`unassigned`
+- 关联事项：创建 HA-001 至 HA-010
+- 状态变化：确认 HA-001 至 HA-003 `done`；新增 HA-004 至 HA-006、HA-008、HA-010 `todo`；新增 HA-007、HA-009 `assessing`
+- 改动：以维护支持计划的 front matter、稳定 ID、固定状态、完成证据和 append-only changelog 结构重写本文；把旧“阶段 0 已解决 80% 风险”的说法改为当前能力边界；将 ops 审查的 P0 恢复问题放在温备之前
+- 关键取舍：保留 active-passive + 人工切换的目标架构，但不再把备机建设当作下一步；先完成安全冷恢复和 LDAP 退役
+- 验证：核对 app `0f52bf9`、ops `5988138`、生产 app `0512c83`；2026-07-18 通过 SSH 只读检查服务、依赖、挂载、WAL、Redis replication、timer、内存、公开 `/healthz` 和有效非密钥 Flask 配置；本地 `pytest` 39 项通过；未修改生产
+- 发生的问题：生产没有系统级 `sqlite3`，改用 app venv 的 Python 以 SQLite URI `mode=ro` 读取 journal mode 和 integrity；Supervisor 控制端口拒绝连接，因此不把 supervisor 子进程状态作为本轮证据
+- 剩余风险：恢复顺序和服务依赖仍是 P0；LDAP、无 Redis replica、备份新鲜度和冷恢复均未闭环
+- 下一步：从 HA-004 / OPS-001 开始，先把数据库存在性检查改为不创建文件的只读模式，再拆分恢复阶段

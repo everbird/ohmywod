@@ -1,100 +1,399 @@
-# 站点改进方案（2026-07）
+---
+document_id: ohmywod-improvement-plan-2026-07
+schema_version: 1
+document_status: active
+source_of_truth_for: "application improvement direction, work item status, and wave changelog"
+language: zh-CN
+created_at: "2026-07-05"
+last_updated: "2026-07-18"
+review_commit: "app 0f52bf9; production app 0512c83"
+review_worktree: "clean before this documentation wave"
+next_item_id: "IMP-010"
+---
 
-基于对代码库的通读整理，覆盖[站点维护成本支持计划](maintenance-support-plan.md)之外的改进方向，按优先级排序。旧广告优化方案已归档，不再作为站点增长或收入方向。
+# 站点改进计划（2026-07）
 
-**2026-07-06 更新**：第 1 项、第 2 项、第 4 项的应用侧 `SQLALCHEMY_ENGINE_OPTIONS`/gunicorn 清理、第 6 项 `/healthz` 已落地；HA 阶段 0 的执行记录已归档到 [ha-phase0-runbook.md](archive/ha-phase0-runbook.md)。
+> 本文是 ohmywod 应用安全、正确性、可发现性、性能和工程质量的工作计划。维护成本支持与 AdSense 去留以 [站点维护成本支持计划](maintenance-support-plan.md) 为准；备份、恢复、存储和温备以 [高可用与灾难恢复计划](ha-plan.md) 为准。
+>
+> **当前结论：最初识别的同源上传 HTML、常见 500、计数漂移、SEO 和 `/healthz` 已落地并部署到生产。SQLite timeout 虽已进入 app 默认配置，但被生产的全量 `local_config.py` 覆盖，仍需补齐。下一批主线是先关闭这处配置漂移，再做防滥用和 CI；缓存与搜索优化只在有实际性能证据时推进。线上仍存在的 AdSense 和“点广告”文案不在本文重复建项，直接由 SUP-001 / SUP-002 处理。**
 
-**2026-07-05 更新**：对照 [ha-plan.md](ha-plan.md) 重新梳理。原第 6 项（备份/监控）大部分被 HA 阶段 0 吸收，第 3 项（限流）改为搭 HA 阶段 2 的车，第 4 项（WAL）从可选优化升级为 Litestream 的前置配套，新增第 8 项（存储归一化的代码侧配套）。与 HA 计划有依赖关系的项都标注了对应阶段。
+## 1. 边界、现状与原则
 
-## 1. 安全：`report_raw` 把用户上传的 HTML 同源直出（最高优先）
+### 1.1 本文负责什么
 
-**现状**：`ohmywod/views/report.py` 的 `report_raw` 把上传 zip 里的 HTML 原样以 `text/html` 返回（只做了 `http:`→`https:` 替换，不做任何清洗），且挂在主域名同源下。阅读模式有一整套精心写的 `sanitize_wod_report`（白名单 onclick/onmouseover、lxml Cleaner），但 raw 路由完全绕过了这些——它不只是 iframe 的内部后端，任何人都可以直接访问这个 URL。
+- 记录应用层改进的稳定 ID、优先级、状态、完成判断和执行证据。
+- 覆盖 Flask 路由、模板、数据访问、测试和 CI。
+- 不重复记录 HA/DR、生产恢复或维护成本支持事项；跨计划只写依赖关系。
+- 不把纯粹“有空清理”的想法包装成必须完成的路线；低优先级事项要有触发条件。
 
-**风险**：注册是开放的，任何用户都能上传含任意 JS 的 zip，得到一个挂在主域名下的存储型 XSS 页面。session cookie 有 HttpOnly 保护，但同源 JS 依然能以受害者身份读页面拿 CSRF token、发起改资料/删战报等请求。
+### 1.2 2026-07-18 当前实现
 
-**方案**（改动很小）：给 `report_raw` 的响应加一个头：
+| 方向 | 当前状态 | 代码 / 生产证据 |
+|---|---|---|
+| 上传 HTML 隔离 | 已完成 | `report_raw` 返回 CSP sandbox，且没有 `allow-same-origin`；已有回归测试 |
+| 500 与数据漂移 | 已完成 | `new_category` 要求登录；缺失 report 返回 404；点赞/收藏只在状态实际变化时更新计数；404/500 页面和异常日志已落地 |
+| SQLite 配套 | 部分完成 | 生产数据库为 WAL 且 integrity check 为 `ok`；但生产有效 `SQLALCHEMY_ENGINE_OPTIONS` 为 `{}`，5 秒 timeout 未生效 |
+| SEO | 已完成主体 | report meta/OG、页面 title、`sitemap.xml` 和 robots 引用已落地并有测试；生产 app cache 未启用 |
+| 运维探针 | 已完成 | `/healthz` 检查 SQLite、Redis 和 `/mnt/jfs/reports`；生产经 Cloudflare 返回 200 |
+| 存储语义 | 已收敛到 HA-002 | app 只把 `/mnt/jfs/reports` 视为战报持久层；本地只保留上传 staging |
+| 防滥用 | 未实现 | 登录、注册、反馈和互动 POST 尚无 Flask-Limiter；注册表单无蜜罐 |
+| CI | 未实现 | `tests/` 约 865 行，但仓库没有 GitHub Actions workflow |
+| 应用与战报缓存 | 未实现 | 生产 `CACHE_TYPE` 未配置；sitemap 缓存调用实际无效，`report_raw` 也没有 ETag / Cache-Control |
+| 搜索 | 观察中 | 当前约 13,476 条 report；真实搜索仍使用 `%q%` LIKE，尚无性能问题证据 |
 
-```python
-resp.headers['Content-Security-Policy'] = "sandbox allow-scripts allow-popups"
+### 1.3 已拍板的原则
+
+1. 先修可被直接利用的安全问题和会破坏数据正确性的 bug，再做性能与代码整洁。
+2. 用户上传 HTML 必须与主站身份隔离；任何兼容修复都不能重新加入 `allow-same-origin`。
+3. 防滥用优先使用一个统一的限流设施，不为 login、register、feedback 各引入一套机制。
+4. `CF-Connecting-IP` 只有在源站入口被 Cloudflare/防火墙约束时才可作为可信限流 key；该边界由 HA/ops 计划维护。
+5. 搜索、缓存和 FTS 先用生产证据证明瓶颈，再增加索引、缓存失效或迁移复杂度。
+6. `done` 必须有测试或可复核行为；“代码看起来改了”不算完成。
+7. 不在本文重复追踪 AdSense、爱发电、LDAP 退役、Litestream、JuiceFS 或温备。
+
+### 1.4 成功判断
+
+- 已完成事项在当前测试集保持覆盖，生产发布后仍能从代码版本和行为复核。
+- 公开写端点有与站点体量匹配、不会误伤正常用户的防滥用保护。
+- 每个 PR/主分支变更能自动运行核心测试；失败不会被静默忽略。
+- 性能事项只有在记录基线和触发阈值后才实施，避免长期维护无收益的复杂度。
+- 本文、维护支持计划和 HA/DR 计划之间没有重复状态真值。
+
+## 2. 这份计划怎么维护
+
+这是个人兴趣项目，不需要 owner、RACI 或复杂产品流程。后续工作通常由一个 AI 工具推进，再由另一个 AI 工具独立检查。涉及用户体验、外部服务或生产发布时，由用户做最后决定。
+
+每个事项有两个可选角色：
+
+- `Drive AI`：调查现状、提出选项、实施改动，并更新本文和 changelog。
+- `Review AI`：独立检查安全边界、diff、测试、兼容性和剩余风险。
+
+角色可以写工具名，例如 `Codex` 或 `Claude Code`；尚未分配时写 `unassigned`。
+
+### 2.1 状态枚举
+
+工作项的 `状态` 只能使用以下值：
+
+- `todo`：方向已确认，尚未开始
+- `assessing`：需要性能数据、用户选择或实现比较，尚不能直接实施
+- `in_progress`：正在调查或实施
+- `blocked`：存在明确阻塞；必须写明解除方式
+- `done`：完成判断已经满足，并有可复核证据
+- `cancelled`：明确决定不做；记录理由和重新考虑的触发条件
+
+### 2.2 更新规则
+
+1. 每个 `IMP-NNN` ID 永久不变、不可复用。新增事项使用 front matter 的 `next_item_id`，并同步递增。
+2. 开始工作前先读本文和 `git status`，保留用户或其他工具的未提交改动。
+3. `状态` 是事项主真值。状态变化、代码改动、测试和 changelog 放在同一波变更里。
+4. `done` 需要可复核证据；只更新本文、只加依赖或只完成 happy path 不算完成。
+5. `blocked` 要说明卡在哪里、怎样解除。`cancelled` 要说明理由和重新考虑的触发条件。
+6. 事项明显扩大时拆新 ID；不要把所有“顺手清理”塞进一个永不结束的事项。
+7. 涉及生产发布、站外账号或外部服务配置时先由用户确认；本文不构成生产执行授权。
+8. 生产证据不得包含账号、token、口令、用户内容或其他个人信息。
+9. 每波改动在文末按时间正序追加 changelog。旧记录不重写，纠错时追加 correction wave。
+10. 每次变更更新 front matter 的 `last_updated`。
+
+### 2.3 固定工作项格式
+
+新增事项使用同一套结构：
+
+- 元信息：`状态`、`优先级`、`波次`、`Drive AI`、`Review AI`、`依赖`、`最后更新`、`结论置信度`
+- 内容：`问题与影响`、`证据`、`方向与要点`、`完成判断`、`Review 关注`、`执行证据`
+
+优先级定义：
+
+- `P0`：可直接利用的安全问题、数据损坏或广泛不可用
+- `P1`：显著影响正确性、防滥用、可回归性或用户查找价值
+- `P2`：性能、维护性或只有达到触发阈值才值得做的优化
+
+## 3. 建议推进顺序
+
+### 历史基线：保住已经完成的改进
+
+范围：IMP-001、IMP-002、IMP-004、IMP-005。
+
+方向：这些事项已经部署。后续工作是维持回归测试和安全边界，不重复实施，也不因重写计划丢失完成证据。
+
+### Wave 0：先关闭配置漂移，再补公开写端点的防滥用
+
+范围：IMP-003、IMP-006。
+
+方向：先把已在 app 默认配置落地的 SQLite timeout 同步到生产全量配置模板并验证有效值，再统一引入轻量限流。限流先覆盖 login、register、feedback，再覆盖可重放的互动 POST，并与 Cloudflare 入口信任边界一起 review。
+
+### Wave 1：让现有测试自动执行
+
+范围：IMP-007。
+
+方向：先建立最小 CI，只跑项目已有测试与必要静态检查；不同时引入复杂矩阵、发布流水线或覆盖率门槛。
+
+### Wave 2：按证据做性能与清理
+
+范围：IMP-008、IMP-009。
+
+方向：记录响应、对象存储读取和搜索延迟。没有用户影响时维持简单实现；达到触发条件再优化。
+
+## 4. 工作项
+
+### IMP-001 — 隔离同源直出的用户上传 HTML
+
+- 状态：`done`
+- 优先级：`P0`
+- 波次：历史基线
+- Drive AI：`unassigned`
+- Review AI：`unassigned`
+- 依赖：无
+- 最后更新：2026-07-18
+- 结论置信度：`confirmed`
+
+问题与影响：`report_raw` 会把用户 zip 中的 HTML 原样以主域名 `text/html` 返回。没有隔离时，上传者可以获得同源脚本执行能力。
+
+证据：`ohmywod/views/report.py` 在 raw 响应上设置 `Content-Security-Policy: sandbox allow-scripts allow-popups`；测试明确断言没有 `allow-same-origin`。阅读模式状态通过 `postMessage` beacon 兼容。
+
+方向与要点：保留 WoD 报告脚本和 popup 能力，但永远不恢复同源身份；需要新增 `allow-forms` 等权限时单独评估。
+
+完成判断：上传 HTML 的脚本不能读取主站 cookie/localStorage 或以主站身份发同源请求；旧战报 tooltip、页内跳转和阅读模式可用。
+
+Review 关注：CSP header 被 nginx/CDN 覆盖、添加 `allow-same-origin`、父子窗口消息未校验来源或内容。
+
+执行证据：`60c9b71`、`34c242d`、`8bc8dbb`；已包含在生产 `0512c83`。
+
+### IMP-002 — 修复常见 500、计数漂移与不可诊断异常
+
+- 状态：`done`
+- 优先级：`P1`
+- 波次：历史基线
+- Drive AI：`unassigned`
+- Review AI：`unassigned`
+- 依赖：无
+- 最后更新：2026-07-18
+- 结论置信度：`confirmed`
+
+问题与影响：匿名创建分类、缺失 report、重复点赞/取消和吞异常会分别造成 500、计数漂移或无法排障。
+
+证据：`new_category` 已加 `@login_required`；详情和 reader 在访问属性前检查 report；Redis `sadd`/`srem` 或收藏状态实际变化后才更新计数；`load_user` 等异常写结构化日志；404/500 handler 已落地。
+
+方向与要点：保持写端点幂等语义；新增互动操作时先定义重复提交结果。
+
+完成判断：已识别的 500 返回登录跳转或 404；重复互动不改变计数；关键异常进入应用日志；用户看到站点风格错误页。
+
+Review 关注：取消操作把计数降为负数、异常 handler 自身依赖已故障的数据库或模板扩展。
+
+执行证据：`ee96a7c`、`8bc8dbb`；已包含在生产 `0512c83`。
+
+### IMP-003 — 让 SQLite 锁等待在生产全量配置中真正生效
+
+- 状态：`todo`
+- 优先级：`P1`
+- 波次：Wave 0
+- Drive AI：`unassigned`
+- Review AI：`unassigned`
+- 依赖：HA-003
+- 最后更新：2026-07-18
+- 结论置信度：`confirmed`
+
+问题与影响：多 gunicorn worker、SQLite 写入和 Litestream 持续读取并存时，默认锁等待容易把短暂竞争变成 `database is locked`。公共 app 配置已经修复，但生产使用的全量配置类没有继承该值。
+
+证据：app `DefaultConfig.SQLALCHEMY_ENGINE_OPTIONS.connect_args.timeout` 为 5 秒，无效的 gunicorn `debug` 已删除；但 ops 的 `ohmywod_local_config.py.j2` 没有 `SQLALCHEMY_ENGINE_OPTIONS`。2026-07-18 生产只读实例化 Flask 后，有效值为 `{}`。生产数据库本身处于 WAL，integrity check 为 `ok`。
+
+方向与要点：把 timeout 同步到 ops 全量模板和 Molecule 断言，部署前后分别检查 Flask 有效配置；同时评估全量替换类是否继续可接受。WAL 与备份归 HA-003。若生效后仍出现锁错误，再根据日志评估事务范围。
+
+完成判断：app 默认配置、ops 渲染模板和生产有效配置都包含相同的 5 秒锁等待；Molecule / 应用测试和部署后只读检查通过，正常写路径没有回归。
+
+Review 关注：不同配置类或 ops 渲染的全量 `local_config.py` 覆盖掉默认 engine options。
+
+执行证据：app 侧 `8fb058e` 已完成；ops 与生产尚未同步，因此本项保持 `todo`。
+
+### IMP-004 — 改善公开战报的搜索引擎可发现性
+
+- 状态：`done`
+- 优先级：`P1`
+- 波次：历史基线
+- Drive AI：`unassigned`
+- Review AI：`unassigned`
+- 依赖：无
+- 最后更新：2026-07-18
+- 结论置信度：`confirmed`
+
+问题与影响：公开战报已有副本、服务器、职业等结构化信息，但旧页面缺 meta description、Open Graph、独立 title 和 sitemap。
+
+证据：report details 已有 description/OG；分类、搜索、reader 有页面 title；`/sitemap.xml` 输出公开 report/category；robots 指向 sitemap；测试覆盖删除战报排除逻辑。代码尝试缓存一小时，但生产未启用 Flask-Caching，此性能缺口归 IMP-008，不影响 sitemap 正确性。
+
+方向与要点：SEO 服务于中文 WoD 玩家查找战报，不与广告流量或收入目标绑定。页面级细节只有在搜索结果确有问题时继续补。
+
+完成判断：公开可索引页面有准确 title/description；sitemap 可访问且不包含软删除 report；robots 引用正确 URL。
+
+Review 关注：用户描述未转义、私有/删除内容进入 sitemap、canonical 或 OG URL 指向错误 host。
+
+执行证据：`53101a2`；已包含在生产 `0512c83`。
+
+### IMP-005 — 建立依赖真实数据面的健康检查
+
+- 状态：`done`
+- 优先级：`P1`
+- 波次：历史基线
+- Drive AI：`unassigned`
+- Review AI：`unassigned`
+- 依赖：HA-002、HA-003
+- 最后更新：2026-07-18
+- 结论置信度：`confirmed`
+
+问题与影响：首页 200 不能证明 SQLite、Redis 或 JuiceFS 正常；挂载掉线时旧监控可能继续报绿。
+
+证据：`/healthz` 执行 SQLite `SELECT 1`、Redis `PING` 并检查 `/mnt/jfs/reports` 可读；任一失败返回 503。生产公开 endpoint 2026-07-18 经 Cloudflare 返回 200，JSON 三类检查均为 `ok`。
+
+方向与要点：保持 endpoint 轻量、无敏感信息，供外部监控和未来切换脚本复用。备份新鲜度不塞进请求路径，归 HA-007 的独立 timer。
+
+完成判断：数据面故障会让 endpoint 返回非 200；正常请求不执行昂贵扫描；响应不泄露凭据或内部异常。
+
+Review 关注：只检查目录存在却命中未挂载底层目录；HA-005 需要从服务依赖层解决这一边界。
+
+执行证据：`8fb058e`、`0512c83`；生产只读复核日期 2026-07-18。
+
+### IMP-006 — 为登录、注册、反馈和互动写端点增加防滥用保护
+
+- 状态：`todo`
+- 优先级：`P1`
+- 波次：Wave 0
+- Drive AI：`unassigned`
+- Review AI：`unassigned`
+- 依赖：HA-001；与 HA-008 协调
+- 最后更新：2026-07-18
+- 结论置信度：`recommended`
+
+问题与影响：开放注册、登录、反馈和多个互动 POST 没有速率限制，容易被爆破、spam 或简单重放消耗资源。
+
+证据：当前 requirements 和应用初始化没有 Flask-Limiter；注册表单无蜜罐。Cloud Firewall 已把源站 80/443 收窄到 Cloudflare IP 段，为可信读取 `CF-Connecting-IP` 提供入口边界。
+
+方向与要点：统一引入 Flask-Limiter，存储复用 redis-cache；先定义 IP 和用户名/账号双维度限制，再扩到 register、feedback、like/favorite。注册加不打扰真人的蜜罐。限值先保守并记录命中日志，不引入 CAPTCHA。
+
+完成判断：目标端点超过阈值返回一致 429；正常用户、测试和反向代理场景不受影响；伪造转发头不能绕过或误伤；Redis 降级行为明确。
+
+Review 关注：key 函数信任任意客户端 header、IPv6/缺 header、登录用户名枚举、限流存储故障导致全站失败。
+
+执行证据：尚无。若 HA-008 很快开始，可同波实现；如果先出现 spam，则本项独立提前。
+
+### IMP-007 — 建立最小 CI 回归门槛
+
+- 状态：`todo`
+- 优先级：`P1`
+- 波次：Wave 1
+- Drive AI：`unassigned`
+- Review AI：`unassigned`
+- 依赖：无
+- 最后更新：2026-07-18
+- 结论置信度：`recommended`
+
+问题与影响：仓库已有覆盖安全、认证、错误处理、健康检查和 SEO 的测试，但没有自动 workflow；这些边界只能依赖本地手工运行。
+
+证据：`tests/` 当前约 865 行；`.github/workflows/` 不存在；`make test` 是现有本地入口。
+
+方向与要点：从单 Python 版本、依赖安装、`pytest` 和 `git diff --check` 开始。先确保稳定，再考虑缓存、版本矩阵、coverage threshold 或自动发布。
+
+完成判断：PR 和 main push 自动运行核心测试；失败阻止合并或至少清楚可见；workflow 不需要生产密钥、LDAP 或真实 JuiceFS。
+
+Review 关注：测试依赖 Redis/文件路径的隔离、未固定依赖导致漂移、CI 绿但跳过关键测试。
+
+执行证据：尚无。
+
+### IMP-008 — 为 sitemap 与不可变战报建立有意的缓存策略
+
+- 状态：`assessing`
+- 优先级：`P2`
+- 波次：Wave 2
+- Drive AI：`unassigned`
+- Review AI：`unassigned`
+- 依赖：HA-002
+- 最后更新：2026-07-18
+- 结论置信度：`potential benefit, measurement needed`
+
+问题与影响：生产没有配置 `CACHE_TYPE`，Flask-Caching 实际处于 null 模式，因此 sitemap 的一小时缓存调用无效；`report_raw` 也会在每次请求从 JuiceFS 读取完整 HTML、替换 `http:` 并追加 reader beacon。
+
+证据：2026-07-18 在生产只读创建 app 时出现“caching is effectively disabled”警告；当前约 13,476 条 report，sitemap 会查询公开 report/category；raw 响应没有 ETag、Last-Modified 或 Cache-Control。生产战报约 104 GiB，但本轮没有采集到用户侧延迟或对象读取成本。
+
+方向与要点：先决定站内派生数据是否使用 redis-cache 或简单进程缓存，并让 sitemap 的缓存行为可测试、可观测。对 raw 报告先测大小与延迟；若值得做，优先 conditional GET。必须保证更新/删除不会长期返回旧内容，且 CSP 在 304/缓存响应上仍存在。
+
+完成判断：生产缓存配置是显式选择，不再静默 null；sitemap 不会每次遍历全量数据；若增加 raw 缓存，重复读取显著减少且更新、删除、权限、CSP 与失效行为有测试。
+
+Review 关注：弱/强 ETag 计算成本、CDN 缓存用户内容、reader beacon 随代码变化、304 丢安全 header。
+
+执行证据：尚无；没有性能证据前保持 `assessing`。
+
+### IMP-009 — 为搜索性能定义触发阈值并清理重复实现
+
+- 状态：`assessing`
+- 优先级：`P2`
+- 波次：Wave 2
+- Drive AI：`unassigned`
+- Review AI：`unassigned`
+- 依赖：无
+- 最后更新：2026-07-18
+- 结论置信度：`not currently justified`
+
+问题与影响：真实搜索使用 `%q%` LIKE，数据增长后会全表扫；`ReportQuery.search` 与 controller 搜索并存，容易让维护者改错入口。
+
+证据：生产 2026-07-18 只读统计约 13,476 条 report；当前没有慢查询或用户体验证据。本仓真实路由调用 controller 搜索，model query helper 没有已知调用者。
+
+方向与要点：先为搜索记录 p50/p95 或简单 explain/query timing。只有达到明确延迟阈值再评估 SQLite FTS5；删除死代码前用测试和全仓引用确认。
+
+完成判断：已记录继续 LIKE 或迁入 FTS5 的依据；若迁移，索引构建、更新、中文分词边界和回退有测试；若不迁移，重复死代码已安全处理。
+
+Review 关注：FTS tokenization 对中文内容的实际价值、索引与软删除同步、把小数据集简单查询过度工程化。
+
+执行证据：尚无；没有性能证据前保持 `assessing`。
+
+## 5. 跨计划归属
+
+| 主题 | 唯一状态真值 | 本文处理方式 |
+|---|---|---|
+| AdSense 文案、脚本和支持入口 | `maintenance-support-plan.md` SUP-001 至 SUP-006 | 不重复建 IMP；线上 2026-07-18 仍存在，按 SUP 推进 |
+| 存储归一化 | `ha-plan.md` HA-002 | 仅在 IMP-005 / IMP-008 记录应用依赖 |
+| WAL、Litestream 和恢复 | `ha-plan.md` HA-003 至 HA-007 | IMP-003 只负责应用锁等待及配置同步 |
+| LDAP 退役、密码和邮件 | `ha-plan.md` HA-008 | IMP-006 与其共用限流设施，不重复认证迁移状态 |
+| 温备和切换 | `ha-plan.md` HA-009、HA-010 | `/healthz` 作为可复用探针 |
+
+## 6. 明确不做
+
+- 不把 SEO 与广告流量、RPM 或收入目标绑定。
+- 不为没有性能证据的 13k 级数据立即引入 Elasticsearch、PostgreSQL 或外部搜索服务。
+- 不在第一版 CI 同时建设多 Python 矩阵、自动部署、复杂 coverage gate 或生产集成测试。
+- 不用 CAPTCHA 作为防滥用第一步；轻量限流和蜜罐不足时再评估。
+- 不通过移除 CSP sandbox 来修复旧战报兼容问题。
+- 不把备份新鲜度、云 API 检查等慢操作放进同步 `/healthz`。
+- 不在本计划重复维护 AdSense、爱发电、恢复 runbook 或 HA 拓扑状态。
+
+## 7. Changelog（append-only，旧 -> 新）
+
+> 每波改动在本节末尾追加。不得改写旧记录；旧版文档在引入 changelog 前的历史仍可从 Git 追溯。
+
+### Changelog 条目模板
+
+```markdown
+### WAVE-YYYYMMDD-NN — 简短标题
+
+- 日期：YYYY-MM-DD
+- Drive AI：工具名称；未使用则写“无”
+- Review AI：工具名称；尚未 review 则写 `unassigned`
+- 关联事项：IMP-NNN, IMP-NNN
+- 状态变化：例如 IMP-006 `todo` -> `in_progress` -> `done`
+- 改动：代码、模板、测试或文档摘要
+- 关键取舍：选择和理由；无则写“无”
+- 验证：检查、测试或生产只读证据摘要
+- 发生的问题：无则写“无”
+- 剩余风险：本波未解决的内容
+- 下一步：下一事项或需要用户决定的问题
 ```
 
-CSP `sandbox` 让浏览器把该响应当作**独立不透明源**——报告里的 JS（wodToolTip 那些）照常运行，但拿不到主站 cookie、localStorage，也无法以用户身份发同源请求。iframe 展示不受影响。比拆独立子域名便宜得多，效果等价。
+### WAVE-20260718-01 — 按实现重建站点改进计划真值
 
-**验证点**：老战报的交互（tooltip、页内跳转）在 sandbox 下是否正常；`allow-popups`/`allow-forms` 按需增减。
-
-## 2. 会 500 或数据漂移的小 bug（便宜，顺手修）
-
-- **`new_category` 缺 `@login_required`**（`views/report.py`）：匿名用户 POST 时 `validate_name` 里的 `current_user.username` 直接 AttributeError 500；GET 也不该对匿名开放。同文件其他写操作都有这个装饰器，只有这一个漏了。
-- **`report_reader` 不检查 report 是否存在**：`rc.get_report(report_id)` 返回 None 时下一行 `report.owner` 直接 500，应该 404。`view_report` 有个小变体：在 `if not report: abort(404)` **之前**就构造了 presenter。
-- **点赞/收藏计数会漂移**：`rc.like()` 用 Redis `sadd`，重复点赞返回 0，但 `incr_likes_cnt` 无条件执行——双击或重放请求就能刷计数（unlike 同理能刷成负数）。改成只在 `sadd`/`srem` 返回 1 时才增减计数。
-- **`print` 当日志用**（`app.py` 的 `load_user`、`views/frontend.py` 的 `validate_old_password`）：迁移记录里"登录成功又被弹回、零报错日志"那个坑，排查困难的根因恰恰是 `load_user` 里 `except: print()` 吞异常。改成 `current_app.logger.exception(...)`。注：这两处都是 LDAP 相关代码，HA 阶段 2（LDAP 退役）会整个重写——但阶段 2 排期在存储迁移之后，过渡期内 LDAP 排障还得靠日志，一行的修改现在就做。
-- **补 404/500 `errorhandler` 页面**：现在全站没有任何 errorhandler，500 时用户看到 Werkzeug 裸页。
-
-## 3. 防滥用：开放注册 + 反馈表单零限流（搭 HA 阶段 2 的车）
-
-**现状**：`/register` 直接创建账号（现走 LDAP，HA 阶段 2 后进 SQLite），`/feedback` 直接入库，都没有频率限制或人机验证，全站没有限流组件。
-
-**为什么**：开放注册和公开表单本身就会持续吸引爬虫和 spam；这项风险不依赖广告或主动引流计划。
-
-**方案**：HA 计划附录 A 已定稿 Flask-Limiter（redis-cache 存储、按 `CF-Connecting-IP` + 用户名限速）用于登录防爆破，**不要单独引入第二套限流**，在阶段 2 落地 Flask-Limiter 时把覆盖面从 `/login` 扩到 `/register`、`/feedback`、点赞收藏这几个 POST 端点即可。Cloudflare 免费 rate limiting rule 同理可以多建一条罩住 `/register`。注册表单加蜜罐字段（隐藏 input，有值即拒），成本几乎为零，不打扰真人。
-
-**如果阶段 2 排期太远而 spam 先来了**：单独提前 Flask-Limiter 这一小步（不用等 LDAP 退役），它对认证后端没有依赖。
-
-**关于取真实 IP**：不必上 nginx realip 模块——限流 key 直接读 `CF-Connecting-IP` 头即可（HA 附录 A 的做法）。前提是这个头可信：HA 阶段 0 已把 Linode Cloud Firewall 入站 80/443 收窄到 Cloudflare IP 段，头不可伪造的边界已经满足。**这两件事要一起看**：Cloud Firewall 不只是安全兜底，也是限流生效的前提。nginx 日志想看真实 IP 再考虑 realip，属可选。
-
-## 4. SQLite 并发：开 WAL（一行配置，且是 Litestream 的配套）
-
-**现状**：gunicorn 是 4 个 sync worker，SQLite 默认 journal 模式下写锁整库互斥。点赞/浏览计数走 Redis 没事，但收藏、上传建报告、编辑这些写路径并发时会开始出现 `database is locked`。
-
-**与 HA 计划的关系**（这项的分量因此变了）：
-- HA 阶段 0 的 Litestream 就是靠持续读 WAL 工作的——接入时会把库切到 WAL 模式。所以 WAL 不再是"可选优化"，而是阶段 0 的必然结果；应用侧要**配套**在 `SQLALCHEMY_ENGINE_OPTIONS` / engine connect 事件里设 `busy_timeout`（Litestream 自身长期持有读锁，没有 busy_timeout 的写入会更容易直接报锁）。
-- HA 阶段 2 LDAP 退役后，登录校验、找回密码、session 吊销全压进 SQLite，读写量上一个台阶，WAL + busy_timeout 是前提而不是锦上添花。
-
-**方案**：应用侧设 `busy_timeout`（约 5s）+ 确认 WAL 生效即可，WAL 切换本身交给 Litestream 接入时统一做，避免两处各切一次。
-
-顺带：`gunicorn_config.py` 里的 `debug = True` 在 gunicorn 19+ 已不是合法配置项（被忽略），可删掉避免误导。
-
-## 5. SEO：改善公开战报的可发现性
-
-**现状**：`base.html`/`report_details.html` 没有 meta description、Open Graph 标签、canonical，全站没有 sitemap.xml（robots.txt 有）。而 `view_report`、`view_category`、搜索页都是公开可爬的。
-
-**为什么**：战报详情页有现成的结构化数据（`ReportDetails` 的副本名、服务器、职业等一堆字段），却没有充分提供给搜索引擎。改善可发现性的目的，是让中文 WoD 玩家更容易找到有用战报，而不是为广告导流。
-
-**方案**：
-- `report_details.html` 加 `<meta name="description">`（用 report.description 截断）+ OG 标签（title/description/url）。
-- 加 `/sitemap.xml` 路由，从 `Report.query.filter(status==None)` 生成，纯模板渲染，几十行的事。
-- 每页 `<title>` 没按页面区分的补上战报名。
-
-## 6. 运维：`/healthz` 路由（备份/监控已并入 HA 计划）
-
-本项原本的主体（备份自动化、uptime 监控）已被 HA 计划阶段 0 完整覆盖且方案更好（Litestream 秒级 RPO 替代 cron `.backup`、Healthchecks.io、UptimeRobot），**以 ha-plan.md 为准，此处不再重复**。
-
-代码侧已完成：
-
-- **`/healthz` 路由已落地**（检查 db、redis、数据挂载点可达），UptimeRobot 应监控这个端点而不是首页。理由：首页不触碰数据目录（`disk_info` 那段有缓存且全 try/except 包着），JuiceFS 挂载悄悄掉线时首页照常 200，UptimeRobot 看不出异常——而代码里到处在防御挂载掉线，说明这是真实发生过的故障模式。HA 阶段 3 的切换脚本里的"冒烟检查"也可以直接复用这个端点。
-
-## 7. 低优先级 / 顺手清理
-
-- **搜索是 `LIKE %q%` 全表扫**（`controllers/report.py` 的 `search`）：数据量小时无所谓，慢了再上 SQLite FTS5。另外 `models/report.py` 的 `ReportQuery.search` 是无人调用的死代码（真正的搜索在 controller 里），可删。
-- **CI 缺失**：`tests/` 有 584 行测试但没有任何 CI 配置。加个跑 `make test` 的 GitHub Actions，十几行 YAML，防住下次依赖升级这类大动作的回归。
-- **`report_raw` 无 HTTP 缓存**：每次请求都从 JuiceFS（S3 后端）整读文件再做字符串替换。战报基本不可变，加 `Cache-Control`/ETag 能省 S3 读取和响应时间。HA 计划的存储归一化落地后**所有**战报读取都走 JuiceFS，这项的收益会变大（JuiceFS 本地 cache 能挡一部分，但省掉的是整条请求路径）。
-
-## 8. 存储归一化的代码侧配套 —— ✅ 已完成（2026-07-15）
-
-生产已稳定从 `/mnt/jfs/reports` 读写后，应用侧已同步收敛：
-
-- `inject_disk_usage` 与 usage 页面已移除 `/mnt/extra-report`，页面明确区分本地 zip 暂存与 JuiceFS 战报存储。
-- 上传前检查保留为本地临时上传空间的保护，配置改名为 `UPLOAD_DISK_USAGE_THRESHOLD`，不再暗示其限制 JuiceFS 战报容量。
-- `/healthz` 仅检查 `DATA_DIR`（`/mnt/jfs/reports`），不再重复检查其父挂载点。
-- 迁移脚本与其运行手册已从主仓移除；Git 历史仍保留可追溯性。
-
-这批改动已在归一化稳定后单独完成，避免页面和配置继续保留三处存储的旧语义。
-
-## 实施顺序建议（对齐 HA 阶段后更新）
-
-1. 第 1 项（CSP sandbox，一行头）+ 第 2 项（bug 修复）——已完成。
-2. 第 5 项（SEO）主体已完成，剩余页面级细节按用户查找价值继续补，不再与广告上线绑定。
-3. 第 4 项的应用侧 `busy_timeout` + 第 6 项 `/healthz` 已完成；WAL 切换随 HA 阶段 0 的 Litestream 接入一起上。
-4. 第 3 项（限流）搭 HA 阶段 2 的 Flask-Limiter 一起做；spam 先来了就单独提前。
-5. 第 8 项跟着 HA 阶段 1 的存储归一化同步上线。
-6. 第 7 项其余内容有空再说。
+- 日期：2026-07-18
+- Drive AI：Codex
+- Review AI：`unassigned`
+- 关联事项：创建 IMP-001 至 IMP-009
+- 状态变化：确认 IMP-001、IMP-002、IMP-004、IMP-005 `done`；确认 IMP-003、IMP-006、IMP-007 `todo`；新增 IMP-008、IMP-009 `assessing`
+- 改动：以维护支持计划的 front matter、稳定 ID、固定状态、完成证据和 append-only changelog 结构重写本文；删除旧文档中已落地却仍像未来方案的描述；把存储、LDAP、HA 和 AdSense 状态分别归回对应计划
+- 关键取舍：先关闭生产全量配置覆盖 app 默认值的漂移，再推进防滥用和最小 CI；缓存与 FTS 必须先有实测，不因“看起来是最佳实践”直接实施
+- 验证：核对 app `0f52bf9`、ops `5988138`、生产 app `0512c83`；检查 CSP、认证装饰器、404、幂等计数、错误 handler、SQLite timeout、SEO、sitemap、`/healthz`、测试目录和 CI 缺失；2026-07-18 SSH 只读确认生产 WAL、integrity、report 数量、JuiceFS 路径、公开 `/healthz` 和有效 Flask 配置；确认生产 timeout 未生效且 app cache 为 null；本地 `pytest` 39 项通过；未修改生产
+- 发生的问题：线上仍加载 AdSense 并展示“偶尔点点网站左下角的广告”，但该问题已有 SUP-001 / SUP-002，因此没有在本文重复建项
+- 剩余风险：生产 SQLite timeout 未生效；公开写端点仍无限流；仓库测试仍无自动 CI；缓存与搜索性能尚无基线
+- 下一步：先执行 IMP-003，把 app 默认配置与 ops 全量模板同步并验证生产有效值，再执行 IMP-006
