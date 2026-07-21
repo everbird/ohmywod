@@ -26,7 +26,7 @@ from ohmywod import security
 from ohmywod.controllers.feedback import FeedbackController
 from ohmywod.controllers.report import ReportController
 from ohmywod.controllers.user import UserController
-from ohmywod.extensions import cache, db, redis
+from ohmywod.extensions import cache, db, redis, limiter, client_ip_key
 from ohmywod.models.report import Report, ReportCategory
 
 
@@ -43,7 +43,17 @@ class LoginForm(FlaskForm):
     submit = SubmitField('登录')
 
 
+def _login_username_key():
+    # Per-account dimension: throttles a targeted (possibly distributed) brute
+    # force on one username. Empty -> fall back to the IP bucket so blank
+    # submissions don't share one global bucket.
+    username = (request.form.get("username") or "").strip().lower()
+    return f"login-user:{username}" if username else client_ip_key()
+
+
 @frontend.route('/login', methods=['GET', 'POST'])
+@limiter.limit("10 per minute; 60 per hour", methods=["POST"])
+@limiter.limit("6 per minute", methods=["POST"], key_func=_login_username_key)
 def login():
     form = LoginForm()
 
@@ -68,6 +78,9 @@ class RegistrationForm(FlaskForm):
     email = StringField('邮箱', validators=[DataRequired(),Email()])
     password1 = PasswordField('密码', validators = [DataRequired()])
     password2 = PasswordField('确认密码', validators = [DataRequired(),EqualTo('password1')])
+    # Honeypot: hidden from humans (see registration.html); bots that autofill
+    # it are silently dropped. No validators so it never bothers real users.
+    website = StringField('请勿填写')
     submit = SubmitField('注册')
 
     def validate_email(form, field):
@@ -97,9 +110,14 @@ class RegistrationForm(FlaskForm):
 
 
 @frontend.route('/register', methods = ['POST','GET'])
+@limiter.limit("5 per minute; 30 per hour", methods=["POST"])
 def register():
     form = RegistrationForm()
     if form.validate_on_submit():
+        # Honeypot tripped -> pretend success without creating anything.
+        if form.website.data:
+            current_app.logger.info("register honeypot tripped from %s", client_ip_key())
+            return redirect(url_for('frontend.login'))
         uc = UserController()
         uc.save(
             username=form.username.data,

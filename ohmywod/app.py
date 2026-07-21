@@ -21,7 +21,7 @@ except ImportError as e:
         raise
 
 from ohmywod.extensions import (
-    db, admin, login_manager, redis, cache, csrf
+    db, admin, login_manager, redis, cache, csrf, limiter, client_ip_key
 )
 from ohmywod.decorators import check_auth
 from ohmywod.models.favorite import Favorite
@@ -108,6 +108,15 @@ def configure_extensions(app):
     login_manager.init_app(app)
     csrf.init_app(app)
 
+    # Rate limiting (IMP-006). Reuse the running redis-cache (7379) as an
+    # isolated store; tests override to memory://. Fail open on storage errors
+    # so a Redis blip throttles nothing rather than 500-ing the whole site.
+    app.config.setdefault("RATELIMIT_STORAGE_URI", "redis://localhost:7379/0")
+    app.config.setdefault("RATELIMIT_SWALLOW_ERRORS", True)
+    app.config.setdefault("RATELIMIT_IN_MEMORY_FALLBACK_ENABLED", True)
+    app.config.setdefault("RATELIMIT_HEADERS_ENABLED", True)
+    limiter.init_app(app)
+
     redis.init_app(app)
 
     if app.config.get('REDIS_MOCK', False):
@@ -185,6 +194,16 @@ def configure_error_handlers(app):
         # errors/500.html is standalone (no base.html) so a broken
         # extension/DB can't take the error page down with it.
         return render_template("errors/500.html"), 500
+
+    @app.errorhandler(429)
+    def too_many_requests(e):
+        # IMP-006: consistent 429 with a hit log (no secrets/usernames).
+        app.logger.warning(
+            "rate limit hit: %s %s from %s (%s)",
+            request.method, request.path, client_ip_key(),
+            getattr(e, "description", ""),
+        )
+        return render_template("errors/429.html"), 429
 
 
 def configure_cli(app):

@@ -17,6 +17,12 @@
   <form action="" method="POST" class="content-section app-form auth-form">
     {{ form.hidden_tag() }}
 
+    {# Honeypot: in the DOM for bots, off-screen and hidden from humans / AT. #}
+    <div style="position:absolute;left:-9999px;top:-9999px;" aria-hidden="true">
+      <label for="{{ form.website.id }}">请勿填写此字段</label>
+      {{ form.website(tabindex="-1", autocomplete="off") }}
+    </div>
+
     <section class="form-section">
       <div class="form-section-heading">
         <h2 class="section-title">基本信息</h2>
