@@ -123,7 +123,10 @@ def configure_extensions(app):
 
     cache.init_app(app)
 
-    def _make_model_view(model_class, *args, **kwargs):
+    def _make_model_view(model_class, *args,
+                         column_exclude_list=None,
+                         form_excluded_columns=None,
+                         **kwargs):
 
         class AuthModelView(sqla.ModelView):
 
@@ -137,6 +140,13 @@ def configure_extensions(app):
                     'You have to login with proper credentials', 401,
                     {'WWW-Authenticate': 'Basic realm="Login Required"'})
 
+        # Set as class attrs before instantiation: Flask-Admin scaffolds its
+        # column/form caches in __init__, so post-hoc assignment wouldn't apply.
+        if column_exclude_list is not None:
+            AuthModelView.column_exclude_list = column_exclude_list
+        if form_excluded_columns is not None:
+            AuthModelView.form_excluded_columns = form_excluded_columns
+
         return AuthModelView(model_class, db, *args, **kwargs)
 
     admin.add_view(_make_model_view(Report, endpoint='report',
@@ -146,7 +156,10 @@ def configure_extensions(app):
     admin.add_view(_make_model_view(ReportDetails, endpoint='report_details',
         category='Online'))
     admin.add_view(_make_model_view(User,
-        endpoint='user', category='User'))
+        endpoint='user', category='User',
+        # HA-008: password is a hash, never edit/expose it through admin.
+        column_exclude_list=['password'],
+        form_excluded_columns=['password', 'password_updated_at']))
     admin.add_view(_make_model_view(Favorite,
         endpoint='favorite', category='Misc'))
     admin.add_view(_make_model_view(Feedback,
@@ -190,6 +203,24 @@ def configure_cli(app):
     @app.cli.command("drop_db")
     def drop_db():
         db.drop_all()
+
+    @app.cli.command("import-ldap-users")
+    @click.option("--ldif", "ldif_path", required=True,
+                  type=click.Path(exists=True, dir_okay=False),
+                  help="Path to an LDIF dump (slapcat -o ldif-wrap=no).")
+    @click.option("--force/--no-force", default=False,
+                  help="Overwrite existing non-null passwords.")
+    @click.option("--dry-run/--no-dry-run", default=False,
+                  help="Report what would change without writing.")
+    def import_ldap_users(ldif_path, force, dry_run):
+        """HA-008: import LDAP account password truth into the user table."""
+        from ohmywod.ldif_import import run_import
+        stats = run_import(ldif_path, force=force, dry_run=dry_run)
+        mode = "DRY-RUN (no writes)" if dry_run else "committed"
+        click.echo(f"import-ldap-users [{mode}]:")
+        for key in ("total", "created", "password_filled", "password_overwritten",
+                    "skipped_has_password", "skipped_no_ldif_password"):
+            click.echo(f"  {key}: {stats[key]}")
 
 
 @login_manager.user_loader

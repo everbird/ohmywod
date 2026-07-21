@@ -13,6 +13,12 @@ class User(UserMixin, db.Model):
     display_name = db.Column(db.String(255))
     email = db.Column(db.String(150), unique = True, index = True)
     joined_at = db.Column(db.DateTime(), default = datetime.utcnow, index = True)
+    # HA-008: SQLite becomes the password truth. Holds a self-describing hash
+    # ({SSHA} imported from LDAP, or $argon2id$ once a later slice rehashes on
+    # login). Nullable and unused for auth in this slice -- login still goes
+    # through LDAP. Kept out of the Flask-Admin User view (see app.py).
+    password = db.Column(db.String(255))
+    password_updated_at = db.Column(db.DateTime())
 
 
 class LDAPUser(UserMixin):

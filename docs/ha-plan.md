@@ -304,14 +304,14 @@ Review 关注：复制与备份边界、同账号/同区域故障域、告警被
 
 ### HA-008 — 退役 LDAP，把身份真值纳入 SQLite 恢复链
 
-- 状态：`todo`
+- 状态：`in_progress`
 - 优先级：`P1`
 - 波次：Wave 1
-- Drive AI：`unassigned`
+- Drive AI：`Claude Code`
 - Review AI：`unassigned`
 - 依赖：HA-003
 - 最后更新：2026-07-21
-- 结论置信度：`confirmed direction, implementation pending`
+- 结论置信度：`confirmed direction, slice 1 implemented locally`
 
 问题与影响：OpenLDAP 仍是本机单点且没有异地 dump；登录、注册、改密和 Flask-Login 用户加载都依赖它。若先做 DR，就要为一个计划退役的组件额外设计恢复；若直接删除，又会让现有用户失去认证能力。
 
@@ -330,7 +330,12 @@ Review 关注：复制与备份边界、同账号/同区域故障域、告警被
 
 Review 关注：既有 SQLite schema 的真实 upgrade / downgrade、LDAP 与 SQLite 孤儿账号、SSHA 格式兼容、哈希升级原子性、用户枚举、旧 session 失效、切换后密码变更导致的回退边界，以及是否仍有隐式 LDAP 调用。
 
-执行证据：尚无。
+执行证据（第一切片 = schema upgrade + 迁移工具，WAVE-20260721-02，2026-07-21，Claude Code）：
+
+- 生产只读盘点：LDAP 756 个 `inetOrgPerson` 全部 `{SSHA}`、都有 `mail` 与 `createTimestamp`，无重复 cn/mail；SQLite `user` 727 行，全部能对上 LDAP，**29 个仅在 LDAP、0 个仅在 SQLite**，邮箱零冲突；生产 alembic head 为 `95c19a94006d`。
+- 落地（app 分支 `ha-008-sqlite-user-schema`，尚未提交、未部署）：新增 alembic 迁移 `48a0963e9b77`，为 `user` 增补可空 `password` / `password_updated_at`，用 `batch_alter_table` 保证 SQLite 兼容；`User` 模型加同名列并从 Flask-Admin 排除（不展示/编辑哈希）；新增 `ohmywod/ldif_import.py` 与 `flask import-ldap-users` CLI（解析 `slapcat -o ldif-wrap=no` 的 LDIF、base64 感知、按用户名 upsert、只补 `password` 不覆盖既有 display_name/email、`createTimestamp` 回填 `joined_at`、支持 `--force`/`--dry-run`、幂等）。本切片**不改认证行为**：登录仍走 LDAP。
+- 验证：本地 `pytest` 47 项通过（新增 8 项）；在合成的产线形状库上 `alembic upgrade`/`downgrade` 往返成功，现有行保留、`password` 迁移后为空、版本号在 `95c19a94006d` ↔ `48a0963e9b77` 正确进退；用本模块解析逻辑在生产 slapcat 上只读复跑，抽取 756 个用户全部带 `{SSHA}` 口令、mail 与 createTimestamp。
+- 未做（待用户授权）：生产 `alembic upgrade`、SQLite 备份点与加密 LDIF、`import-ldap-users` 回填；以及第二切片（SQLite 认证 + 惰性 Argon2id + 一次性 session 失效 + operator 密码重置 + IMP-006 登录/注册限流）。
 
 ### HA-009 — 通过 DR gate 后建立同区域温备
 
@@ -478,3 +483,17 @@ Review 关注：旧主复活、Cloudflare API 部分成功、SQLite 写入窗口
 - 发生的问题：HA 计划滞后于 ops 状态，HA-004 / HA-005 仍为 `todo`；本波按 ops 唯一状态真值修正
 - 剩余风险：尚未盘点生产 LDAP / SQLite 账号，也没有生产可执行的 schema upgrade 与回退证据；LDAP 仍是当前运行时依赖，不能直接停服务或删包
 - 下一步：执行 HA-008，第一切片先建立生产可回滚的 SQLite 用户 schema upgrade，并完成 LDAP / SQLite 账号只读盘点与迁移工具设计
+
+### WAVE-20260721-02 — HA-008 第一切片：SQLite 用户 schema upgrade 与 LDIF 导入工具
+
+- 日期：2026-07-21
+- Drive AI：Claude Code
+- Review AI：`unassigned`
+- 关联事项：HA-008
+- 状态变化：HA-008 `todo` -> `in_progress`
+- 改动：app 分支 `ha-008-sqlite-user-schema`（未提交、未部署）新增 alembic 迁移 `48a0963e9b77`（`user` +`password`/+`password_updated_at`，可空、`batch_alter_table`）；`User` 模型加同名列并排除出 Flask-Admin；新增 `ohmywod/ldif_import.py` + `flask import-ldap-users` CLI；`tests/test_ldif_import.py`（8 项）
+- 关键取舍：本切片不改认证行为、不触碰生产；密码用单个自描述哈希列（`{SSHA}` 导入、后续登录时惰性升级 Argon2id），不额外加 scheme 列；导入按“无损”把 756 全量纳入（含 29 个 LDAP-only），只补 `password`、不覆盖用户已改的 display_name/email；LDIF 文件既是导入源也是加密回滚材料
+- 验证：本地 `pytest` 47 通过；迁移 upgrade/downgrade 往返在合成的产线形状库验证（行保留、版本正确进退）；生产只读盘点（756/727/29）与本模块解析逻辑在生产 slapcat 上只读复跑（抽取 756 全带 `{SSHA}`）
+- 发生的问题：生产无系统级 `sqlite3`，改用产线 app venv 的 python 以 `mode=ro` 读取；产线 `awk` 为 mawk 不支持 gawk `match(,,arr)`，改用 python 做盘点；对生产只写过一个随即删除的 `/tmp` 只读校验脚本，未改任何数据
+- 剩余风险：生产 schema upgrade 与回填尚未执行；认证仍走 LDAP；旧 session 失效、Argon2id 惰性升级、operator 密码重置、登录/注册限流属后续切片
+- 下一步：用户授权后按 runbook 在生产执行（备份 → 加密 LDIF → `alembic upgrade` → 部署带列的 app → `import-ldap-users`）；随后进入 HA-008 第二切片
