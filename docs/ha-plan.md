@@ -333,9 +333,10 @@ Review 关注：既有 SQLite schema 的真实 upgrade / downgrade、LDAP 与 SQ
 执行证据（第一切片 = schema upgrade + 迁移工具，WAVE-20260721-02，2026-07-21，Claude Code）：
 
 - 生产只读盘点：LDAP 756 个 `inetOrgPerson` 全部 `{SSHA}`、都有 `mail` 与 `createTimestamp`，无重复 cn/mail；SQLite `user` 727 行，全部能对上 LDAP，**29 个仅在 LDAP、0 个仅在 SQLite**，邮箱零冲突；生产 alembic head 为 `95c19a94006d`。
-- 落地（app 分支 `ha-008-sqlite-user-schema`，尚未提交、未部署）：新增 alembic 迁移 `48a0963e9b77`，为 `user` 增补可空 `password` / `password_updated_at`，用 `batch_alter_table` 保证 SQLite 兼容；`User` 模型加同名列并从 Flask-Admin 排除（不展示/编辑哈希）；新增 `ohmywod/ldif_import.py` 与 `flask import-ldap-users` CLI（解析 `slapcat -o ldif-wrap=no` 的 LDIF、base64 感知、按用户名 upsert、只补 `password` 不覆盖既有 display_name/email、`createTimestamp` 回填 `joined_at`、支持 `--force`/`--dry-run`、幂等）。本切片**不改认证行为**：登录仍走 LDAP。
-- 验证：本地 `pytest` 47 项通过（新增 8 项）；在合成的产线形状库上 `alembic upgrade`/`downgrade` 往返成功，现有行保留、`password` 迁移后为空、版本号在 `95c19a94006d` ↔ `48a0963e9b77` 正确进退；用本模块解析逻辑在生产 slapcat 上只读复跑，抽取 756 个用户全部带 `{SSHA}` 口令、mail 与 createTimestamp。
-- 未做（待用户授权）：生产 `alembic upgrade`、SQLite 备份点与加密 LDIF、`import-ldap-users` 回填；以及第二切片（SQLite 认证 + 惰性 Argon2id + 一次性 session 失效 + operator 密码重置 + IMP-006 登录/注册限流）。
+- 落地（app 分支 `ha-008-sqlite-user-schema`，2 个 commit，tip `ab64762`）：新增 alembic 迁移 `48a0963e9b77`，为 `user` 增补可空 `password` / `password_updated_at`，用 `batch_alter_table` 保证 SQLite 兼容；`User` 模型加同名列并从 Flask-Admin 排除（不展示/编辑哈希）；新增 `ohmywod/ldif_import.py` 与 `flask import-ldap-users` CLI（解析 `slapcat -o ldif-wrap=no` 的 LDIF、base64 感知、按用户名 upsert、只补 `password` 不覆盖既有 display_name/email、`createTimestamp` 回填 `joined_at`、支持 `--force`/`--dry-run`、幂等）。本切片**不改认证行为**：登录仍走 LDAP。
+- 验证：本地 `pytest` 48 项通过（新增 9 项）；在合成的产线形状库上 `alembic upgrade`/`downgrade` 往返成功，现有行保留、`password` 迁移后为空、版本号在 `95c19a94006d` ↔ `48a0963e9b77` 正确进退。
+- 生产落地（已执行，2026-07-21，Claude Code；runbook 在 ops 仓 `docs/ha-008-apply-slice1.md`）：备份 SQLite 一致快照 + 导出并 age 加密 LDIF 回滚材料 → 外科式 `git checkout` 部署新代码（不重启，configs/密钥未变）→ `alembic upgrade head`（`user` 加两列、727 行、integrity ok）→ `supervisorctl restart web`（新代码上线，healthz 200、LDAP 登录正常、无回溯）→ `import-ldap-users` 回填。**dry-run 拦下一个 bug**：工具 strip 掉 cn 尾随空格，导致 3 个「用户名带尾空格」账号（LDAP DN 用 `\20` 转义）匹配不到已有 SQLite 行、会建重复行并撞 `email UNIQUE`；改为原样保留 cn（commit `ab64762`）后修正。最终回填 **total 756 / created 29 / password_filled 727 / 0 冲突**；库现为 **756 行全部有 `{SSHA}` 口令、0 NULL、0 重复用户名/邮箱、integrity ok**；重跑 dry-run 为 no-op（幂等）。
+- 未做（第二切片）：SQLite 认证切换 + 惰性 Argon2id + 一次性 session 失效 + operator 密码重置 + IMP-006 登录/注册限流；届时才 stop/mask slapd（OPS-015）。注意当前生产以**分支 checkout** 部署，ops `app_ref` 仍为 `0512c83`，合并入 `main` 后需 bump。
 
 ### HA-009 — 通过 DR gate 后建立同区域温备
 
@@ -497,3 +498,17 @@ Review 关注：旧主复活、Cloudflare API 部分成功、SQLite 写入窗口
 - 发生的问题：生产无系统级 `sqlite3`，改用产线 app venv 的 python 以 `mode=ro` 读取；产线 `awk` 为 mawk 不支持 gawk `match(,,arr)`，改用 python 做盘点；对生产只写过一个随即删除的 `/tmp` 只读校验脚本，未改任何数据
 - 剩余风险：生产 schema upgrade 与回填尚未执行；认证仍走 LDAP；旧 session 失效、Argon2id 惰性升级、operator 密码重置、登录/注册限流属后续切片
 - 下一步：用户授权后按 runbook 在生产执行（备份 → 加密 LDIF → `alembic upgrade` → 部署带列的 app → `import-ldap-users`）；随后进入 HA-008 第二切片
+
+### WAVE-20260721-03 — HA-008 第一切片生产落地：迁移 + 回填 756 账号口令
+
+- 日期：2026-07-21
+- Drive AI：Claude Code
+- Review AI：`unassigned`
+- 关联事项：HA-008；ops 仓 runbook `docs/ha-008-apply-slice1.md`
+- 状态变化：HA-008 保持 `in_progress`（第一切片已上生产，认证仍待第二切片切换）
+- 改动：生产执行第一切片。分支加 fix commit `ab64762`（cn 原样保留、不 strip）。生产：SQLite 一致快照 + age 加密 LDIF 回滚材料；外科式 `git checkout` 部署（未走 app role、未 bump `app_ref`，避免重渲染 sops 密钥配置——configs/密钥/gen.py 输入均未变）；`alembic upgrade head` 加两列；`supervisorctl restart web`；`import-ldap-users` 回填
+- 关键取舍：部署用手动 checkout 而非 ansible app role，把 code-only 变更的爆炸半径压到最小；回填按无损纳入全部 756（含 29 个 LDAP-only）；先 dry-run 对账再真写
+- 验证：迁移后 727 行、两列就位、integrity ok；回填 total 756 / created 29 / password_filled 727 / 0 email 冲突；终态 756 行全 `{SSHA}`、0 NULL、0 重复；healthz 200、登录页 200、web 无回溯；重跑 dry-run no-op（幂等）
+- 发生的问题：dry-run 报 created 32 而盘点为 29 → 定位为工具 strip 掉 cn 尾随空格（3 个账号 LDAP/SQLite 用户名都带尾空格、DN 用 `\20` 转义），会建重复行并撞 `email UNIQUE`；改为原样匹配后修正，dry-run 提前拦下、零脏写。GPG 签名无法从助手上下文完成，fix commit 由用户在终端签名提交
+- 剩余风险：认证仍走 LDAP（第二切片切换前 SQLite 口令列只写不读）；生产以分支 checkout 部署，`app_ref` 未 bump，合并 `main` 后需同步；加密 LDIF 与迁移前快照为短期回滚材料，待第二切片观察通过后按窗口销毁
+- 下一步：HA-008 第二切片——SQLite 认证 + 惰性 Argon2id + 一次性 session 失效 + operator 密码重置 + IMP-006 登录/注册限流；通过观察 gate 后交 OPS-015 stop/mask 并清理 slapd
