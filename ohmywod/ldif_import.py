@@ -107,10 +107,16 @@ def extract_users(entries):
     for entry in entries:
         if not _has_object_class(entry, "inetOrgPerson"):
             continue
-        username = _first(entry, "cn").strip()
-        if not username:
+        # Preserve the cn verbatim -- do NOT strip. A few production accounts
+        # carry a trailing space in the username in BOTH LDAP and SQLite (the
+        # LDIF DN shows it escaped as `\20`, and the cn value is base64). The app
+        # created the SQLite row from the raw cn, so the upsert must match on the
+        # raw value too: stripping would miss the existing row, create a
+        # duplicate, and then collide on the unique email column at commit.
+        username = _first(entry, "cn")
+        if not username.strip():
             continue
-        display_name = _first(entry, "displayName").strip() or username
+        display_name = _first(entry, "displayName").strip() or username.strip()
         email = _first(entry, "mail").strip()
         password = _first(entry, "userPassword")
         created_at = _parse_generalized_time(_first(entry, "createTimestamp"))

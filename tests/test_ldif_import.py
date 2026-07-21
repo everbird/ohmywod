@@ -128,6 +128,32 @@ def test_import_fills_missing_and_creates(db):
     assert ghost.joined_at == datetime(2022, 1, 1, 0, 0, 0)
 
 
+def test_username_with_trailing_space_matches_existing_row(db):
+    # Production reality: a few accounts carry a trailing space in the username
+    # in both LDAP and SQLite. The cn must NOT be stripped, or the upsert would
+    # miss the existing row, create a duplicate, and collide on the unique email.
+    db.session.add(User(username="ghosty ", display_name="Ghosty",
+                        email="ghosty@example.com"))
+    db.session.commit()
+
+    # A trailing space makes real slapcat base64-encode both the dn and the cn.
+    ldif = (
+        "dn:: " + _b64("cn=ghosty ,ou=users,dc=everbird,dc=me") + "\n"
+        "objectClass: inetOrgPerson\n"
+        "cn:: " + _b64("ghosty ") + "\n"
+        "mail: ghosty@example.com\n"
+        "userPassword:: " + _b64("{ssha}GHOSTYHASH") + "\n"
+    )
+    users = extract_users(parse_ldif(ldif))
+    assert users[0].username == "ghosty "  # trailing space preserved
+
+    stats = import_users(db.session, users)
+    assert stats["created"] == 0
+    assert stats["password_filled"] == 1
+    assert User.query.count() == 1  # no duplicate row created
+    assert User.query.filter_by(username="ghosty ").first().password == "{ssha}GHOSTYHASH"
+
+
 def test_import_force_overwrites_existing_password(db):
     db.session.add(User(username="jane", display_name="Jane",
                         email="jane@example.com", password="{ssha}OLDJANE"))
