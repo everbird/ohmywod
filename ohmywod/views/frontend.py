@@ -16,20 +16,17 @@ from flask import (
     redirect,
     url_for, current_app, g, session, request, jsonify
 )
-from flask_ldap3_login import AuthenticationResponseStatus
-from flask_ldap3_login.forms import LDAPLoginForm
 from flask_login import login_user, current_user, login_required, logout_user
 from flask_wtf import FlaskForm
-from ldap3 import HASHED_SALTED_SHA
-from ldap3.utils.hashed import hashed
 from wtforms import StringField, PasswordField, SubmitField, BooleanField, SelectField
 from wtforms.validators import DataRequired, Email, EqualTo, ValidationError
 from wtforms.widgets import TextArea
 
+from ohmywod import security
 from ohmywod.controllers.feedback import FeedbackController
 from ohmywod.controllers.report import ReportController
 from ohmywod.controllers.user import UserController
-from ohmywod.extensions import cache, db, ldap_manager, redis
+from ohmywod.extensions import cache, db, redis
 from ohmywod.models.report import Report, ReportCategory
 
 
@@ -40,18 +37,27 @@ def landing_page():
     return rt("landing.html")
 
 
+class LoginForm(FlaskForm):
+    username = StringField('用户名', validators=[DataRequired()])
+    password = PasswordField('密码', validators=[DataRequired()])
+    submit = SubmitField('登录')
+
+
 @frontend.route('/login', methods=['GET', 'POST'])
 def login():
-    form = LDAPLoginForm()
+    form = LoginForm()
 
     if form.validate_on_submit():
-        login_user(form.user)  # Tell flask-login to log them in.
-        args = request.args
-        next_url = args.get("next")
-        if next_url:
-            return redirect(next_url)
-
-        return redirect(url_for("wodreport.home"))  # Send them home
+        uc = UserController()
+        user = uc.authenticate(form.username.data, form.password.data)
+        if user is not None:
+            login_user(user)  # Tell flask-login to log them in.
+            next_url = request.args.get("next")
+            if next_url:
+                return redirect(next_url)
+            return redirect(url_for("wodreport.home"))  # Send them home
+        # Generic message avoids leaking whether the username exists.
+        flash("用户名或密码错误。")
 
     return rt("login.html", form=form)
 
@@ -68,9 +74,7 @@ class RegistrationForm(FlaskForm):
         email = field.data
         if email:
             uc = UserController()
-            ldap_user = uc.get_ldap_user_by_email(email)
-            db_user = uc.get_db_user_by_email(email)
-            if ldap_user or db_user:
+            if uc.get_db_user_by_email(email):
                 raise ValidationError("邮箱已被其他用户使用。")
 
     def validate_display_name(form, field):
@@ -173,22 +177,17 @@ class ProfileForm(FlaskForm):
 
     def validate_email(form, field):
         email = field.data
-        if email and current_user.db_user.email != email:
+        if email and current_user.email != email:
             uc = UserController()
-            ldap_user = uc.get_ldap_user_by_email(email)
-            db_user = uc.get_db_user_by_email(email)
-            if ldap_user or db_user:
+            if uc.get_db_user_by_email(email):
                 raise ValidationError("邮箱已被其他用户使用。")
 
     def validate_old_password(form, field):
         old_password = field.data
         if old_password:
-            result = ldap_manager.authenticate(current_user.username, old_password)
-            current_app.logger.info(
-                "Old-password re-auth for %s: %s",
-                current_user.username, result.status
-            )
-            if result.status != AuthenticationResponseStatus.success:
+            # Re-auth against the stored hash directly (no lazy upgrade here;
+            # the actual password change re-hashes anyway).
+            if not security.verify_password(current_user.password, old_password):
                 raise ValidationError("旧密码不匹配。")
         elif form.new_password1.data or form.new_password2.data:
             raise ValidationError("修改密码时需要填写旧密码。")
@@ -200,7 +199,7 @@ class ProfileForm(FlaskForm):
 def profile_page():
     form = ProfileForm(
         display_name=current_user.display_name,
-        email=current_user.db_user.email,
+        email=current_user.email,
     )
     if form.validate_on_submit():
         uc = UserController()

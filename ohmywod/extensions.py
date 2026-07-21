@@ -3,7 +3,6 @@
 from flask_admin import Admin, AdminIndexView, expose
 from flask_admin.theme import Bootstrap4Theme
 from flask_caching import Cache
-from flask_ldap3_login import LDAP3LoginManager
 from flask_login import LoginManager
 from flask_paginate import Pagination, get_page_args
 from flask_redis import FlaskRedis
@@ -24,7 +23,6 @@ class AuthAdminHome(AdminIndexView):
 db = SQLAlchemy()
 admin = Admin(name='Admin of Ohmywod', index_view=AuthAdminHome(), theme=Bootstrap4Theme(swatch='darkly'))
 login_manager = LoginManager()
-ldap_manager = LDAP3LoginManager()
 redis = FlaskRedis()
 cache = Cache()
 csrf = CSRFProtect()

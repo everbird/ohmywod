@@ -15,24 +15,17 @@ def app():
     # Create temp directories for testing session
     temp_data_dir = tempfile.mkdtemp()
     temp_upload_dir = tempfile.mkdtemp()
-    temp_ldap_db_dir = tempfile.mkdtemp()
-    mock_ldap_db_path = os.path.join(temp_ldap_db_dir, 'mock_ldap.json')
-
-    # Setup initial empty mock LDAP database
-    with open(mock_ldap_db_path, 'w', encoding='utf-8') as f:
-        json.dump({}, f)
 
     class TestConfig(object):
         TESTING = True
         WTF_CSRF_ENABLED = False
         SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'
         SQLALCHEMY_ECHO = False
-        
-        LDAP_MOCK = True
+
+        # Auth is SQLite-only now (HA-008); only Redis is still mocked.
         REDIS_MOCK = True
         CACHE_TYPE = 'simple'
-        
-        MOCK_LDAP_DB = mock_ldap_db_path
+
         DATA_DIR = temp_data_dir
         UPLOAD_DIR = temp_upload_dir
         UPLOAD_DISK_USAGE_THRESHOLD = 0.99
@@ -55,7 +48,6 @@ def app():
     # Clean up directories
     shutil.rmtree(temp_data_dir, ignore_errors=True)
     shutil.rmtree(temp_upload_dir, ignore_errors=True)
-    shutil.rmtree(temp_ldap_db_dir, ignore_errors=True)
 
 
 @pytest.fixture(autouse=True)

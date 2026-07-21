@@ -11,39 +11,34 @@ from ohmywod.models.feedback import Feedback
 
 def test_user_controller(db):
     uc = UserController()
-    
-    # Save a user
-    res = uc.save("john", "John Doe", "john@example.com", "mypassword")
-    assert res is True
-    
-    # Check SQL DB
+
+    # Save a user -> returns the User row with an Argon2id password.
+    user = uc.save("john", "John Doe", "john@example.com", "mypassword")
+    assert user.id is not None
+    assert user.password.startswith("$argon2")
+
     db_user = uc.get_db_user("john")
     assert db_user is not None
     assert db_user.display_name == "John Doe"
     assert db_user.email == "john@example.com"
-    
-    # Check LDAP User
-    ldap_user = uc.get_ldap_user_by_username("john")
-    assert ldap_user is not None
-    assert ldap_user.username == "john"
-    assert ldap_user.dn == "cn=john,ou=users,dc=everbird,dc=me"
-    
-    # Check get by email
-    ldap_by_email = uc.get_ldap_user_by_email("john@example.com")
-    assert ldap_by_email is not None
-    assert ldap_by_email.username == "john"
-    
-    # Update user
-    uc.update_user("john", display_name="John Updated", email="johnnew@example.com")
-    
+
+    # Authentication: right password succeeds, wrong fails, case-insensitive login.
+    assert uc.authenticate("john", "mypassword") is not None
+    assert uc.authenticate("john", "nope") is None
+    assert uc.authenticate("JOHN", "mypassword") is not None
+    assert uc.authenticate("ghost", "whatever") is None
+
+    # get by email
+    assert uc.get_db_user_by_email("john@example.com").username == "john"
+
+    # Update profile + password
+    uc.update_user("john", display_name="John Updated",
+                   email="johnnew@example.com", password="newsecret")
     db_user_updated = uc.get_db_user("john")
     assert db_user_updated.display_name == "John Updated"
     assert db_user_updated.email == "johnnew@example.com"
-    
-    ldap_user_updated = uc.get_ldap_user_by_username("john")
-    # For MockLDAPConnection, modify updates entries.
-    # LDAPUser gets attributes back. Let's make sure it doesn't throw.
-    assert ldap_user_updated is not None
+    assert uc.authenticate("john", "newsecret") is not None
+    assert uc.authenticate("john", "mypassword") is None
 
 
 def test_report_controller(db):
