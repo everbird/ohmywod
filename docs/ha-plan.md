@@ -5,8 +5,8 @@ document_status: active
 source_of_truth_for: "HA/DR direction, implementation gates, work item status, and wave changelog"
 language: zh-CN
 created_at: "2026-07-05"
-last_updated: "2026-07-18"
-review_commit: "app 0f52bf9; ops 5988138; production app 0512c83"
+last_updated: "2026-07-21"
+review_commit: "app 8174971; ops 61f84e8; production app 0512c83"
 review_worktree: "clean before this documentation wave"
 next_item_id: "HA-011"
 ---
@@ -15,7 +15,7 @@ next_item_id: "HA-011"
 
 > 本文是 ohmywod 可用性、备份恢复和温备建设方向的工作计划，不是可以直接复制到生产执行的 runbook。具体生产真值和恢复步骤以私有仓库 `ohmywod-ops/docs/recovery.md` 为准，ops 整改细节以 `ohmywod-ops/docs/ops-review-plan.md` 为准。
 >
-> **当前结论：生产仍是单机。已完成单机加固、SQLite 持续复制、对象存储迁移和战报存储归一化，但冷恢复闭环尚未成立，双机温备也尚未建设。因此当前能力应称为“使用外部对象存储和持续数据库复制的单机部署”，不能称为 HA，也不再宣称 20 分钟可重建。温备仍是目标方向，但必须先关闭恢复顺序、服务依赖和身份恢复缺口。**
+> **当前结论：生产仍是单机。恢复顺序闸门、裸机 bootstrap 和 JuiceFS/nginx 服务依赖已经在 ops 仓落地，但尚未经过真实空白机端到端恢复演练。当前主线先退役 OpenLDAP，把账号与密码真值收敛进 SQLite，再让单机 DR 只恢复 SQLite、JuiceFS、证书和入口网络。LDAP 未退役前不为它补建长期恢复或温备能力；LDAP 退役和单机 DR 均完成后，才决定是否建设双机温备。**
 
 ## 1. 边界、现状与目标
 
@@ -43,32 +43,32 @@ next_item_id: "HA-011"
 
 ### 1.3 风险结论
 
-当前最大的风险不是“少一台机器”，而是已有恢复材料还没有组成安全闭环：
+当前最大的风险不是“少一台机器”，而是身份真值和恢复边界仍不够小、也没有真实演练证据：
 
-1. ops 的完整 playbook 会先启动应用和 Litestream，再恢复数据；缺库检查还可能创建空 SQLite。
-2. Redis meta、JuiceFS、web 的 systemd 依赖方向不满足“挂载未就绪时 web 不得写入”。
-3. 裸机 bootstrap、目录、证书、DNS、Cloud Firewall、密钥真值和 LDAP 身份恢复仍有缺口。
-4. 监控目前能证明进程和定时任务在运行，不能单独证明最近副本可恢复。
-5. ops 渲染的生产 `local_config.py` 是全量替换类，已经遗漏 app 默认配置中的 SQLite timeout；配置真值漂移会让“代码已完成”不等于“生产已生效”。
-6. 如果现在直接增加备机，只会把未验证的恢复与启动问题复制到两台机器，并增加脑裂面。
+1. OPS-001 至 OPS-003 已把 prepare / restore / serve 闸门和 JuiceFS/nginx 启动关系落地，但真实 VM、FUSE、重启和恢复行为仍待 OPS-004 验证。
+2. OpenLDAP 仍承接登录、注册、改密和 session 用户加载，却没有独立异地恢复；继续为它补 DR 会固化一个计划退役的组件。
+3. 当前 `User` 表没有密码哈希；生产又缺少可靠的既有 SQLite schema upgrade 流程。LDAP 下线前必须先完成可回滚的 schema 迁移、账号对账和 SSHA 迁移。
+4. 证书、DNS、Cloud Firewall、新机接入与控制节点信任链仍有缺口。
+5. 监控目前能证明进程和定时任务在运行，不能单独证明最近副本可恢复。
+6. ops 渲染的生产 `local_config.py` 是全量替换类，已经遗漏 app 默认配置中的 SQLite timeout；删除 LDAP 配置时应同时收敛这一漂移。
 
 ### 1.4 已拍板的原则
 
-1. 先完成可靠的单机 DR，再建设双机温备；备机不能替代恢复演练。
+1. 先退役 LDAP、缩小恢复边界，再完成可靠的单机 DR，最后才决定是否建设双机温备；备机不能替代恢复演练。
 2. 目标架构是 active-passive，不做多活；SQLite 和 Redis 不允许双主写入。
 3. 故障切换由告警触发、人工确认、一条命令执行，不做自动 failover。
 4. 备机与主机优先同区域、不同宿主机，用私网 VLAN 复制；区域级故障靠对象存储和从零恢复兜底。
 5. 流量切换继续使用 Cloudflare 源站变更，不为这个体量引入 NodeBalancer。
 6. 配置管理使用 Ansible，密钥使用 sops + age；不引入 Vault/OpenBao 一类新的在线单点。
 7. 战报不做 restic 或第二 bucket 副本。接受暂时没有防误删版本化备份的风险；触发条件见 HA-007。
-8. LDAP 在建设备机前退役，避免为过渡组件设计复制和切换。
+8. LDAP 在单机 DR 演练前退役，避免为过渡组件设计恢复、复制和切换；迁移期间先保留可回滚材料，再按“切换、停用、删除”三步退出。
 9. 所有 RPO/RTO 只能来自演练记录，不能从组件宣传或脚本目标推导。
 
 ### 1.5 成功判断
 
 计划分两层成立：
 
-- **DR 层成立**：从隔离的空白机器恢复时，不会创建并复制空库，不会向未挂载目录写数据；SQLite、JuiceFS metadata、战报、身份、证书、入口网络和监控均有可复核恢复证据，并记录实际 RPO/RTO。
+- **DR 层成立**：LDAP 已退出运行时和恢复边界；从隔离的空白机器恢复时，不会创建并复制空库，不会向未挂载目录写数据；SQLite（含账号密码真值）、JuiceFS metadata、战报、证书、入口网络和监控均有可复核恢复证据，并记录实际 RPO/RTO。
 - **温备层成立**：主机与备机角色明确，只有一端可写；真实切换和回切都演练成功，旧主重新加入前经过防脑裂检查；日常升级能按同一套蓝绿流程完成。
 
 ## 2. 这份计划怎么维护
@@ -121,17 +121,17 @@ next_item_id: "HA-011"
 
 ## 3. 建议推进顺序
 
-### Wave 0：把现有单机恢复路径变安全
+### Wave 0：把现有单机恢复路径变安全（已完成实现切片）
 
 范围：HA-004、HA-005。
 
-方向：先解决空库、服务启动顺序和未挂载目录写入风险。完成前不执行完整冷恢复，也不创建长期备机。
+方向：先解决空库、服务启动顺序和未挂载目录写入风险。OPS-001 至 OPS-003 已落地；真实 FUSE / reboot 复核留给后续恢复演练。
 
-### Wave 1：建立可验证的 DR 闭环
+### Wave 1：先退役 LDAP，再建立可验证的 DR 闭环
 
-范围：HA-006、HA-007、HA-008。
+范围：HA-008、HA-006、HA-007。
 
-方向：补齐裸机、身份、证书、网络和备份证据，在隔离新机做一次端到端恢复并测量 RPO/RTO。LDAP 退役后，SQLite/Litestream 才能覆盖完整账号真值。
+方向：先以 HA-008 把账号和密码真值迁入 SQLite，完成生产切换、停用和清理 LDAP；再以 HA-006 在隔离新机恢复更小的系统边界并测量 RPO/RTO，最后用 HA-007 收敛备份新鲜度与误删风险。
 
 ### Wave 2：建设并演练温备
 
@@ -212,18 +212,18 @@ Review 关注：不要用 service active 或能列出旧 generation 代替最新
 
 ### HA-004 — 重排冷恢复流程，阻止空库上线或进入备份链
 
-- 状态：`todo`
+- 状态：`done`
 - 优先级：`P0`
 - 波次：Wave 0
-- Drive AI：`unassigned`
+- Drive AI：`Claude Code`
 - Review AI：`unassigned`
 - 依赖：HA-003
-- 最后更新：2026-07-18
+- 最后更新：2026-07-21
 - 结论置信度：`confirmed`
 
-问题与影响：现有恢复文档先运行完整 playbook，再恢复数据。Litestream role 的 SQLite 检查会在缺库时创建空文件，app、nginx 和 Litestream 也可能过早启动。
+问题与影响：旧恢复文档先运行完整 playbook，再恢复数据。Litestream role 的 SQLite 检查会在缺库时创建空文件，app、nginx 和 Litestream 也可能过早启动。
 
-证据：`ohmywod-ops/docs/ops-review-plan.md` 的 OPS-001、OPS-002；`docs/recovery.md` 当前顺序；Litestream role 使用默认 `sqlite3.connect()`。
+证据：`ohmywod-ops/docs/ops-review-plan.md` 的 OPS-001、OPS-002 已标记 `done`；当前 recovery runbook 已使用 prepare → restore / verify → serve；缺库检查使用不创建文件的 `stat` 与 SQLite `mode=rw`。
 
 方向与要点：拆分“准备机器、恢复数据、验证、激活流量”；缺库检查必须使用不创建文件的只读打开；恢复完成前禁止 app 和 Litestream 写入/复制目标。
 
@@ -231,17 +231,17 @@ Review 关注：不要用 service active 或能列出旧 generation 代替最新
 
 Review 关注：Litestream generation 选择、失败清理和重复执行是否仍有污染路径。
 
-执行证据：尚无；具体执行状态跟踪 OPS-001、OPS-002。
+执行证据：OPS-001 / OPS-002（WAVE-20260720-01..03）：恢复闸门、三阶段 runbook、缺库与 `--check` 回归测试、Ubuntu 24.04 prepare 幂等验证均已完成；真实空白 VM 数据恢复仍由 HA-006 / OPS-004 验收。
 
 ### HA-005 — 修正 Redis meta、JuiceFS、web 和 nginx 的服务依赖
 
-- 状态：`todo`
+- 状态：`done`
 - 优先级：`P0`
 - 波次：Wave 0
-- Drive AI：`unassigned`
+- Drive AI：`Claude Code`
 - Review AI：`unassigned`
 - 依赖：HA-004
-- 最后更新：2026-07-18
+- 最后更新：2026-07-21
 - 结论置信度：`confirmed`
 
 问题与影响：Redis store、Redis cache 和 web 同属一个 Supervisor unit。JuiceFS 必须等 Redis store，但 web 又必须等 JuiceFS，当前 unit 粒度形成错误依赖，重启时 web 可能写进挂载点的底层目录。
@@ -254,7 +254,7 @@ Review 关注：Litestream generation 选择、失败清理和重复执行是否
 
 Review 关注：循环依赖、停止顺序、挂载假活和 nginx 过早接流量。
 
-执行证据：尚无；具体执行状态跟踪 OPS-003。
+执行证据：OPS-003（WAVE-20260720-04）：JuiceFS `ExecStartPost` 等待真实挂载，nginx 使用 `After` + `BindsTo` 作为公网入口闸门；Ubuntu 24.04 systemd 容器以 tmpfs 验证未挂不放流量、挂载后启动、掉挂后停 nginx。真实 FUSE / reboot 留给 HA-006 / OPS-004 复核。
 
 ### HA-006 — 补齐裸机恢复前提并完成端到端演练
 
@@ -263,15 +263,15 @@ Review 关注：循环依赖、停止顺序、挂载假活和 nginx 过早接流
 - 波次：Wave 1
 - Drive AI：`unassigned`
 - Review AI：`unassigned`
-- 依赖：HA-004、HA-005
-- 最后更新：2026-07-18
+- 依赖：HA-004、HA-005、HA-008
+- 最后更新：2026-07-21
 - 结论置信度：`confirmed`
 
-问题与影响：bootstrap、运行目录、Supervisor 来源、证书、DNS、Cloud Firewall、新 inventory 和工具安装尚未形成空白 Ubuntu 可重复流程。现有 smoke 只恢复 SQLite 到临时目录。
+问题与影响：bootstrap、运行目录和关键二进制已基本收敛，但证书、DNS、Cloud Firewall、新 inventory 和信任链仍未在真实空白机闭环。现有 smoke 只恢复 SQLite 到临时目录；在 LDAP 退役前演练还会被迫恢复一个即将删除的身份组件。
 
-证据：OPS-002、OPS-004、OPS-007、OPS-010 至 OPS-012；2026-07-18 生产也确认系统没有 `sqlite3` CLI，说明文档中的隐含工具前提不成立。
+证据：OPS-002、OPS-004、OPS-007、OPS-010 至 OPS-012、OPS-015；HA-008 负责先把身份真值收进 SQLite。
 
-方向与要点：在隔离新机从信任根开始，恢复 SQLite、JuiceFS metadata/战报、身份、证书、入口网络和监控；验证后再切测试流量。记录每一步耗时和恢复点时间。
+方向与要点：HA-008 / OPS-015 完成后，在隔离新机从信任根开始，恢复 SQLite（含账号密码）、JuiceFS metadata/战报、证书、入口网络和监控；验证后再切测试流量。记录每一步耗时和恢复点时间，不再恢复 slapd / LDIF。
 
 完成判断：一台空白 Ubuntu 能安全到达“数据已恢复但未上线”，再经显式激活对外服务；至少一次完整演练记录真实 RPO/RTO、回退和遗留手工步骤。
 
@@ -309,19 +309,26 @@ Review 关注：复制与备份边界、同账号/同区域故障域、告警被
 - 波次：Wave 1
 - Drive AI：`unassigned`
 - Review AI：`unassigned`
-- 依赖：HA-003、HA-006
-- 最后更新：2026-07-18
-- 结论置信度：`recommended`
+- 依赖：HA-003
+- 最后更新：2026-07-21
+- 结论置信度：`confirmed direction, implementation pending`
 
-问题与影响：OpenLDAP 仍是本机单点且没有异地 dump；如果先建设备机，就要为一个计划退役的组件额外设计复制、恢复和切换。
+问题与影响：OpenLDAP 仍是本机单点且没有异地 dump；登录、注册、改密和 Flask-Login 用户加载都依赖它。若先做 DR，就要为一个计划退役的组件额外设计恢复；若直接删除，又会让现有用户失去认证能力。
 
-证据：生产 `slapd` active；应用仍使用 `flask-ldap3-login`，admin 仍是独立 Basic Auth；OPS-008 指出 LDAP 身份与“两个信任根”说法尚未闭环。
+证据：生产 `slapd` active；`User` 表当前没有密码哈希；应用仍使用 `flask-ldap3-login` / LDAP DN session，注册和 profile 更新写 LDAP；现有部署主要调用 `db.create_all()`，不能给生产已有表补列。ops 侧退役工作由 OPS-015 跟踪。
 
-方向与要点：把 SSHA 哈希迁入 user 表，登录成功惰性升级到 argon2id；补找回密码、统一失败提示、登录限速和 session 吊销；双轨只读观察后再停 LDAP。邮件只使用标准 SMTP 接口，供应商在实施时复核。
+方向与要点：
 
-完成判断：现有用户无需统一重设密码；注册、登录、改密、找回密码和 admin 权限有测试与迁移/回退记录；LDAP 停止后，账号可随 SQLite/Litestream 恢复。
+- 先建立可在生产执行和回退的 SQLite schema upgrade 路径，为 `User` 增加密码哈希与必要的版本字段。
+- 只读盘点 LDAP / SQLite 账号，保存加密 LDIF 与 SQLite 回滚点；导入 SSHA 哈希并逐项对账，不要求全员重设密码。
+- 应用改用 SQLite `User` 认证；登录成功时把 SSHA 惰性升级到 Argon2id。注册、资料和改密只写 SQLite。
+- 切换时允许旧 LDAP DN session 一次性失效，避免长期维护两套身份对象；登录/注册限流与 IMP-006 同波完成。
+- 初始密码恢复使用受控的 operator CLI，不把 SMTP 变成新的 DR 硬依赖；用户自助邮件找回作为后续可选增强。
+- 生产切换并观察后先 stop / mask slapd，确认无 LDAP 调用，再由 OPS-015 删除包、配置、密钥和恢复前提；加密 LDIF 只保留明确的短期回滚窗口。
 
-Review 关注：SSHA 兼容实现、token 失效、用户枚举、邮件失败、管理员迁移和双轨期间的真值冲突。
+完成判断：LDAP 与 SQLite 账号全部对账且现有用户无需统一重设密码；注册、登录、改密、operator 密码重置、一次性 session 失效和 admin 权限有测试与迁移/回退记录；生产观察期无 LDAP 调用；slapd 停止后账号可随 SQLite/Litestream 恢复，OPS-015 已清除运行时与 runbook 残留。
+
+Review 关注：既有 SQLite schema 的真实 upgrade / downgrade、LDAP 与 SQLite 孤儿账号、SSHA 格式兼容、哈希升级原子性、用户枚举、旧 session 失效、切换后密码变更导致的回退边界，以及是否仍有隐式 LDAP 调用。
 
 执行证据：尚无。
 
@@ -418,10 +425,9 @@ Review 关注：旧主复活、Cloudflare API 部分成功、SQLite 写入窗口
 以下问题按对应事项处理，不阻塞 Wave 0：
 
 1. HA-007：是否继续接受战报无独立防误删备份，以及 JuiceFS trash 保留多久。
-2. HA-008：找回密码邮件供应商和发件域最终设置。
-3. HA-009：实测后选择长期 2 GiB ×2，还是保留单机 + 临时恢复机模式。
-4. HA-009：是否需要供应商级 placement group 来明确主备分散到不同宿主机。
-5. HA-010：可接受的人工响应窗口，以及真实切换演练的低峰时间。
+2. HA-009：实测后选择长期 2 GiB ×2，还是保留单机 + 临时恢复机模式。
+3. HA-009：是否需要供应商级 placement group 来明确主备分散到不同宿主机。
+4. HA-010：可接受的人工响应窗口，以及真实切换演练的低峰时间。
 
 ## 8. Changelog（append-only，旧 -> 新）
 
@@ -458,3 +464,17 @@ Review 关注：旧主复活、Cloudflare API 部分成功、SQLite 写入窗口
 - 发生的问题：生产没有系统级 `sqlite3`，改用 app venv 的 Python 以 SQLite URI `mode=ro` 读取 journal mode 和 integrity；Supervisor 控制端口拒绝连接，因此不把 supervisor 子进程状态作为本轮证据
 - 剩余风险：恢复顺序和服务依赖仍是 P0；LDAP、无 Redis replica、备份新鲜度和冷恢复均未闭环
 - 下一步：从 HA-004 / OPS-001 开始，先把数据库存在性检查改为不创建文件的只读模式，再拆分恢复阶段
+
+### WAVE-20260721-01 — 主线改为先退役 LDAP，再演练单机 DR
+
+- 日期：2026-07-21
+- Drive AI：Codex
+- Review AI：`unassigned`
+- 关联事项：HA-004、HA-005、HA-006、HA-008
+- 状态变化：HA-004 `todo` -> `done`；HA-005 `todo` -> `done`；HA-006 保持 `todo`；HA-008 保持 `todo` 并成为下一主任务
+- 改动：同步 ops 已完成的恢复闸门与服务依赖真值；把 Wave 1 重排为 HA-008 → HA-006 → HA-007；让 HA-006 显式依赖 HA-008；补充 SQLite schema upgrade、LDAP/SQLite 对账、SSHA 迁移与惰性升级、一次性 session 失效、operator 密码重置、stop/mask 后再删除 LDAP 的完整方向；将 ops 清理映射到 OPS-015
+- 关键取舍：先删除不必要的身份组件、缩小恢复边界，再花成本证明单机 DR；不为计划退役的 slapd 新建长期恢复链，也不把 SMTP 引入为首版密码恢复硬依赖
+- 验证：只读核对 app `8174971` 的 `User` 模型、登录/注册/profile、Flask-Login loader、LDAP mock 与依赖；核对 ops `61f84e8` 的 base/app roles、SOPS schema 和 OPS-001..003 执行证据；本波只更新计划，没有修改应用、生产或密钥
+- 发生的问题：HA 计划滞后于 ops 状态，HA-004 / HA-005 仍为 `todo`；本波按 ops 唯一状态真值修正
+- 剩余风险：尚未盘点生产 LDAP / SQLite 账号，也没有生产可执行的 schema upgrade 与回退证据；LDAP 仍是当前运行时依赖，不能直接停服务或删包
+- 下一步：执行 HA-008，第一切片先建立生产可回滚的 SQLite 用户 schema upgrade，并完成 LDAP / SQLite 账号只读盘点与迁移工具设计
