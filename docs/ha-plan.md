@@ -291,6 +291,12 @@ OPS-010、OPS-011、OPS-012。
 `read_only` 临时 Object Storage key 因执行环境禁止向第三方 VM 传递任何 credential 而未下发，随后立即
 撤销并确认无残留。因此 VM FUSE/reboot、证书和切流仍是明确未覆盖项，HA-006 保持 `in_progress`。
 
+补充（自动化边界，WAVE-20260722-02）：本次演练确认 ops 的 JuiceFS role 只管理 binary、systemd unit 与 mount
+生命周期，不负责 metadata dump load 或恢复后 `juicefs config`。metadata load、FUSE 对象读取、reboot gate 是三个
+独立验收层，不能互相替代。当前 runbook 的人工 volume credential 恢复是 OPS-008 secret-delivery 信任链缺口；
+未来应实现显式 `prepare → restore → reboot gate → serve`，且先单独验证目标机取得 SOPS secret 的机制被执行环境
+允许。完整过程与后续 AI 禁止重试项记录在私有 ops `docs/ops-004-rehearsal.md`。
+
 ### HA-007 — 验证备份新鲜度、保留策略与误删风险边界
 
 - 状态：`assessing`
@@ -606,3 +612,17 @@ Review 关注：旧主复活、Cloudflare API 部分成功、SQLite 写入窗口
 - 发生的问题：真实空白镜像揭示多处只在容器中未触发的 prepare 缺口，均已回修；Object Storage key 创建成功但不能传到第三方 VM，key ID 与本地响应均已清理。
 - 剩余风险：第三方 VM 真实 FUSE/reboot 启动 gate、证书、DNS、测试入口与切换/回退未验证；临时实例仍运行并计费；HA-006 不标 done。
 - 下一步：两仓证据与 ops 修正已提交并推送（app `161cc80`、ops `3de16e6`）；随后由用户决定销毁临时实例，或在其自行执行 credential 注入与 FUSE/reboot 后补交证据。
+
+### WAVE-20260722-02 — 记录 JuiceFS 恢复自动化与 secret-delivery 断点
+
+- 日期：2026-07-22
+- Drive AI：Codex
+- Review AI：`unassigned`
+- 关联事项：HA-006；ops OPS-004、OPS-008
+- 状态变化：HA-006 保持 `in_progress`
+- 改动：把本次 drill 的关键结论同步到跨仓计划：Ansible 现只控制 JuiceFS mount 服务，不控制 dump load/volume credential；明确 metadata load、FUSE 文件读取、reboot gate 三层证据；未来拓扑调整为 `prepare → restore → reboot gate → serve`，secret delivery 归 OPS-008 独立闭环。
+- 关键取舍：不把 `no_log` 或“改写为 Ansible task”视为 tenant/runtime credential policy 的自动解法；目标机独立 age recipient 是推荐方向，但仍须先验证策略允许。
+- 验证：与 ops role/template 和 2026-07-22 真机状态交叉核对：drill node 有恢复后的 Redis metadata，但无 `/mnt/jfs` mount；可信控制机 10 文件抽样不冒充 VM FUSE/reboot 证据。
+- 发生的问题：现有高层计划过去把“Ansible 管理 juicefs.service”与“JuiceFS volume 可从零恢复”靠得太近，容易让后续 AI 误读；本波拆开说明。
+- 剩余风险：restore playbook、目标机 secret delivery、只读 drill mount 与 reboot gate 均未实现；临时 Linode 仍运行并计费。
+- 下一步：以 OPS-008 secret-delivery trust chain 为前置，之后实现并演练 restore phase；HA-006 在 VM FUSE/reboot 证据前不标 done。
