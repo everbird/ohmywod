@@ -15,24 +15,24 @@ def app():
     # Create temp directories for testing session
     temp_data_dir = tempfile.mkdtemp()
     temp_upload_dir = tempfile.mkdtemp()
-    temp_ldap_db_dir = tempfile.mkdtemp()
-    mock_ldap_db_path = os.path.join(temp_ldap_db_dir, 'mock_ldap.json')
-
-    # Setup initial empty mock LDAP database
-    with open(mock_ldap_db_path, 'w', encoding='utf-8') as f:
-        json.dump({}, f)
 
     class TestConfig(object):
         TESTING = True
         WTF_CSRF_ENABLED = False
         SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'
         SQLALCHEMY_ECHO = False
-        
-        LDAP_MOCK = True
+
+        # Auth is SQLite-only now (HA-008); only Redis is still mocked.
         REDIS_MOCK = True
         CACHE_TYPE = 'simple'
-        
-        MOCK_LDAP_DB = mock_ldap_db_path
+
+        # Rate limiting on with in-memory storage. flask-limiter only wires up
+        # enforcement when enabled at init, so it must be True here; the
+        # autouse _reset_ratelimit fixture clears counters between tests so the
+        # shared session app doesn't leak buckets.
+        RATELIMIT_STORAGE_URI = 'memory://'
+        RATELIMIT_ENABLED = True
+
         DATA_DIR = temp_data_dir
         UPLOAD_DIR = temp_upload_dir
         UPLOAD_DISK_USAGE_THRESHOLD = 0.99
@@ -55,7 +55,18 @@ def app():
     # Clean up directories
     shutil.rmtree(temp_data_dir, ignore_errors=True)
     shutil.rmtree(temp_upload_dir, ignore_errors=True)
-    shutil.rmtree(temp_ldap_db_dir, ignore_errors=True)
+
+
+@pytest.fixture(autouse=True)
+def _reset_ratelimit(app):
+    # Clear rate-limit buckets before each test so counts don't leak across the
+    # shared session-scoped app (login/register are the only limited endpoints).
+    from ohmywod.extensions import limiter
+    try:
+        limiter.reset()
+    except Exception:
+        pass
+    yield
 
 
 @pytest.fixture(autouse=True)

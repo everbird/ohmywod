@@ -17,25 +17,6 @@ class DefaultConfig(object):
         },
     }
 
-    # --- FLASK-LDAP3-LOGIN ---
-    LDAP_HOST = 'everbird.me'
-    LDAP_BASE_DN = 'dc=everbird,dc=me'
-    LDAP_USER_DN = 'ou=users'
-    LDAP_GROUP_DN = 'ou=groups'
-    LDAP_USER_RDN_ATTR = 'cn'
-    # The Attribute you want users to authenticate to LDAP with.
-    LDAP_USER_LOGIN_ATTR = 'cn'
-    # The Username to bind to LDAP with
-    LDAP_BIND_USER_DN = "cn=admin,dc=everbird,dc=me"
-    # The Password to bind to LDAP with
-    LDAP_BIND_USER_PASSWORD = "<secret:ldap_passwd>"
-
-    # Override the group => groupOfNames and person => inetOrgPerson
-    LDAP_GROUP_OBJECT_FILTER = "(objectclass=groupOfNames)"
-    LDAP_USER_OBJECT_FILTER = "(objectclass=inetOrgPerson)"
-    # Need to support sign-up
-    LDAP_READONLY = False
-
     # --- Upload ---
     # Reports are persisted in JuiceFS; UPLOAD_DIR is only local staging for zips.
     DATA_DIR = "/mnt/jfs/reports"

@@ -6,8 +6,6 @@ from flask import (
     Flask, request, redirect, url_for, Response, current_app, render_template
 )
 from flask_admin.contrib import sqla
-from flask_ldap3_login import LDAP3LoginManager
-from flask_login import LoginManager
 
 from ohmywod import views
 from ohmywod.config import DefaultConfig
@@ -23,13 +21,13 @@ except ImportError as e:
         raise
 
 from ohmywod.extensions import (
-    db, admin, login_manager, ldap_manager, redis, cache, csrf
+    db, admin, login_manager, redis, cache, csrf, limiter, client_ip_key
 )
 from ohmywod.decorators import check_auth
 from ohmywod.models.favorite import Favorite
 from ohmywod.models.feedback import Feedback
 from ohmywod.models.report import Report, ReportCategory, ReportDetails
-from ohmywod.models.user import User, LDAPUser
+from ohmywod.models.user import User
 
 
 __all__ = ['create_app']
@@ -108,22 +106,29 @@ def configure_app(app, config):
 def configure_extensions(app):
     db.init_app(app)
     login_manager.init_app(app)
-    ldap_manager.init_app(app)
     csrf.init_app(app)
 
-    if app.config.get('LDAP_MOCK', False):
-        from ohmywod.ldap_mock import init_mock_ldap
-        init_mock_ldap(ldap_manager, app)
+    # Rate limiting (IMP-006). Reuse the running redis-cache (7379) as an
+    # isolated store; tests override to memory://. Fail open on storage errors
+    # so a Redis blip throttles nothing rather than 500-ing the whole site.
+    app.config.setdefault("RATELIMIT_STORAGE_URI", "redis://localhost:7379/0")
+    app.config.setdefault("RATELIMIT_SWALLOW_ERRORS", True)
+    app.config.setdefault("RATELIMIT_IN_MEMORY_FALLBACK_ENABLED", True)
+    app.config.setdefault("RATELIMIT_HEADERS_ENABLED", True)
+    limiter.init_app(app)
 
     redis.init_app(app)
 
     if app.config.get('REDIS_MOCK', False):
-        from ohmywod.ldap_mock import init_mock_redis
+        from ohmywod.mocks import init_mock_redis
         init_mock_redis(redis)
 
     cache.init_app(app)
 
-    def _make_model_view(model_class, *args, **kwargs):
+    def _make_model_view(model_class, *args,
+                         column_exclude_list=None,
+                         form_excluded_columns=None,
+                         **kwargs):
 
         class AuthModelView(sqla.ModelView):
 
@@ -137,6 +142,13 @@ def configure_extensions(app):
                     'You have to login with proper credentials', 401,
                     {'WWW-Authenticate': 'Basic realm="Login Required"'})
 
+        # Set as class attrs before instantiation: Flask-Admin scaffolds its
+        # column/form caches in __init__, so post-hoc assignment wouldn't apply.
+        if column_exclude_list is not None:
+            AuthModelView.column_exclude_list = column_exclude_list
+        if form_excluded_columns is not None:
+            AuthModelView.form_excluded_columns = form_excluded_columns
+
         return AuthModelView(model_class, db, *args, **kwargs)
 
     admin.add_view(_make_model_view(Report, endpoint='report',
@@ -146,7 +158,10 @@ def configure_extensions(app):
     admin.add_view(_make_model_view(ReportDetails, endpoint='report_details',
         category='Online'))
     admin.add_view(_make_model_view(User,
-        endpoint='user', category='User'))
+        endpoint='user', category='User',
+        # HA-008: password is a hash, never edit/expose it through admin.
+        column_exclude_list=['password'],
+        form_excluded_columns=['password', 'password_updated_at']))
     admin.add_view(_make_model_view(Favorite,
         endpoint='favorite', category='Misc'))
     admin.add_view(_make_model_view(Feedback,
@@ -180,6 +195,16 @@ def configure_error_handlers(app):
         # extension/DB can't take the error page down with it.
         return render_template("errors/500.html"), 500
 
+    @app.errorhandler(429)
+    def too_many_requests(e):
+        # IMP-006: consistent 429 with a hit log (no secrets/usernames).
+        app.logger.warning(
+            "rate limit hit: %s %s from %s (%s)",
+            request.method, request.path, client_ip_key(),
+            getattr(e, "description", ""),
+        )
+        return render_template("errors/429.html"), 429
+
 
 def configure_cli(app):
 
@@ -191,19 +216,45 @@ def configure_cli(app):
     def drop_db():
         db.drop_all()
 
+    @app.cli.command("import-ldap-users")
+    @click.option("--ldif", "ldif_path", required=True,
+                  type=click.Path(exists=True, dir_okay=False),
+                  help="Path to an LDIF dump (slapcat -o ldif-wrap=no).")
+    @click.option("--force/--no-force", default=False,
+                  help="Overwrite existing non-null passwords.")
+    @click.option("--dry-run/--no-dry-run", default=False,
+                  help="Report what would change without writing.")
+    def import_ldap_users(ldif_path, force, dry_run):
+        """HA-008: import LDAP account password truth into the user table."""
+        from ohmywod.ldif_import import run_import
+        stats = run_import(ldif_path, force=force, dry_run=dry_run)
+        mode = "DRY-RUN (no writes)" if dry_run else "committed"
+        click.echo(f"import-ldap-users [{mode}]:")
+        for key in ("total", "created", "password_filled", "password_overwritten",
+                    "skipped_has_password", "skipped_no_ldif_password"):
+            click.echo(f"  {key}: {stats[key]}")
+
+    @app.cli.command("set-password")
+    @click.argument("username")
+    @click.password_option()
+    def set_password(username, password):
+        """HA-008: operator/self-service password reset for a SQLite user."""
+        from ohmywod.controllers.user import UserController
+        user = UserController().set_password(username, password)
+        if user is None:
+            click.echo(f"no such user: {username}")
+            raise SystemExit(1)
+        click.echo(f"password updated for {user.username}")
+
 
 @login_manager.user_loader
-def load_user(dn):
-    uc = UserController()
+def load_user(user_id):
+    # Sessions minted before the LDAP->SQLite cutover stored an LDAP DN, which
+    # int() rejects -> those users are transparently logged out (one-time).
     try:
-        return uc.get_ldap_user(dn)
-    except Exception:
-        current_app.logger.exception(f"load_user failed for dn={dn}")
-
-
-@ldap_manager.save_user
-def save_user(dn, username, data, memberships):
-    return LDAPUser.from_ldap_entry(data)
+        return db.session.get(User, int(user_id))
+    except (TypeError, ValueError):
+        return None
 
 
 @login_manager.unauthorized_handler

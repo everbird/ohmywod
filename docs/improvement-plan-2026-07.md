@@ -252,7 +252,7 @@ Review 关注：只检查目录存在却命中未挂载底层目录；HA-005 需
 
 ### IMP-006 — 为登录、注册、反馈和互动写端点增加防滥用保护
 
-- 状态：`todo`
+- 状态：`in_progress`（登录/注册切片已实现，未部署；feedback、like/favorite 仍 `todo`）
 - 优先级：`P1`
 - 波次：Wave 0
 - Drive AI：`unassigned`
@@ -271,7 +271,7 @@ Review 关注：只检查目录存在却命中未挂载底层目录；HA-005 需
 
 Review 关注：key 函数信任任意客户端 header、IPv6/缺 header、登录用户名枚举、限流存储故障导致全站失败。
 
-执行证据：尚无。登录/注册切片作为 HA-008 上线 gate 同波实现；其他写端点不阻塞 LDAP 退役。
+执行证据（登录/注册切片，2026-07-21，Claude Code；app 分支 `ha-008-sqlite-user-schema`，未部署）：引入 `Flask-Limiter`，key 函数信任 `CF-Connecting-IP`（源站已被 Cloud Firewall 收窄到 Cloudflare 段）、缺失时回退 socket peer；`login` 加 IP（10/分、60/时）与用户名（6/分）双维度限制，`register` 加 IP（5/分、30/时）限制；仅这两个端点被装饰，其它端点不受影响。存储复用运行中的 redis-cache（`redis://localhost:7379/0`，测试用 `memory://`），`RATELIMIT_SWALLOW_ERRORS` + in-memory fallback 实现**存储故障 fail-open**（不 500 全站）。注册加隐藏蜜罐字段 `website`（真人不受扰，机器人填了即静默丢弃并记日志）；统一 `429` 页与命中告警日志。本地 `pytest` 58 通过（新增 `tests/test_ratelimit.py` 5 项：CF-IP key、登录/注册触发 429、蜜罐静默丢弃、正常注册不受影响）。未做：feedback、like/favorite 限流；生产部署随 HA-008 第二切片一起（切换 runbook 已含装 `Flask-Limiter`）。
 
 ### IMP-007 — 建立最小 CI 回归门槛
 

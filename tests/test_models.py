@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from datetime import datetime
-from ohmywod.models.user import User, LDAPUser
+from ohmywod.models.user import User
 from ohmywod.models.report import Report, ReportCategory, ReportDetails
 
 
@@ -15,45 +15,8 @@ def test_user_creation(db):
     assert user.display_name == "Test User"
     assert user.email == "test@example.com"
     assert isinstance(user.joined_at, datetime)
-
-
-def test_ldap_user_properties():
-    ldap_data = {
-        'dn': 'cn=testuser,ou=users,dc=everbird,dc=me',
-        'cn': ['testuser'],
-        'displayName': ['Test User Display'],
-        'mail': ['testuser@example.com']
-    }
-    
-    ldap_user = LDAPUser.from_ldap_entry(ldap_data)
-    assert ldap_user.dn == 'cn=testuser,ou=users,dc=everbird,dc=me'
-    assert ldap_user.username == 'testuser'
-    assert ldap_user.display_name == ['Test User Display']
-    assert ldap_user.reader_theme == 4
-    assert ldap_user.app_theme is None
-    assert ldap_user.theme_css == "css/bootstrap.min.css"
-    assert "LDAPUser: dn=" in repr(ldap_user)
-
-
-def test_ldap_user_db_user_creation(db):
-    ldap_data = {
-        'dn': 'cn=testuser,ou=users,dc=everbird,dc=me',
-        'cn': ['testuser'],
-        'displayName': ['Test User Display'],
-        'mail': ['testuser@example.com']
-    }
-    ldap_user = LDAPUser.from_ldap_entry(ldap_data)
-    
-    # lazy creation
-    db_user = ldap_user.db_user
-    assert db_user.id is not None
-    assert db_user.username == 'testuser'
-    assert db_user.display_name == 'Test User Display'
-    assert db_user.email == 'testuser@example.com'
-
-    # retrieve again, should be the same
-    db_user_2 = ldap_user.db_user
-    assert db_user_2.id == db_user.id
+    # Flask-Login identity is the primary key (HA-008 session invalidation).
+    assert user.get_id() == str(user.id)
 
 
 def test_report_category_properties(db):

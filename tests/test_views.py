@@ -59,7 +59,7 @@ def test_login_logout(client, register_user):
     assert res.status_code == 200
     # Should stay on login page
     assert "login" in res.request.path.lower()
-    assert "invalid-feedback" in res.data.decode('utf-8')
+    assert "用户名或密码错误。" in res.data.decode('utf-8')
 
     # Successful login
     res = client.post('/login', data={

@@ -1,109 +1,90 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import json
+from datetime import datetime
 
-from ldap3 import HASHED_SALTED_SHA, SUBTREE, MODIFY_REPLACE
-from ldap3.utils.hashed import hashed
-from ldap3.utils.conv import escape_filter_chars
+from sqlalchemy import func
 
-from ohmywod.extensions import db, ldap_manager
-from ohmywod.models.user import User, LDAPUser
+from ohmywod.extensions import db
+from ohmywod.models.user import User
+from ohmywod import security
 
 
 class UserController:
-
-    def save_ldap_user(self, username, display_name, email, passwd):
-        dn = f'cn={username},ou=users,dc=everbird,dc=me'
-        hashed_passwd = hashed(HASHED_SALTED_SHA, passwd)
-        conn = ldap_manager.connection
-        r = conn.add(
-            dn,
-            'inetOrgPerson',
-            {
-                "displayName": display_name,
-                "mail": email,
-                "sn": username,
-                "userPassword": hashed_passwd,
-            }
-        )
-        return r
-
-    def save_db_user(self, username, display_name, email, passwd):
-        user = User(username=username, display_name=display_name, email=email)
-        db.session.add(user)
-        db.session.commit()
-        return user
-
-    def save(self, username, display_name, email, passwd):
-        display_name = display_name or username
-        if self.save_ldap_user(username, display_name, email, passwd):
-            self.save_db_user(username, display_name, email, passwd)
-
-            return True
-        return False
+    """SQLite-backed user identity (HA-008: LDAP retired from the auth path)."""
 
     def get_db_user(self, username):
         return User.query.filter_by(username=username).first()
 
-    def get_ldap_user(self, dn):
-        d = ldap_manager.get_user_info(dn)
-        if d:
-            return LDAPUser.from_ldap_entry(d)
-
-    def get_ldap_user_by_username(self, username):
-        d = ldap_manager.get_user_info_for_username(username)
-        if d:
-            return LDAPUser.from_ldap_entry(d)
-
     def get_db_user_by_email(self, email):
         return User.query.filter_by(email=email).first()
-
-    def get_ldap_user_by_email(self, email):
-        conn = ldap_manager.connection
-        escaped_email = escape_filter_chars(email)
-        result = conn.search(
-            "dc=everbird,dc=me",
-            "(&(objectClass=inetOrgPerson)(mail={}))".format(escaped_email),
-            SUBTREE,
-            attributes=['*']
-        )
-        if result:
-            entry = conn.entries[0]
-            data = json.loads(entry.entry_to_json())
-            _entry = data['attributes'].copy()
-            _entry['dn'] = data['dn']
-            return LDAPUser.from_ldap_entry(_entry)
 
     def get_db_user_by_display_name(self, display_name):
         return User.query.filter_by(display_name=display_name).first()
 
-    def update_user(self, username,
-                    display_name=None,
-                    email=None,
-                    password=None
-                    ):
-        ldap_user = self.get_ldap_user_by_username(username)
-        if display_name or email or password:
-            conn = ldap_manager.connection
-            d = {}
-            if display_name:
-                d['displayName'] = [(MODIFY_REPLACE, [display_name])]
+    def get_by_login(self, username):
+        # Case-insensitive match, mirroring LDAP cn (caseIgnoreMatch) so existing
+        # users keep logging in with any casing.
+        return User.query.filter(
+            func.lower(User.username) == (username or "").lower()
+        ).first()
 
-            if email:
-                d['mail'] = [(MODIFY_REPLACE, [email])]
-
-            if password:
-                hashed_passwd = hashed(HASHED_SALTED_SHA, password)
-                d['userPassword'] = [(MODIFY_REPLACE, [hashed_passwd])]
-
-            conn.modify(ldap_user.dn, d)
-
-            db_user = self.get_db_user(username)
-            if db_user:
-                if display_name:
-                    db_user.display_name = display_name
-                if email:
-                    db_user.email = email
-                db.session.add(db_user)
+    def authenticate(self, username, password):
+        """Return the User on success, else None. Lazily upgrades the hash."""
+        user = self.get_by_login(username)
+        if user is None:
+            return None
+        if not security.verify_password(user.password, password):
+            return None
+        # Re-hash imported LDAP {SSHA} (or a stale Argon2 hash) to current policy
+        # now that we have the plaintext. Best-effort: a failure here must not
+        # block a valid login.
+        if security.needs_rehash(user.password):
+            try:
+                user.password = security.hash_password(password)
+                user.password_updated_at = datetime.utcnow()
+                db.session.add(user)
                 db.session.commit()
+            except Exception:
+                db.session.rollback()
+        return user
+
+    def save(self, username, display_name, email, passwd):
+        """Create a new user with an Argon2id password. Returns the User."""
+        display_name = display_name or username
+        user = User(
+            username=username,
+            display_name=display_name,
+            email=email,
+            password=security.hash_password(passwd),
+            password_updated_at=datetime.utcnow(),
+        )
+        db.session.add(user)
+        db.session.commit()
+        return user
+
+    def set_password(self, username, password):
+        """Operator / self-service password reset. Returns the User or None."""
+        user = self.get_db_user(username)
+        if user is None:
+            return None
+        user.password = security.hash_password(password)
+        user.password_updated_at = datetime.utcnow()
+        db.session.add(user)
+        db.session.commit()
+        return user
+
+    def update_user(self, username, display_name=None, email=None, password=None):
+        user = self.get_db_user(username)
+        if user is None:
+            return None
+        if display_name:
+            user.display_name = display_name
+        if email:
+            user.email = email
+        if password:
+            user.password = security.hash_password(password)
+            user.password_updated_at = datetime.utcnow()
+        db.session.add(user)
+        db.session.commit()
+        return user
