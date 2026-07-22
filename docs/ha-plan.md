@@ -540,3 +540,16 @@ Review 关注：旧主复活、Cloudflare API 部分成功、SQLite 写入窗口
 - 发生的问题：用 urllib 手工复刻浏览器 CSRF+session 登录时得到 400（CSRF harness 假象，非回归——登录切换前后都需 CSRF），改用 test_client 对生产 DB 验证端点逻辑
 - 剩余风险：观察期（真实用户重新登录、`{ssha}`→argon 迁移趋势、稳定性）尚未走完；slapd 仍在跑（未停）；旧 session 一次性失效已对在线用户生效；分支 checkout、`app_ref` 未 bump；短期回滚材料（`pre-ha008s2-20260721T162027Z.sqlite`、slice-1 快照与 age LDIF）待观察通过后按窗口销毁
 - 下一步：观察期确认无 LDAP 调用与认证稳定 → 交 OPS-015 stop/mask 并删除 slapd/LDAP 配置/密钥 → 合并 `main` 并 bump `app_ref`
+
+### WAVE-20260721-06 — OPS-015：LDAP 从运行时与 ops 代码彻底退役
+
+- 日期：2026-07-21
+- Drive AI：Claude Code
+- Review AI：`unassigned`
+- 关联事项：HA-008、OPS-015
+- 状态变化：OPS-015 `todo` -> `done`；HA-008 保持 `in_progress`（仅剩观察窗口收尾与回滚材料销毁）
+- 改动：切换验证通过后退役 LDAP。生产 `stop`+`mask` slapd → 停机下复验 `/login`/healthz/无 :389 → `apt purge slapd ldap-utils`（配置/数据/`/var/lib/ldap` 全移除）→ purge 后再复验登录。ops 代码（`ohmywod-ops`，未提交）：base 去 `slapd`/`ldap-utils`、app assert 去 `ldap_bind_user_password`、app 模板删 LDAP 块、secrets example 去 LDAP 键、加密 `secrets.sops.yaml` 移除 LDAP bind 密钥、`recovery.md` 删 LDIF/olcRootPW 坑；`app_ref` bump 到 `c91c7f3` 并对齐生产 checkout。详见 ops `OPS-015` 执行证据。
+- 关键取舍：先 stop/mask 验证零依赖再 purge；保留加密 LDIF + SQLite 快照作短期回滚窗口，不立即销毁
+- 验证：slapd 停止与 purge 后 `/login` 端到端仍成功、healthz 200、无 :389；`slapd`/`slapcat`/`ldapsearch` 已不存在；sops 解密确认仅 `ldap_bind_user_password` 被移除、其余 12 键完好
+- 剩余风险：观察窗口未走满（真实用户重新登录趋势、稳定性）；回滚材料尚未销毁；IMP-003 的 `SQLALCHEMY_ENGINE_OPTIONS` 生产收敛仍待做
+- 下一步：观察窗口通过后销毁回滚材料（加密 LDIF + 两个快照）→ 视情况把 HA-008 判 `done`；单独推进 IMP-003 与后续 DR（HA-006）
