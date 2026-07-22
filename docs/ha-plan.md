@@ -257,10 +257,10 @@ Review 关注：循环依赖、停止顺序、挂载假活和 nginx 过早接流
 
 ### HA-006 — 补齐裸机恢复前提并完成端到端演练
 
-- 状态：`todo`
+- 状态：`in_progress`
 - 优先级：`P1`
 - 波次：Wave 1
-- Drive AI：`unassigned`
+- Drive AI：`Codex`
 - Review AI：`unassigned`
 - 依赖：HA-004、HA-005、HA-008（均已完成）
 - 最后更新：2026-07-21
@@ -276,7 +276,12 @@ Review 关注：循环依赖、停止顺序、挂载假活和 nginx 过早接流
 
 Review 关注：是否偷用了旧主机文件、个人 shell、已存在 DNS/证书或未入库凭据。
 
-执行证据：尚无；HA-008 完成后本项已解除身份依赖，可从 OPS-004 演练准备开始；详细子项跟踪 OPS-004、OPS-007、OPS-008、OPS-010、OPS-011、OPS-012。
+执行证据（准备切片，WAVE-20260721-08）：ops 仓已加入独立 recovery inventory、拒绝生产 IP / 占位值 /
+多目标的只读预检、显式 `-i` + `--limit` 命令和 RPO/RTO 证据模板；HA-006 因此正式开始。该切片只闭合
+离线准备和误连生产 gate，并把 certbot 签发/续期纳入 prepare/serve gate，避免 prepare 阶段调用云 API；
+未创建或连接新机、未恢复数据、未改 DNS / Firewall / 生产；真实空白机、
+FUSE/reboot 与完整 RPO/RTO 仍由 OPS-004 主演练验收。详细子项跟踪 OPS-004、OPS-007、OPS-008、
+OPS-010、OPS-011、OPS-012。
 
 ### HA-007 — 验证备份新鲜度、保留策略与误删风险边界
 
@@ -566,3 +571,16 @@ Review 关注：旧主复活、Cloudflare API 部分成功、SQLite 写入窗口
 - 发生的问题：计划顶部、HA-008 现状和依赖说明仍停留在 LDAP 未退役阶段，本波一并纠正
 - 剩余风险：尚无真实空白机端到端恢复证据；OPS-007 / OPS-008 的新机接入和信任链仍未闭环；备份新鲜度、误删边界与 RPO/RTO 仍待 HA-006 / HA-007
 - 下一步：启动 HA-006 / OPS-004 的演练准备，并行推进 OPS-007 → OPS-008；三者汇合后在隔离空白机执行完整恢复演练
+
+### WAVE-20260721-08 — HA-006 / OPS-004 隔离演练准备启动
+
+- 日期：2026-07-21
+- Drive AI：Codex
+- Review AI：`unassigned`
+- 关联事项：HA-006；ops OPS-004、OPS-007、OPS-008
+- 状态变化：HA-006 `todo` -> `in_progress`
+- 改动：在 ops 仓加入仓库外 recovery inventory 模板、只读预检脚本、演练依赖图、授权 gate 与证据模板；恢复命令改为显式 inventory 和单目标 limit，脚本硬拒绝当前生产 IP；certbot 签发与续期 timer 纳入 deploy phase，prepare 不触云 API
+- 关键取舍：先完成无成本、无外部写入的安全准备；OPS-007 / OPS-008 独立准备可并行，但真实证书、网络、SSH 与数据恢复在同一台隔离新机汇合。临时实例创建、生产 DNS/Firewall 变更和实例销毁都不由本状态变化自动授权
+- 验证：ops 脚本 shell syntax、Ansible syntax 与 diff check 通过；fixture 验证占位、生产 IP、多目标均 fail closed，TEST-NET 单目标通过并只输出后续命令；未连接生产或新机
+- 剩余风险：完整控制节点信任链、临时实例规格/成本、新机 SSH/Firewall/证书、真实 SQLite/JuiceFS 恢复、FUSE/reboot 与 RPO/RTO 尚未闭环
+- 下一步：获得临时 VM 创建授权后，在隔离 Ubuntu 24.04 新机运行 preflight → prepare dry-run/apply → restore/verify；生产切流继续留在 OPS-007 / HA-010 的独立授权 gate
