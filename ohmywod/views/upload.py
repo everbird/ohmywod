@@ -11,7 +11,7 @@ from zipfile import ZipFile
 from flask import Blueprint, redirect, request, abort, current_app, flash
 from flask_login import current_user
 
-from ohmywod.controllers.report import ReportController
+from ohmywod.controllers.report import ReportController, invalidate_sitemap_cache
 from ohmywod.extensions import db
 
 
@@ -122,6 +122,7 @@ def process(category_id):
             report = sorted(exist_reports, key=lambda x: x.created_at, reverse=True)[0]
             report.updated_at = db.func.now()
             db.session.commit()
+            invalidate_sitemap_cache()
         else:
             rc.create_report(category.id, _filename, category.owner)
         return uid

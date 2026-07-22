@@ -113,6 +113,12 @@ def test_default_report_storage_is_juicefs_only():
     assert DefaultConfig.HEALTHZ_STORAGE_PATHS == (DefaultConfig.DATA_DIR,)
 
 
+def test_default_cache_is_explicit_shared_redis():
+    assert DefaultConfig.CACHE_TYPE == 'RedisCache'
+    assert DefaultConfig.CACHE_REDIS_URL == 'redis://localhost:7379/0'
+    assert DefaultConfig.CACHE_KEY_PREFIX == 'flask_cache_'
+
+
 def test_usage_page_has_no_legacy_extra_mount(client):
     res = client.get('/usage')
     assert res.status_code == 200
@@ -252,6 +258,46 @@ def test_report_raw_injects_reader_state_beacon(authenticated_client, app, db):
     page = res.data.decode('utf-8')
     assert 'wodReaderState' in page
     assert 'postMessage' in page
+
+
+def test_report_raw_revalidates_without_reading_body(authenticated_client, app, db):
+    rc = ReportController()
+    cat = rc.create_category("cat1", "Cat Desc", "testuser")
+    rc.create_report(cat.id, "myreport", "testuser")
+
+    report_dir = os.path.join(app.config['DATA_DIR'], 'testuser', 'cat1', 'myreport')
+    os.makedirs(report_dir, exist_ok=True)
+    report_file = os.path.join(report_dir, 'index.html')
+    with open(report_file, 'w', encoding='utf-8') as f:
+        f.write("<html><body>Version One</body></html>")
+
+    first = authenticated_client.get('/r/raw/testuser/cat1/myreport/')
+    assert first.status_code == 200
+    etag = first.headers['ETag']
+    assert etag.startswith('W/"report-')
+    assert first.headers['Cache-Control'] == 'private, no-cache'
+
+    cached = authenticated_client.get(
+        '/r/raw/testuser/cat1/myreport/',
+        headers={'If-None-Match': etag},
+    )
+    assert cached.status_code == 304
+    assert cached.data == b''
+    assert cached.headers['ETag'] == etag
+    assert cached.headers['Cache-Control'] == 'private, no-cache'
+    assert 'sandbox' in cached.headers['Content-Security-Policy']
+    assert 'allow-same-origin' not in cached.headers['Content-Security-Policy']
+
+    # A replacement upload changes the validator and returns the new body.
+    with open(report_file, 'a', encoding='utf-8') as f:
+        f.write("<!-- Version Two -->")
+    updated = authenticated_client.get(
+        '/r/raw/testuser/cat1/myreport/',
+        headers={'If-None-Match': etag},
+    )
+    assert updated.status_code == 200
+    assert updated.headers['ETag'] != etag
+    assert b'Version Two' in updated.data
 
 
 def test_report_details_listens_for_reader_state(authenticated_client, db):
@@ -476,6 +522,47 @@ def test_sitemap_excludes_deleted_reports(client, db):
     assert f'/r/report/{rid}' not in res.data.decode('utf-8')
 
     cache.delete("sitemap_xml")
+
+
+def test_sitemap_cache_is_invalidated_by_public_content_changes(client, db):
+    from ohmywod.extensions import cache
+
+    rc = ReportController()
+    cache.delete("sitemap_xml")
+    initial = client.get('/sitemap.xml')
+    assert initial.status_code == 200
+    assert cache.get("sitemap_xml") is not None
+
+    cat = rc.create_category("cache-cat", "Cache", "someuser")
+    assert cache.get("sitemap_xml") is None
+    rc.create_report(cat.id, "cache-report", "someuser")
+
+    report = Report.query.filter_by(name="cache-report").first()
+    refreshed = client.get('/sitemap.xml')
+    assert f'/r/report/{report.id}' in refreshed.data.decode('utf-8')
+    assert f'/r/category/{cat.id}' in refreshed.data.decode('utf-8')
+
+    rc.delete_report(report.id)
+    assert cache.get("sitemap_xml") is None
+    after_delete = client.get('/sitemap.xml')
+    assert f'/r/report/{report.id}' not in after_delete.data.decode('utf-8')
+
+    cache.delete("sitemap_xml")
+
+
+def test_sitemap_cache_failure_falls_back_to_rendering(client, db, monkeypatch):
+    from ohmywod.extensions import cache
+
+    def unavailable(*_args, **_kwargs):
+        raise ConnectionError("cache unavailable")
+
+    monkeypatch.setattr(cache, "get", unavailable)
+    monkeypatch.setattr(cache, "set", unavailable)
+
+    response = client.get('/sitemap.xml')
+    assert response.status_code == 200
+    assert response.mimetype == 'application/xml'
+    assert b'<urlset' in response.data
 
 
 def test_report_reader_has_tail_ad(authenticated_client, app, db):

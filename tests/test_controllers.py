@@ -139,3 +139,42 @@ def test_report_controller_system_stats_and_latest(db):
     assert len(latest) >= 2
     assert latest[0].name in ["report_latest_1", "report_latest_2"]
 
+
+def test_report_controller_search_is_the_single_search_path(db):
+    rc = ReportController()
+    cat = rc.create_category("search-cat", "Search", "john")
+    rc.create_report(cat.id, "plain-name", "john")
+    rc.create_report(cat.id, "deleted-needle", "john")
+
+    report = Report.query.filter_by(name="plain-name").one()
+    report.display_name = "Visible Needle"
+    report.description = "searchable description"
+    deleted = Report.query.filter_by(name="deleted-needle").one()
+    deleted.status = 1
+    db.session.commit()
+
+    by_display_name, total = rc.search("Needle")
+    assert total == 1
+    assert [item.id for item in by_display_name] == [report.id]
+
+    by_description, total = rc.search("searchable")
+    assert total == 1
+    assert [item.id for item in by_description] == [report.id]
+
+    including_deleted, total = rc.search("needle", show_deleted=True)
+    assert total == 2
+    assert {item.id for item in including_deleted} == {report.id, deleted.id}
+
+
+def test_sitemap_invalidation_does_not_fail_committed_writes(db, monkeypatch):
+    from ohmywod.extensions import cache
+
+    def unavailable(_key):
+        raise ConnectionError("cache unavailable")
+
+    monkeypatch.setattr(cache, "delete", unavailable)
+    category = ReportController().create_category(
+        "cache-fail-open", "Cache", "john"
+    )
+    assert category.id is not None
+    assert ReportCategory.query.filter_by(name="cache-fail-open").one().id == category.id

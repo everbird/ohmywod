@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from flask import request
+from flask import current_app, has_app_context, request
 from flask_admin import Admin, AdminIndexView, expose
 from flask_admin.theme import Bootstrap4Theme
 from flask_caching import Cache
@@ -46,3 +46,40 @@ csrf = CSRFProtect()
 # so every other endpoint is unaffected. Storage/enabled/fail-open are wired in
 # app.configure_extensions.
 limiter = Limiter(key_func=client_ip_key)
+
+
+def _cache_warning(operation, key, error):
+    if has_app_context():
+        current_app.logger.warning(
+            "application cache %s failed for %s: %s",
+            operation,
+            key,
+            error.__class__.__name__,
+        )
+
+
+def cache_get(key):
+    """Read the optional application cache without making it a hard dependency."""
+    try:
+        return cache.get(key)
+    except Exception as error:
+        _cache_warning("get", key, error)
+        return None
+
+
+def cache_set(key, value, timeout=None):
+    """Write the optional application cache; requests still work if Redis is down."""
+    try:
+        return cache.set(key, value, timeout=timeout)
+    except Exception as error:
+        _cache_warning("set", key, error)
+        return False
+
+
+def cache_delete(key):
+    """Invalidate a cache entry without failing a completed database write."""
+    try:
+        return cache.delete(key)
+    except Exception as error:
+        _cache_warning("delete", key, error)
+        return False

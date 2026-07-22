@@ -4,9 +4,17 @@
 from sqlalchemy.sql import text
 from sqlalchemy.sql.expression import case
 
-from ohmywod.extensions import db, redis
+from ohmywod.extensions import cache_delete, cache_get, cache_set, db, redis
 from ohmywod.models.favorite import Favorite
-from ohmywod.models.report import Report, ReportCategory, ReportCategoryQuery
+from ohmywod.models.report import Report, ReportCategory
+
+
+SITEMAP_CACHE_KEY = "sitemap_xml"
+
+
+def invalidate_sitemap_cache():
+    """Drop the shared sitemap after a public report/category mutation."""
+    cache_delete(SITEMAP_CACHE_KEY)
 
 
 class ReportController:
@@ -37,17 +45,20 @@ class ReportController:
         )
         db.session.add(report)
         db.session.commit()
+        invalidate_sitemap_cache()
 
     def delete_report(self, rid):
         report = self.get_report(rid)
         report.status = 1
         db.session.add(report)
         db.session.commit()
+        invalidate_sitemap_cache()
 
     def create_category(self, name, description, owner):
         category = ReportCategory(name=name, description=description, owner=owner)
         db.session.add(category)
         db.session.commit()
+        invalidate_sitemap_cache()
         return category
 
     def delete_category(self, cid):
@@ -62,6 +73,7 @@ class ReportController:
             db.session.add(r)
 
         db.session.commit()
+        invalidate_sitemap_cache()
 
     def bulk_load_report_stats(self, reports):
         if not reports:
@@ -327,10 +339,9 @@ class ReportController:
         return query.all(), total
 
     def get_system_stats(self):
-        from ohmywod.extensions import cache
         from ohmywod.models.user import User
         
-        stats = cache.get("system_stats")
+        stats = cache_get("system_stats")
         if stats is not None:
             return stats
 
@@ -368,11 +379,10 @@ class ReportController:
             'likes': total_likes,
             'views': total_views
         }
-        cache.set("system_stats", stats, timeout=300)
+        cache_set("system_stats", stats, timeout=300)
         return stats
 
     def get_latest_reports(self, limit=5):
         reports = Report.query.filter(Report.status == None).order_by(Report.created_at.desc()).limit(limit).all()
         self.bulk_load_report_stats(reports)
         return reports
-

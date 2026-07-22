@@ -21,7 +21,8 @@ except ImportError as e:
         raise
 
 from ohmywod.extensions import (
-    db, admin, login_manager, redis, cache, csrf, limiter, client_ip_key
+    db, admin, login_manager, redis, cache, csrf, limiter, client_ip_key,
+    cache_get, cache_set,
 )
 from ohmywod.decorators import check_auth
 from ohmywod.models.favorite import Favorite
@@ -66,10 +67,9 @@ def configure_app(app, config):
 
     @app.context_processor
     def inject_disk_usage():
-        from ohmywod.extensions import cache
         import shutil
         import os
-        disk_info = cache.get("disk_info")
+        disk_info = cache_get("disk_info")
         if disk_info is None:
             total, used, free = shutil.disk_usage("/")
             disk_info = {
@@ -99,7 +99,7 @@ def configure_app(app, config):
                     'available': False
                 }
 
-            cache.set("disk_info", disk_info, timeout=300)
+            cache_set("disk_info", disk_info, timeout=300)
         return dict(disk_info=disk_info)
 
 

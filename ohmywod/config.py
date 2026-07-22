@@ -17,6 +17,13 @@ class DefaultConfig(object):
         },
     }
 
+    # Shared, explicitly configured application cache. Production and local
+    # development already run redis-cache on 7379; a shared backend keeps
+    # sitemap invalidation coherent across Gunicorn workers.
+    CACHE_TYPE = "RedisCache"
+    CACHE_REDIS_URL = "redis://localhost:7379/0"
+    CACHE_KEY_PREFIX = "flask_cache_"
+
     # --- Upload ---
     # Reports are persisted in JuiceFS; UPLOAD_DIR is only local staging for zips.
     DATA_DIR = "/mnt/jfs/reports"

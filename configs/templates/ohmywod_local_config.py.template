@@ -48,7 +48,7 @@ class DefaultConfig(object):
     REDIS_PORT = $REDIS_STORE_PORT
 
     # --- Redis Cache ---
-    CACHE_TYPE = 'redis'
+    CACHE_TYPE = 'RedisCache'
     CACHE_DEFAULT_TIMEOUT = 300
-    CACHE_REDIS_HOST = '$REDIS_CACHE_HOST'
-    CACHE_REDIS_PORT = $REDIS_CACHE_PORT
+    CACHE_REDIS_URL = 'redis://$REDIS_CACHE_HOST:$REDIS_CACHE_PORT/0'
+    CACHE_KEY_PREFIX = 'flask_cache_'

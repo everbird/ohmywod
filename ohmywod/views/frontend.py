@@ -24,9 +24,11 @@ from wtforms.widgets import TextArea
 
 from ohmywod import security
 from ohmywod.controllers.feedback import FeedbackController
-from ohmywod.controllers.report import ReportController
+from ohmywod.controllers.report import ReportController, SITEMAP_CACHE_KEY
 from ohmywod.controllers.user import UserController
-from ohmywod.extensions import cache, db, redis, limiter, client_ip_key
+from ohmywod.extensions import (
+    cache_get, cache_set, db, redis, limiter, client_ip_key,
+)
 from ohmywod.models.report import Report, ReportCategory
 
 
@@ -293,7 +295,7 @@ def robots_txt():
 def sitemap_xml():
     # Cached because it walks the whole report table and crawlers hit it
     # repeatedly; 1h staleness is fine for a sitemap.
-    xml = cache.get("sitemap_xml")
+    xml = cache_get(SITEMAP_CACHE_KEY)
     if xml is None:
         reports = (
             Report.query
@@ -307,5 +309,5 @@ def sitemap_xml():
             .all()
         )
         xml = rt("sitemap.xml", reports=reports, categories=categories)
-        cache.set("sitemap_xml", xml, timeout=3600)
+        cache_set(SITEMAP_CACHE_KEY, xml, timeout=3600)
     return current_app.response_class(xml, mimetype="application/xml")

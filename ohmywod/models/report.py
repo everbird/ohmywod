@@ -2,54 +2,9 @@
 from datetime import datetime
 
 import bbcode
-from functools import reduce
-from flask_sqlalchemy.query import Query as BaseQuery
 from sqlalchemy.orm import backref, relationship
 
 from ohmywod.extensions import db
-
-
-class ReportQuery(BaseQuery):
-
-    def search(self, keywords):
-        criteria = []
-
-        for keyword in keywords.split():
-            keyword = '%' + keyword + '%'
-            criteria.append(db.or_(Report.name.ilike(keyword),
-                ))
-        q = reduce(db.and_, criteria)
-        rs = self.filter(q).distinct()
-        rs = [x for x in rs if not x.is_deleted]
-        return rs
-
-    def get_by_username(self, username):
-        exp = db.session.query(Report) \
-            .filter(
-                Report.owner==username,
-                Report.status==None,
-            )
-
-        return exp.all()
-
-
-class ReportCategoryQuery(BaseQuery):
-
-    def get_by_username(self, username):
-        exp = db.session.query(ReportCategory) \
-            .filter(
-                ReportCategory.owner==username,
-                ReportCategory.status==None,
-            )
-
-        return exp.all()
-
-    @classmethod
-    def get_by_name(cls, name):
-        return ReportCategory.query.filter(
-            ReportCategory.name==name,
-            ReportCategory.status==None,
-        ).first()
 
 
 class Report(db.Model):

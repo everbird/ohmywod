@@ -28,7 +28,7 @@ from wtforms import StringField, SubmitField, SelectField
 from wtforms.validators import DataRequired, ValidationError, Optional
 from wtforms.widgets import TextArea
 
-from ohmywod.controllers.report import ReportController
+from ohmywod.controllers.report import ReportController, invalidate_sitemap_cache
 from ohmywod.extensions import db, Pagination, get_page_args, limiter
 from ohmywod.utils import paginate
 from ohmywod.models.report import ReportDetails
@@ -123,6 +123,22 @@ READER_STATE_BEACON = """
 })();
 </script>
 """
+READER_STATE_BEACON_VERSION = "1"
+REPORT_RAW_CSP = "sandbox allow-scripts allow-popups"
+
+
+def _report_raw_response(body, etag, status=200):
+    response = make_response(body, status)
+    if status != 304:
+        response.mimetype = "text/html"
+    response.set_etag(etag, weak=True)
+    # Reports can be replaced by a later upload. Let browsers retain the body,
+    # but require a cheap metadata revalidation rather than shared/CDN caching.
+    response.headers["Cache-Control"] = "private, no-cache"
+    # Keep the sandbox on 304 responses too; a revalidation must not weaken the
+    # security contract of the cached user-uploaded HTML.
+    response.headers["Content-Security-Policy"] = REPORT_RAW_CSP
+    return response
 
 
 # Used in iframe, username+cateogry+name should be uniqe
@@ -140,11 +156,24 @@ def report_raw(username, category, name, subpath="index.html"):
     fpath = Path(fpath_str)
 
     try:
-        if not fpath.exists():
+        file_stat = fpath.stat()
+        if not fpath.is_file():
             abort(404)
+    except FileNotFoundError:
+        abort(404)
     except OSError as e:
         current_app.logger.error(f"Failed to access path {fpath_str}: {e}")
         abort(503, description="Storage service is temporarily unavailable.")
+
+    # A weak validator based on stable file metadata avoids reading the full
+    # JuiceFS object on a matching request. Include the injected beacon version
+    # so an application change invalidates otherwise unchanged report files.
+    etag = (
+        f"report-{file_stat.st_mtime_ns:x}-{file_stat.st_size:x}-"
+        f"{READER_STATE_BEACON_VERSION}"
+    )
+    if request.if_none_match.contains_weak(etag):
+        return _report_raw_response("", etag, status=304)
 
     try:
         with open(fpath) as f:
@@ -154,13 +183,10 @@ def report_raw(username, category, name, subpath="index.html"):
         abort(503, description="Storage service is temporarily unavailable.")
 
     raw = raw.replace('http:', 'https:')
-    resp = make_response(raw + READER_STATE_BEACON)
-    resp.mimetype = 'text/html'
     # User-uploaded HTML is served verbatim; CSP sandbox makes the browser
     # treat it as an opaque origin so its scripts can't touch main-site
     # cookies or issue same-origin requests. iframe embedding still works.
-    resp.headers['Content-Security-Policy'] = "sandbox allow-scripts allow-popups"
-    return resp
+    return _report_raw_response(raw + READER_STATE_BEACON, etag)
 
 
 @report.route("/category/<category_id>")
@@ -393,6 +419,7 @@ def edit_report(report_id):
         details.classes_and_races = form.classes_and_races.data
         report.details = details
         db.session.commit()
+        invalidate_sitemap_cache()
         return redirect(url_for("wodreport.view_report", report_id=report.id))
 
     return rt("edit_report.html", report=report, form=form)
