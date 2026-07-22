@@ -6,8 +6,8 @@ source_of_truth_for: "HA/DR direction, implementation gates, work item status, a
 language: zh-CN
 created_at: "2026-07-05"
 last_updated: "2026-07-22"
-review_commit: "app eb2b8be; ops 31105fe; production app d930c6a"
-review_worktree: "clean before HA-008 closure wave"
+review_commit: "app 161cc80; ops 3de16e6; production app d930c6a"
+review_worktree: "app clean; ops has user-owned encrypted token update"
 next_item_id: "HA-011"
 ---
 
@@ -605,4 +605,4 @@ Review 关注：旧主复活、Cloudflare API 部分成功、SQLite 写入窗口
 - 验证：SQLite 完整性与关键表对照通过，本次观测 RPO=0；JuiceFS metadata load 得 311,775 keys，可信控制机从真实对象端抽取 10 文件、976,379 bytes，哈希全部成功；prepare 二次 check `changed=0`，演练机仅 SSH 监听；ops syntax 与 hermetic recovery gate 测试通过。
 - 发生的问题：真实空白镜像揭示多处只在容器中未触发的 prepare 缺口，均已回修；Object Storage key 创建成功但不能传到第三方 VM，key ID 与本地响应均已清理。
 - 剩余风险：第三方 VM 真实 FUSE/reboot 启动 gate、证书、DNS、测试入口与切换/回退未验证；临时实例仍运行并计费；HA-006 不标 done。
-- 下一步：先 review/commit/push 两仓证据与 ops 修正；随后由用户决定销毁临时实例，或在其自行执行 credential 注入与 FUSE/reboot 后补交证据。
+- 下一步：两仓证据与 ops 修正已提交并推送（app `161cc80`、ops `3de16e6`）；随后由用户决定销毁临时实例，或在其自行执行 credential 注入与 FUSE/reboot 后补交证据。
