@@ -336,7 +336,7 @@ Review 关注：既有 SQLite schema 的真实 upgrade / downgrade、LDAP 与 SQ
 - 落地（app 分支 `ha-008-sqlite-user-schema`，2 个 commit，tip `ab64762`）：新增 alembic 迁移 `48a0963e9b77`，为 `user` 增补可空 `password` / `password_updated_at`，用 `batch_alter_table` 保证 SQLite 兼容；`User` 模型加同名列并从 Flask-Admin 排除（不展示/编辑哈希）；新增 `ohmywod/ldif_import.py` 与 `flask import-ldap-users` CLI（解析 `slapcat -o ldif-wrap=no` 的 LDIF、base64 感知、按用户名 upsert、只补 `password` 不覆盖既有 display_name/email、`createTimestamp` 回填 `joined_at`、支持 `--force`/`--dry-run`、幂等）。本切片**不改认证行为**：登录仍走 LDAP。
 - 验证：本地 `pytest` 48 项通过（新增 9 项）；在合成的产线形状库上 `alembic upgrade`/`downgrade` 往返成功，现有行保留、`password` 迁移后为空、版本号在 `95c19a94006d` ↔ `48a0963e9b77` 正确进退。
 - 生产落地（已执行，2026-07-21，Claude Code；runbook 在 ops 仓 `docs/ha-008-apply-slice1.md`）：备份 SQLite 一致快照 + 导出并 age 加密 LDIF 回滚材料 → 外科式 `git checkout` 部署新代码（不重启，configs/密钥未变）→ `alembic upgrade head`（`user` 加两列、727 行、integrity ok）→ `supervisorctl restart web`（新代码上线，healthz 200、LDAP 登录正常、无回溯）→ `import-ldap-users` 回填。**dry-run 拦下一个 bug**：工具 strip 掉 cn 尾随空格，导致 3 个「用户名带尾空格」账号（LDAP DN 用 `\20` 转义）匹配不到已有 SQLite 行、会建重复行并撞 `email UNIQUE`；改为原样保留 cn（commit `ab64762`）后修正。最终回填 **total 756 / created 29 / password_filled 727 / 0 冲突**；库现为 **756 行全部有 `{SSHA}` 口令、0 NULL、0 重复用户名/邮箱、integrity ok**；重跑 dry-run 为 no-op（幂等）。
-- 第二切片（已实现，未部署；同一分支 `ha-008-sqlite-user-schema` 叠加，见 WAVE-20260721-04）：应用改用 SQLite `User` 认证——新 `ohmywod/security.py`（Argon2id + 兼容 LDAP `{SSHA}`）、登录成功惰性升级 `{SSHA}`→Argon2id、`load_user` 按主键取（旧 LDAP DN session 一次性失效）、注册/资料/改密只写 SQLite、operator `flask set-password` CLI；移除 `flask-ldap3-login`/`ldap3` 依赖与 LDAP 配置。本地 `pytest` 53 通过。**仍未做**：IMP-006 登录/注册限流（切换前的验收 gate）、生产切换与观察、OPS-015 stop/mask slapd。注意生产仍以**分支 checkout** 跑第一切片，`app_ref` 仍为 `0512c83`。
+- 第二切片 + IMP-006（**已生产切换**，2026-07-21，见 WAVE-20260721-04/05）：应用改用 SQLite `User` 认证——`ohmywod/security.py`（Argon2id + 兼容 LDAP `{SSHA}`）、登录成功惰性升级 `{SSHA}`→Argon2id、`load_user` 按主键取（旧 LDAP DN session 一次性失效）、注册/资料/改密只写 SQLite、operator `flask set-password` CLI；IMP-006 登录/注册限流（Flask-Limiter，redis-cache 7379，fail-open）+ 注册蜜罐；移除 `flask-ldap3-login`/`ldap3` 依赖与 LDAP 配置。生产已在 tip `d6671a1` 重启切换，运行时验证 SQLite 认证 + `{SSHA}`→argon2 惰性升级 + `/login` 端到端 + 无 :389 连接。**仍未做**：观察期收尾、OPS-015 stop/mask 并删 slapd、合并 `main` 后 bump `app_ref`（当前仍分支 checkout、`app_ref`=`0512c83`）。
 
 ### HA-009 — 通过 DR gate 后建立同区域温备
 
@@ -526,3 +526,17 @@ Review 关注：旧主复活、Cloudflare API 部分成功、SQLite 写入窗口
 - 发生的问题：`LDAPUser` 曾提供 `reader_theme`/`app_theme`/`theme_css`，核查确认模板未使用（死代码），`User` 无需复刻
 - 剩余风险：尚未做 IMP-006 登录/注册限流（切换验收 gate）；未部署、未观察；旧 session 一次性失效对在线用户的影响需在切换公告/低峰执行；`flask-ldap3-login`/`ldap3` 仅从 requirements 移除，生产 venv 仍装有（OPS-015 清理）
 - 下一步：补 IMP-006 登录/注册限流 → 出第二切片切换 runbook（部署、观察无 LDAP 调用、确认 slapd 可停）→ 用户授权后生产切换
+
+### WAVE-20260721-05 — HA-008 第二切片 + IMP-006 生产切换（认证已切到 SQLite）
+
+- 日期：2026-07-21
+- Drive AI：Claude Code
+- Review AI：`unassigned`
+- 关联事项：HA-008、IMP-006；后续 OPS-015
+- 状态变化：HA-008 保持 `in_progress`（认证已切换并即时验证通过；观察期收尾 + OPS-015 删 slapd 后才可判 `done`）
+- 改动：生产按 ops runbook `docs/ha-008-apply-slice2.md` 执行第二切片切换。venv 装 `argon2-cffi`+`Flask-Limiter`；外科式 checkout 到 tip `d6671a1`（含 slice-2 + IMP-006）；`supervisorctl restart web` 完成认证从 LDAP→SQLite 的切换。未改 slapd。
+- 关键取舍：沿用外科式 checkout（不走 app role、不 bump `app_ref`）把 code-only 切换爆炸半径压到最小；限流存储复用运行中的 redis-cache 7379、fail-open
+- 验证：切换前基线 756 行全 `{ssha}`、0 argon、redis-cache 活；新代码在生产配置下 `create_app()` 通过后再重启；重启后 4 worker 正常、无回溯、healthz 200、登录页 200；生产运行时用自清理临时账号验证 **SQLite 认证成功 + `{SSHA}`→Argon2id 惰性升级 + 错误密码拒绝**；`/login` 端到端（生产 DB + test client）正确密码跳 `/r/`、错误密码留登录并报错；`ss` 查**无到 :389 的连接**
+- 发生的问题：用 urllib 手工复刻浏览器 CSRF+session 登录时得到 400（CSRF harness 假象，非回归——登录切换前后都需 CSRF），改用 test_client 对生产 DB 验证端点逻辑
+- 剩余风险：观察期（真实用户重新登录、`{ssha}`→argon 迁移趋势、稳定性）尚未走完；slapd 仍在跑（未停）；旧 session 一次性失效已对在线用户生效；分支 checkout、`app_ref` 未 bump；短期回滚材料（`pre-ha008s2-20260721T162027Z.sqlite`、slice-1 快照与 age LDIF）待观察通过后按窗口销毁
+- 下一步：观察期确认无 LDAP 调用与认证稳定 → 交 OPS-015 stop/mask 并删除 slapd/LDAP 配置/密钥 → 合并 `main` 并 bump `app_ref`
