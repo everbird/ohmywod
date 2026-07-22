@@ -297,6 +297,12 @@ OPS-010、OPS-011、OPS-012。
 未来应实现显式 `prepare → restore → reboot gate → serve`，且先单独验证目标机取得 SOPS secret 的机制被执行环境
 允许。完整过程与后续 AI 禁止重试项记录在私有 ops `docs/ops-004-rehearsal.md`。
 
+补充（自动化落地，WAVE-20260722-03）：上条列为「未来应实现」的部分已在 ops 仓落地并本地验证——secret-delivery
+三步 age 信任链（目标机自有 recipient 加密、本地解密，控制节点永不经手明文）、hermetic 往返自测 6 项全绿、独立
+`restore.yml`（强 gate、不启 writer）、`deploy_phase` 白名单。恢复拓扑收敛为显式 `prepare → restore → serve`。
+仍 deferred：restore.yml 与 vm-* 的真机端到端——本自动化环境连演练机只读 SSH 都被拦，「向第三方 VM 传输」确认是
+执行环境策略而非代码可解，须获授权操作者手动完成后回填证据。
+
 ### HA-007 — 验证备份新鲜度、保留策略与误删风险边界
 
 - 状态：`assessing`
@@ -626,3 +632,16 @@ Review 关注：旧主复活、Cloudflare API 部分成功、SQLite 写入窗口
 - 发生的问题：现有高层计划过去把“Ansible 管理 juicefs.service”与“JuiceFS volume 可从零恢复”靠得太近，容易让后续 AI 误读；本波拆开说明。
 - 剩余风险：restore playbook、目标机 secret delivery、只读 drill mount 与 reboot gate 均未实现；临时 Linode 仍运行并计费。
 - 下一步：以 OPS-008 secret-delivery trust chain 为前置，之后实现并演练 restore phase；HA-006 在 VM FUSE/reboot 证据前不标 done。
+
+### WAVE-20260722-03 — 实现 secret-delivery 信任链 + restore 骨架（ops 侧）
+
+- 日期：2026-07-22
+- Drive AI：Claude Code
+- Review AI：`unassigned`
+- 关联事项：HA-006；ops OPS-004、OPS-008
+- 状态变化：HA-006 保持 `in_progress`
+- 改动：按 WAVE-02 定的次序，在 ops 仓实现并本地验证上一波列为「未实现」的自动化——secret-delivery 三步 age 信任链（`scripts/recovery-secret-delivery.sh`）+ hermetic 往返自测（6 项全绿）+ 独立 restore playbook（`ansible/restore.yml`，强 gate、不启 writer）+ `site.yml` 的 `deploy_phase` 白名单（restore/拼写错误 fail closed）。恢复拓扑从「注释级人工 juicefs config」收敛为显式 `prepare → restore → serve`。
+- 关键取舍：secret-delivery 保持为操作者驱动的显式 out-of-band 协议，控制节点只经手密文、明文只在目标机本地出现；密文传输刻意不塞进 ansible/不由受限控制节点自动 SSH，遵守「不反向注入隐式凭据搬运」。
+- 验证：round-trip 6 项全绿（recipient 合法/私钥 0600/幂等、密文无明文泄漏、juicefs config 逐字节一致凭据+`--force`、错误私钥解密失败、`--dry-run` 不 exec 不泄漏、无明文落盘）；真实 sops 源路径本地往返成功；`site.yml`/`restore.yml` syntax-check 通过；phase 白名单 localhost 实测 serve/prepare 放行、restore/bogus 拒绝；recovery gate 测试无回归。未连 VM、未传凭据、未改生产。
+- 剩余风险：restore.yml 与 vm-* 真机端到端未验证——本自动化环境连演练机只读 SSH 都被拦，证明「向第三方 VM 传输」是执行环境策略、非代码可解；临时 Linode `101125220` 仍运行并计费。
+- 下一步：由用户决定演练机去留；FUSE/reboot 闭环须由获授权操作者手动完成密文传输 + vm-config + drill 挂载 + reboot gate，再回填 ops `docs/ops-004-rehearsal.md`；HA-006 在 VM FUSE/reboot 证据前不标 done。
