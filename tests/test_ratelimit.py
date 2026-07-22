@@ -61,3 +61,35 @@ def test_register_normal_still_works_with_honeypot_field(client, db):
     }, follow_redirects=True)
     assert res.status_code == 200
     assert UserController().get_db_user("realuser") is not None
+
+
+def test_feedback_is_rate_limited(client, db):
+    headers = {"CF-Connecting-IP": "198.51.100.33"}
+    statuses = []
+    for _ in range(7):
+        res = client.post("/feedback", data={"username": "rl", "feedback": "hi"},
+                          headers=headers)
+        statuses.append(res.status_code)
+    assert 429 in statuses  # feedback limit is 5/min
+
+
+def test_interaction_like_is_rate_limited(authenticated_client):
+    # Report blueprint is mounted at /r; report 999999 doesn't exist so the
+    # handler returns a JSON "not found", but the limiter sits outside
+    # @login_required and counts every POST regardless.
+    headers = {"CF-Connecting-IP": "198.51.100.44"}
+    statuses = []
+    for _ in range(22):
+        res = authenticated_client.post("/r/report/999999/like", headers=headers)
+        statuses.append(res.status_code)
+    assert 429 in statuses  # interaction limit is 20/min
+
+
+def test_interaction_endpoint_not_limited_under_threshold(authenticated_client):
+    # A handful of favorites from one client must not trip the limiter, so real
+    # browsing isn't throttled.
+    headers = {"CF-Connecting-IP": "198.51.100.55"}
+    for _ in range(5):
+        res = authenticated_client.post("/r/report/999999/add_favorite",
+                                        headers=headers)
+        assert res.status_code == 200

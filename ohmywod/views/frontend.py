@@ -172,6 +172,9 @@ class FeedbackForm(FlaskForm):
 
 
 @frontend.route("/feedback", methods=["POST", "GET"])
+# IMP-006: feedback is an open (unauthenticated) text POST -> spam vector.
+# Conservative per-IP cap; GET (viewing the form) is unaffected.
+@limiter.limit("5 per minute; 20 per hour", methods=["POST"])
 def feedback_page():
     form = FeedbackForm()
     if form.validate_on_submit():

@@ -29,7 +29,7 @@ from wtforms.validators import DataRequired, ValidationError, Optional
 from wtforms.widgets import TextArea
 
 from ohmywod.controllers.report import ReportController
-from ohmywod.extensions import db, Pagination, get_page_args
+from ohmywod.extensions import db, Pagination, get_page_args, limiter
 from ohmywod.utils import paginate
 from ohmywod.models.report import ReportDetails
 from ohmywod.presenters.report import ReportPresenter
@@ -510,7 +510,16 @@ def new_category():
     return rt("new_category.html", form=form)
 
 
+# IMP-006: throttle authenticated interaction writes (like/favorite toggles).
+# Generous enough for real browsing; caps replay/spam churn. Keyed by client IP
+# (default key_func) and applied outside @login_required so unauthenticated
+# floods are counted too. Counters are already replay-safe (controller uses set
+# membership), so this mainly bounds request volume.
+_INTERACTION_LIMIT = "20 per minute; 200 per hour"
+
+
 @report.route("/report/<report_id>/like", methods=['POST'])
+@limiter.limit(_INTERACTION_LIMIT)
 @login_required
 def ajax_like(report_id):
     username = current_user.username
@@ -528,6 +537,7 @@ def ajax_like(report_id):
 
 
 @report.route("/report/<report_id>/unlike", methods=['POST'])
+@limiter.limit(_INTERACTION_LIMIT)
 @login_required
 def ajax_unlike(report_id):
     username = current_user.username
@@ -543,6 +553,7 @@ def ajax_unlike(report_id):
 
 
 @report.route("/report/<report_id>/add_favorite", methods=['POST'])
+@limiter.limit(_INTERACTION_LIMIT)
 @login_required
 def ajax_add_favorite(report_id):
     username = current_user.username
@@ -559,6 +570,7 @@ def ajax_add_favorite(report_id):
 
 
 @report.route("/report/<report_id>/cancel_favorite", methods=['POST'])
+@limiter.limit(_INTERACTION_LIMIT)
 @login_required
 def ajax_cancel_favorite(report_id):
     username = current_user.username
