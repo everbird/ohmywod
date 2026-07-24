@@ -37,7 +37,7 @@ next_item_id: "SUP-007"
 - `ohmywod/templates/ads.txt` 与 `frontend.py` 的 `/ads.txt` 路由已删除，站点不再声明参与广告投放。
 - 全仓仅剩测试里一处**否定断言**（`adsbygoogle not in page`）确保广告不再回归；`pytest` 67 项全过。
 - AdSense 后台：Auto Ads 已由用户关闭（2026-07-24）。
-- 尚未完成：提交 + 部署到生产（部署后公开页面才真正不再请求 AdSense）。
+- 已部署到生产（2026-07-24，app `327a4e3`）：公网首页与真实战报阅读页均 0 处 `adsbygoogle`、`/ads.txt` 404。SUP-001 / SUP-002 均 `done`。
 - 旧广告优化方案已归档到 `docs/archive/ad-optimization-plan-2026-07.md`，只保留为历史记录。
 
 ### 1.3 已拍板的原则
@@ -130,7 +130,7 @@ next_item_id: "SUP-007"
 
 ### SUP-001 — 清除鼓励广告点击的文案
 
-- 状态：`in_progress`
+- 状态：`done`
 - 优先级：`P0`
 - 波次：Wave 0
 - Drive AI：`Claude Code`
@@ -153,11 +153,13 @@ next_item_id: "SUP-007"
 
 Review 关注：同时检查中文文案、图片 alt、模板注释和可能由 JavaScript 注入的内容。
 
-执行证据（2026-07-24，Claude Code，代码侧完成、未部署）：`landing.html` 的“支持作者”文案删除“偶尔点点网站左下角的广告，”一句，只保留微信打赏与 GitHub。全仓 `grep` 确认再无鼓励查看/点击广告的站内文案（图片 alt、模板注释均无）。`pytest` 67 项全过。**未完成**：提交 + 部署到生产。
+执行证据（2026-07-24，Claude Code，代码侧完成、未部署）：`landing.html` 的“支持作者”文案删除“偶尔点点网站左下角的广告，”一句，只保留微信打赏与 GitHub。全仓 `grep` 确认再无鼓励查看/点击广告的站内文案（图片 alt、模板注释均无）。`pytest` 67 项全过。
+
+部署完成（2026-07-24）：合入 main（app `327a4e3`，PR #4）→ ops bump `app_ref` d930c6a→327a4e3 + inventory 指向 DR-3 新生产机 `172.104.74.85` → `ansible-playbook site.yml --tags app`（仅 checkout + 重启 web 两处 changed）。公网复核：首页返回 0 处 `adsbygoogle`、登录页 200（session 正常），本项 `done`。
 
 ### SUP-002 — 完全移除 AdSense 及其遗留配置
 
-- 状态：`in_progress`
+- 状态：`done`
 - 优先级：`P0`
 - 波次：Wave 0
 - Drive AI：`Claude Code`
@@ -182,7 +184,9 @@ Review 关注：同时检查中文文案、图片 alt、模板注释和可能由
 
 Review 关注：检查模板继承、移动端、阅读模式和缓存版本，避免只删可见元素却继续加载脚本。
 
-执行证据（2026-07-24，Claude Code，代码侧完成、未部署）：删除两处 AdSense 单元及其加载/初始化脚本——`base.html` 侧栏单元改回 WoD 推广图（非商业内容）、`report_reader.html` 尾部单元整段删除（含 MutationObserver 布局修补）。收敛模板：`base_noadsense.html` 删除，9 个原本 `extends "base_noadsense.html"` 的页面改为 `extends "base.html"`（base 默认侧栏已无广告，输出不变）。删除 `ads.txt` 模板与 `frontend.py` 的 `/ads.txt` 路由。测试 `test_report_reader_has_tail_ad` 改写为 `test_report_reader_has_no_ads`（断言 `adsbygoogle`/`reader-tail-ad` 均不在页面）。全仓 `grep` 确认应用代码再无 `adsbygoogle`/`ca-pub`/`pagead`（仅剩测试否定断言）；`pytest` 67 项全过。AdSense 后台 Auto Ads 已由用户关闭（2026-07-24）。**未完成**：提交 + 部署到生产（部署后公开页面才不再请求 AdSense，届时 SUP-002 完成判断满足）。
+执行证据（2026-07-24，Claude Code，代码侧完成、未部署）：删除两处 AdSense 单元及其加载/初始化脚本——`base.html` 侧栏单元改回 WoD 推广图（非商业内容）、`report_reader.html` 尾部单元整段删除（含 MutationObserver 布局修补）。收敛模板：`base_noadsense.html` 删除，9 个原本 `extends "base_noadsense.html"` 的页面改为 `extends "base.html"`（base 默认侧栏已无广告，输出不变）。删除 `ads.txt` 模板与 `frontend.py` 的 `/ads.txt` 路由。测试 `test_report_reader_has_tail_ad` 改写为 `test_report_reader_has_no_ads`（断言 `adsbygoogle`/`reader-tail-ad` 均不在页面）。全仓 `grep` 确认应用代码再无 `adsbygoogle`/`ca-pub`/`pagead`（仅剩测试否定断言）；`pytest` 67 项全过。AdSense 后台 Auto Ads 已由用户关闭（2026-07-24）。
+
+部署完成（2026-07-24，同 SUP-001 同一波 `--tags app`）：生产 app 切到 `327a4e3`（新机 `172.104.74.85`）。SSH 只读复核：模板 0 个文件含 `adsbygoogle`、`ads.txt` / `base_noadsense.html` 均已删除、web active。公网复核：首页 0 处 `adsbygoogle`、真实战报阅读页 `/r/report/13916/reader/` 200 且 0 处 `adsbygoogle` / `reader-tail-ad`、`/ads.txt` 返回 404、healthz 200。源码无生效广告配置 + 后台 Auto Ads 已停 + 公开页面不再请求 AdSense，完成判断全部满足，本项 `done`。
 
 ### SUP-003 — 建立爱发电支持渠道
 
@@ -370,3 +374,17 @@ Review 关注：确认复盘没有演变成新的分析系统，回馈没有形�
 - 发生的问题：无
 - 剩余风险：改动已提交但未部署；生产线上仍在加载 AdSense 直到部署（AdSense 后台 Auto Ads 已由用户关闭）
 - 下一步：由用户确认后部署（属外发/生产动作）；部署后只读复核公开页面不再请求 AdSense，随后把 SUP-001/002 置 `done`。Wave 1 的爱发电（SUP-003）仍待用户站外决策
+
+### WAVE-20260724-02 — Wave 0 部署到生产，SUP-001/002 完成
+
+- 日期：2026-07-24
+- Drive AI：Claude Code（Opus 4.8）
+- Review AI：`unassigned`
+- 关联事项：SUP-001、SUP-002；跨仓 `ohmywod-ops`（app_ref / inventory）
+- 状态变化：SUP-001 `in_progress` -> `done`；SUP-002 `in_progress` -> `done`
+- 改动：无新代码。用户合入 PR #4（app main `327a4e3`）并已在 AdSense 后台关闭 Auto Ads；ops 侧 bump `app_ref` d930c6a→327a4e3、把 `inventory.ini` 从旧机 `139.162.71.71` 指向 DR-3 后的新生产机 `172.104.74.85`，`ansible-playbook site.yml --tags app` 部署（仅 checkout + 重启 web 两处 changed，failed=0）
+- 关键取舍：必须同步 bump `app_ref` 并修正 inventory，否则下次全量 `site.yml` 会用旧锚点回退广告改动、或误连已停机的旧机
+- 验证：SSH 只读——生产 HEAD=`327a4e3`、模板 0 文件含 `adsbygoogle`、`ads.txt`/`base_noadsense.html` 已删、web active。公网——首页 0 处 `adsbygoogle`、阅读页 `/r/report/13916/reader/` 200 且 0 处 `adsbygoogle`/`reader-tail-ad`、`/ads.txt` 404、healthz 200、登录页 200（session 正常，无历史假绿）
+- 发生的问题：`--check` 干跑时 checkout 误报 skipping（check 模式假象）；实际 apply 正常 checkout + reload。inventory 部署前仍指向旧机，一并修正
+- 剩余风险：无（Wave 0 完成）。旧机 `139.162.71.71` 由 DR 主线按 `dr-node cleanup` 处理，不属本计划
+- 下一步：Wave 1 的爱发电（SUP-003）待用户站外决策；无则本计划 Wave 0 收尾、保持 active 观察
