@@ -565,7 +565,7 @@ def test_sitemap_cache_failure_falls_back_to_rendering(client, db, monkeypatch):
     assert b'<urlset' in response.data
 
 
-def test_report_reader_has_tail_ad(authenticated_client, app, db):
+def test_report_reader_has_no_ads(authenticated_client, app, db):
     rc = ReportController()
     cat = rc.create_category("cat1", "Cat Desc", "testuser")
     rc.create_report(cat.id, "myreport", "testuser")
@@ -580,10 +580,9 @@ def test_report_reader_has_tail_ad(authenticated_client, app, db):
     assert res.status_code == 200
     page = res.data.decode('utf-8')
     assert "Reader Content" in page
-    # Content-tail ad unit is present and comes after the report content
-    assert 'adsbygoogle' in page
-    assert 'data-ad-slot="6513178276"' in page
-    assert page.index('Reader Content') < page.index('reader-tail-ad')
+    # AdSense fully removed (SUP-002): no ad script, unit, or leftover container.
+    assert 'adsbygoogle' not in page
+    assert 'reader-tail-ad' not in page
 
 
 def test_robots_txt_points_to_sitemap(client):

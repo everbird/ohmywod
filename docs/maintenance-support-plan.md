@@ -1,11 +1,11 @@
 ---
 document_id: ohmywod-maintenance-support-plan
 schema_version: 1
-document_status: draft
+document_status: active
 source_of_truth_for: "maintenance-cost support direction, work item status, and wave changelog"
 language: zh-CN
 created_at: "2026-07-16"
-last_updated: "2026-07-16"
+last_updated: "2026-07-24"
 review_commit: "0512c83"
 review_worktree: "dirty: existing user documentation changes preserved"
 next_item_id: "SUP-007"
@@ -28,10 +28,16 @@ next_item_id: "SUP-007"
 
 ### 1.2 当前实现
 
-- `ohmywod/templates/base.html` 在桌面侧边栏加载一个 AdSense 单元。
-- `ohmywod/templates/report_reader.html` 已在战报内容尾部加载一个 AdSense 单元。它是旧广告方案撰写后实际落地的部分。
-- `ohmywod/templates/landing.html` 同时引导微信打赏、参与 GitHub 和“点广告”。其中鼓励点击广告的文案有平台政策风险，也与新的支持方向冲突。
-- `ohmywod/templates/base_noadsense.html` 通过模板覆盖区分无广告页面。全部移除 AdSense 后，这层差异可能不再需要。
+> 2026-07-24 更新：SUP-001 / SUP-002 的**代码侧已完成**（未部署、未动 AdSense 后台），下面记录改动后的现状。
+
+- `ohmywod/templates/base.html`：侧边栏 AdSense 单元已删除，改回展示 WoD 推广图（非商业内容，保留）。
+- `ohmywod/templates/report_reader.html`：战报尾部 AdSense 单元已整段删除。
+- `ohmywod/templates/landing.html`：“支持作者”文案已去掉“偶尔点点网站左下角的广告”，只保留微信打赏与 GitHub。
+- `ohmywod/templates/base_noadsense.html`：已删除。移除广告后 base 默认侧栏即为 WoD 推广图，原来 9 个页面改为直接 `extends "base.html"`，`noadsense` 概念不再需要。
+- `ohmywod/templates/ads.txt` 与 `frontend.py` 的 `/ads.txt` 路由已删除，站点不再声明参与广告投放。
+- 全仓仅剩测试里一处**否定断言**（`adsbygoogle not in page`）确保广告不再回归；`pytest` 67 项全过。
+- AdSense 后台：Auto Ads 已由用户关闭（2026-07-24）。
+- 尚未完成：提交 + 部署到生产（部署后公开页面才真正不再请求 AdSense）。
 - 旧广告优化方案已归档到 `docs/archive/ad-optimization-plan-2026-07.md`，只保留为历史记录。
 
 ### 1.3 已拍板的原则
@@ -124,13 +130,13 @@ next_item_id: "SUP-007"
 
 ### SUP-001 — 清除鼓励广告点击的文案
 
-- 状态：`todo`
+- 状态：`in_progress`
 - 优先级：`P0`
 - 波次：Wave 0
-- Drive AI：`unassigned`
+- Drive AI：`Claude Code`
 - Review AI：`unassigned`
 - 依赖：无
-- 最后更新：2026-07-16
+- 最后更新：2026-07-24
 - 结论置信度：`confirmed`
 
 问题与影响：`landing.html` 的支持文案鼓励用户“偶尔点点网站左下角的广告”。这既与自愿维护成本支持的定位冲突，也会给 AdSense 账号带来不必要的平台政策风险。
@@ -147,17 +153,17 @@ next_item_id: "SUP-007"
 
 Review 关注：同时检查中文文案、图片 alt、模板注释和可能由 JavaScript 注入的内容。
 
-执行证据：尚无。
+执行证据（2026-07-24，Claude Code，代码侧完成、未部署）：`landing.html` 的“支持作者”文案删除“偶尔点点网站左下角的广告，”一句，只保留微信打赏与 GitHub。全仓 `grep` 确认再无鼓励查看/点击广告的站内文案（图片 alt、模板注释均无）。`pytest` 67 项全过。**未完成**：提交 + 部署到生产。
 
 ### SUP-002 — 完全移除 AdSense 及其遗留配置
 
-- 状态：`todo`
+- 状态：`in_progress`
 - 优先级：`P0`
 - 波次：Wave 0
-- Drive AI：`unassigned`
+- Drive AI：`Claude Code`
 - Review AI：`unassigned`
 - 依赖：SUP-001
-- 最后更新：2026-07-16
+- 最后更新：2026-07-24
 - 结论置信度：`recommended`
 
 问题与影响：当前至少有侧边栏和阅读模式页尾部两个广告单元。即使没有成功填充，它们仍会引入第三方脚本、额外请求、布局处理和长期政策维护，而预期收入不足以构成继续实验的理由。
@@ -176,7 +182,7 @@ Review 关注：同时检查中文文案、图片 alt、模板注释和可能由
 
 Review 关注：检查模板继承、移动端、阅读模式和缓存版本，避免只删可见元素却继续加载脚本。
 
-执行证据：尚无。
+执行证据（2026-07-24，Claude Code，代码侧完成、未部署）：删除两处 AdSense 单元及其加载/初始化脚本——`base.html` 侧栏单元改回 WoD 推广图（非商业内容）、`report_reader.html` 尾部单元整段删除（含 MutationObserver 布局修补）。收敛模板：`base_noadsense.html` 删除，9 个原本 `extends "base_noadsense.html"` 的页面改为 `extends "base.html"`（base 默认侧栏已无广告，输出不变）。删除 `ads.txt` 模板与 `frontend.py` 的 `/ads.txt` 路由。测试 `test_report_reader_has_tail_ad` 改写为 `test_report_reader_has_no_ads`（断言 `adsbygoogle`/`reader-tail-ad` 均不在页面）。全仓 `grep` 确认应用代码再无 `adsbygoogle`/`ca-pub`/`pagead`（仅剩测试否定断言）；`pytest` 67 项全过。AdSense 后台 Auto Ads 已由用户关闭（2026-07-24）。**未完成**：提交 + 部署到生产（部署后公开页面才不再请求 AdSense，届时 SUP-002 完成判断满足）。
 
 ### SUP-003 — 建立爱发电支持渠道
 
@@ -350,3 +356,17 @@ Review 关注：确认复盘没有演变成新的分析系统，回馈没有形�
 - 发生的问题：模板文件位于相邻 `ohmywod-ops` 仓库，本计划沿用其 front matter、工作项和 append-only changelog 结构
 - 剩余风险：鼓励点击广告的线上文案和两个 AdSense 单元仍在代码中，需优先处理 SUP-001、SUP-002
 - 下一步：确认草案后执行 Wave 0；爱发电账号与公开成本口径可稍后决定
+
+### WAVE-20260724-01 — 执行 Wave 0：撤除广告文案与 AdSense（代码侧）
+
+- 日期：2026-07-24
+- Drive AI：Claude Code（Opus 4.8）
+- Review AI：`unassigned`
+- 关联事项：SUP-001、SUP-002
+- 状态变化：草案转正（`document_status` draft -> active）；SUP-001 `todo` -> `in_progress`；SUP-002 `todo` -> `in_progress`
+- 改动：`landing.html` 去掉鼓励点击广告文案；`base.html` 侧栏 AdSense → WoD 推广图；`report_reader.html` 删尾部 AdSense 单元；删 `base_noadsense.html` 并把 9 个页面改 `extends "base.html"`；删 `ads.txt` 模板与 `/ads.txt` 路由；`test_report_reader_has_tail_ad` → `test_report_reader_has_no_ads`（否定断言）
+- 关键取舍：WoD 推广图属非商业内容予以保留；模板收敛选择「base 默认即无广告 + 9 页直接 extends base」而非留一个等价冗余的 `base_noadsense`，减少「为什么这页要 noadsense」的困惑
+- 验证：全仓 `grep` 确认应用代码无 `adsbygoogle`/`ca-pub`/`pagead`（仅测试否定断言）；`pytest` 67 项全过
+- 发生的问题：无
+- 剩余风险：改动已提交但未部署；生产线上仍在加载 AdSense 直到部署（AdSense 后台 Auto Ads 已由用户关闭）
+- 下一步：由用户确认后部署（属外发/生产动作）；部署后只读复核公开页面不再请求 AdSense，随后把 SUP-001/002 置 `done`。Wave 1 的爱发电（SUP-003）仍待用户站外决策
