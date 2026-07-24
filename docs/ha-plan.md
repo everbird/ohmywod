@@ -5,7 +5,7 @@ document_status: active
 source_of_truth_for: "单机快速重建与节点替换：目标体验、必要步骤、当前下一步"
 language: zh-CN
 created_at: "2026-07-05"
-last_updated: "2026-07-23"
+last_updated: "2026-07-24"
 ---
 
 # 单机 DR：快速重建与节点替换
@@ -33,7 +33,7 @@ last_updated: "2026-07-23"
 - 战报没有第二桶或不可变副本，不防供应商账号级事故和超窗口误删。
 - 切换后旧机不再自动追平；需要回退时手动把 DNS 改回旧机。
 
-## 3. 目标命令（待在私有 `ohmywod-ops` 仓实现）
+## 3. 目标命令（已在私有 `ohmywod-ops` 仓实现）
 
 ```bash
 ./scripts/dr-node build              # 自动起一台装好数据、已自检通过的新机（不接公网）
@@ -68,12 +68,13 @@ last_updated: "2026-07-23"
 
 不自动回滚、不合并数据、不自动删旧机。任一步失败就停下、保留现场，由你决定修新机还是回退旧机（把 A 记录改回去）。
 
-## 6. 实现顺序
+## 6. 实现与验收状态
 
-- **DR-1（下一步）**：实现 `dr-node build`，复用现有 roles / Litestream / JuiceFS，删掉正常路径里的人工 inventory、
-  age 凭据仪式和只读 drill mount。完成标准：一条命令从空白云资源得到自检通过、不接公网的新机。
-- **DR-2**：实现 `dr-node cutover`（上面四步）+ `cleanup` 独立删机。完成标准：除一次 `yes` 外不需 dashboard / SSH。
-- **DR-3**：用临时 Linode 真跑一次 `build`，低峰真跑一次 `cutover`，记录实际耗时和恢复点，只修挡住正常路径的问题。
+- **DR-1：done**。一条 `dr-node build` 能从空白 Linode 完成 prepare、SQLite / Redis / JuiceFS 恢复、serve 与本机自检，候选机不接公网且不启动备份 writer。
+- **DR-2：done**。`cutover` 能停旧机 writer、追平 SQLite、启动新机 writer、更新 Cloudflare A 记录并复验公网；`cleanup` 独立保留，稳定观察后才删除旧机。
+- **DR-3：done（2026-07-24）**。候选机 `101259671`（`172.104.74.85`）一次 build 成功并真实接管生产。切换后新旧机的 `/usage` 六项统计完全一致；SQLite `quick_check=ok`、13,491 条 report，Redis db0 为 24,609 个键，JuiceFS 使用量 / inode 一致，最新 5 份战报均可读取。旧机保留观察，未自动删除。
+
+当前下一步：观察新机稳定性；确认无需回退后，再显式执行 `cleanup` 删除旧机。
 
 ## 7. 现有可复用基础
 
