@@ -7,13 +7,13 @@ language: zh-CN
 created_at: "2026-07-24"
 last_updated: "2026-07-24"
 review_commit: "907babd"
-review_worktree: "dirty: existing docs/ha-plan.md changes preserved"
+review_worktree: "dirty: existing docs/archive/ha-plan.md changes preserved"
 next_item_id: "CDN-003"
 ---
 
 # 国内访问与 CDN 改进计划（未来）
 
-> 本文是战报网未来 CDN 与国内访问体验优化的工作计划，不是多地域部署方案。节点替换与恢复以 [单机 DR 与节点替换计划](ha-plan.md) 为准，已经完成的应用缓存与安全基线以 [站点改进计划](improvement-plan-2026-07.md) 为准。
+> 本文是战报网未来 CDN 与国内访问体验优化的工作计划，不是多地域部署方案。节点替换与恢复以 [单机 DR 与节点替换计划](archive/ha-plan.md) 为准，已经完成的应用缓存与安全基线以 [站点改进计划](archive/improvement-plan-2026-07.md) 为准。
 >
 > **当前结论：继续使用 Cloudflare 橙云和东京源站，不增加国内节点或更换 CDN。下一步最有价值的两项小改进是：让公开且基本不可变的 `/r/raw/*` 战报 HTML 在 Cloudflare 边缘缓存 1 天；缩小每页都会加载的 1024×1024、约 956 KB logo。两项可以并行。metadata 页面、登录态页面和互动接口继续不缓存。**
 
