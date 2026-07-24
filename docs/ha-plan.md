@@ -72,9 +72,9 @@ last_updated: "2026-07-24"
 
 - **DR-1：done**。一条 `dr-node build` 能从空白 Linode 完成 prepare、SQLite / Redis / JuiceFS 恢复、serve 与本机自检，候选机不接公网且不启动备份 writer。
 - **DR-2：done**。`cutover` 能停旧机 writer、追平 SQLite、启动新机 writer、更新 Cloudflare A 记录并复验公网；`cleanup` 独立保留，稳定观察后才删除旧机。
-- **DR-3：done（2026-07-24）**。候选机 `101259671`（`172.104.74.85`）一次 build 成功并真实接管生产。切换后新旧机的 `/usage` 六项统计完全一致；SQLite `quick_check=ok`、13,491 条 report，Redis db0 为 24,609 个键，JuiceFS 使用量 / inode 一致，最新 5 份战报均可读取。旧机保留观察，未自动删除。
+- **DR-3：done（2026-07-24）**。候选机 `101259671`（`172.104.74.85`）一次 build 成功并真实接管生产。切换后新旧机的 `/usage` 六项统计完全一致；SQLite `quick_check=ok`、13,491 条 report，Redis db0 为 24,609 个键，JuiceFS 使用量 / inode 一致，最新 5 份战报均可读取。新机稳定观察通过后，旧生产节点已显式 cleanup 并删除。
 
-当前下一步：观察新机稳定性；确认无需回退后，再显式执行 `cleanup` 删除旧机。
+当前状态：DR-1 至 DR-3 及切换后 cleanup 已全部完成，旧生产节点不再保留，没有 DR 收尾待办。后续仅在再次发生节点替换时复用本流程。
 
 ## 7. 现有可复用基础
 
