@@ -117,6 +117,29 @@ class ReportController:
     def get_report(self, rid):
         return Report.query.get(rid)
 
+    def get_report_by_path(self, owner, category_name, report_name, active_only=True):
+        """Resolve a report from its on-disk path parts (owner/category/name).
+
+        A2: ``/raw`` serves files straight off disk without touching the DB, so
+        a soft-deleted report's URL still works. This lets that route check the
+        report *and* its category are still active before serving.
+        """
+        query = (
+            db.session.query(Report)
+            .join(ReportCategory, Report.category_id == ReportCategory.id)
+            .filter(
+                Report.owner == owner,
+                ReportCategory.name == category_name,
+                Report.name == report_name,
+            )
+        )
+        if active_only:
+            query = query.filter(
+                Report.status == None,
+                ReportCategory.status == None,
+            )
+        return query.first()
+
     def get_reports(self, rids):
         if not rids:
             return []

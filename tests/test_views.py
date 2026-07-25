@@ -400,11 +400,12 @@ def test_upload_flow(authenticated_client, app, db):
     assert len(reports) == 1
     assert reports[0].name == "my_new_report"
 
-    # Verify files created in UPLOAD_DIR and DATA_DIR
+    # A3: the staging zip is cleaned up after a successful extraction; only the
+    # extracted report survives under DATA_DIR.
     uploaded_zip = os.path.join(app.config['UPLOAD_DIR'], 'testuser', 'cat1', 'my_new_report.zip')
     extracted_html = os.path.join(app.config['DATA_DIR'], 'testuser', 'cat1', 'my_new_report', 'index.html')
-    
-    assert os.path.exists(uploaded_zip)
+
+    assert not os.path.exists(uploaded_zip)
     assert os.path.exists(extracted_html)
     with open(extracted_html, 'r', encoding='utf-8') as f:
         assert "Uploaded Report HTML" in f.read()
@@ -438,7 +439,7 @@ def test_upload_preserves_chinese_report_filename(authenticated_client, app, db)
     uploaded_zip = os.path.join(app.config['UPLOAD_DIR'], 'testuser', 'cat1', report_filename)
     extracted_html = os.path.join(app.config['DATA_DIR'], 'testuser', 'cat1', report_name, 'index.html')
 
-    assert os.path.exists(uploaded_zip)
+    assert not os.path.exists(uploaded_zip)  # A3: staging zip cleaned up
     assert os.path.exists(extracted_html)
     with open(extracted_html, 'r', encoding='utf-8') as f:
         assert "Chinese Report HTML" in f.read()

@@ -354,7 +354,7 @@ Review 关注：确认复盘没有演变成新的分析系统，回馈没有形�
 - Review AI：`unassigned`
 - 关联事项：创建 SUP-001 至 SUP-006
 - 状态变化：新增 4 个 `todo`、2 个 `assessing`
-- 改动：新增 `docs/maintenance-support-plan.md` 草案；旧广告优化方案移入 `docs/archive/`；同步清理 `docs/improvement-plan-2026-07.md` 中把站点改进与广告增长绑定的旧表述；尚未修改应用代码或站外账号
+- 改动：新增 `docs/maintenance-support-plan.md` 草案；旧广告优化方案移入 `docs/archive/`；同步清理 `docs/archive/improvement-plan-2026-07.md` 中把站点改进与广告增长绑定的旧表述；尚未修改应用代码或站外账号
 - 关键取舍：收入方向从 AdSense 优化改为自愿维护成本支持；推荐完全移除 AdSense；不再要求用数据证明撤广告合理
 - 验证：核对现有两个广告单元、首页微信打赏入口和旧计划引用；相关文档链接可解析；`git diff --check` 通过
 - 发生的问题：模板文件位于相邻 `ohmywod-ops` 仓库，本计划沿用其 front matter、工作项和 append-only changelog 结构
