@@ -1,5 +1,7 @@
 ![](https://wod.everbird.me/static/img/favicon.ico) [OhMyWoD](https://wod.everbird.me) - 一个[WoD](https://world-of-dungeons.org)战报分享网站
 
+爱发电：https://ifdian.net/a/everbird
+
 以下介绍 Copy 自 https://wod.everbird.me ：
 
 ---
