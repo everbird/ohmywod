@@ -30,6 +30,7 @@ from ohmywod.extensions import (
     cache_get, cache_set, db, redis, limiter, client_ip_key,
 )
 from ohmywod.models.report import Report, ReportCategory
+from ohmywod.utils import is_safe_path_segment, is_safe_next_url
 
 
 frontend = Blueprint("frontend", __name__)
@@ -64,8 +65,9 @@ def login():
         user = uc.authenticate(form.username.data, form.password.data)
         if user is not None:
             login_user(user)  # Tell flask-login to log them in.
+            # A4: only follow a local relative `next`, never an off-site URL.
             next_url = request.args.get("next")
-            if next_url:
+            if is_safe_next_url(next_url):
                 return redirect(next_url)
             return redirect(url_for("wodreport.home"))  # Send them home
         # Generic message avoids leaking whether the username exists.
@@ -103,9 +105,14 @@ class RegistrationForm(FlaskForm):
     def validate_username(form, field):
         username = field.data
         if username:
+            # A1: the username becomes a filesystem path segment (owner dir).
+            if not is_safe_path_segment(username):
+                raise ValidationError("用户名不能包含路径分隔符或以点开头（如 / \\ .. 等）。")
             uc = UserController()
-            db_user = uc.get_db_user(username)
-            if db_user:
+            # A5: registration must reject case-insensitive duplicates because
+            # login (get_by_login) matches case-insensitively. Otherwise "Bob"
+            # and "bob" coexist and login resolves ambiguously.
+            if uc.get_by_login(username):
                 raise ValidationError("用户名已被其他用户使用。")
 
 

@@ -30,7 +30,7 @@ from wtforms.widgets import TextArea
 
 from ohmywod.controllers.report import ReportController, invalidate_sitemap_cache
 from ohmywod.extensions import db, Pagination, get_page_args, limiter
-from ohmywod.utils import paginate
+from ohmywod.utils import paginate, is_safe_path_segment, clamped_page_args
 from ohmywod.models.report import ReportDetails
 from ohmywod.presenters.report import ReportPresenter
 
@@ -148,6 +148,12 @@ def report_raw(username, category, name, subpath="index.html"):
     if not subpath.endswith(".html"):
         abort(404)
 
+    # A2: this route serves files straight off disk, so without a DB check a
+    # soft-deleted report's raw URL keeps working. Require an active record.
+    rc = ReportController()
+    if not rc.get_report_by_path(username, category, name):
+        abort(404)
+
     data_dir = current_app.config["DATA_DIR"]
     fpath_str = safe_join(data_dir, username, category, name, subpath)
     if not fpath_str:
@@ -193,7 +199,7 @@ def report_raw(username, category, name, subpath="index.html"):
 def view_category(category_id):
     rc = ReportController()
     category = rc.get_category(category_id)
-    if not category:
+    if not category or category.status is not None:  # A2: hide soft-deleted
         abort(404)
 
     reports, pagination, page, per_page, total = paginate(
@@ -326,7 +332,9 @@ def delete_category(category_id):
 def view_report(report_id):
     rc = ReportController()
     report = rc.get_report(report_id)
-    if not report:
+    if not report or report.status is not None:  # A2: hide soft-deleted
+        abort(404)
+    if report.category and report.category.status is not None:
         abort(404)
 
     report_presenter = ReportPresenter(report)
@@ -449,7 +457,9 @@ def report_reader(report_id, subpath="index.html"):
 
     rc = ReportController()
     report = rc.get_report(report_id)
-    if not report:
+    if not report or report.status is not None:  # A2: hide soft-deleted
+        abort(404)
+    if report.category and report.category.status is not None:
         abort(404)
 
     data_dir = current_app.config["DATA_DIR"]
@@ -488,7 +498,6 @@ def report_reader(report_id, subpath="index.html"):
             report=report,
             subpath=subpath
         )
-    return rt("report_details.html", report=report, subpath="index.html")
 
 
 @report.route("/all")
@@ -510,6 +519,10 @@ class NewCategoryForm(FlaskForm):
 
     def validate_name(form, field):
         name = field.data
+        # A1: the category name becomes a filesystem path segment; an absolute
+        # or "../"-bearing name would escape DATA_DIR / UPLOAD_DIR.
+        if name and not is_safe_path_segment(name):
+            raise ValidationError("分类名不能包含路径分隔符或以点开头（如 / \\ .. 等）。")
         rc = ReportController()
         if rc.get_category_by_name_and_username(name, current_user.username):
             raise ValidationError(
@@ -643,10 +656,7 @@ def search():
     q = request.args.get("q")
     reports = []
     total = 0
-    page, per_page, offset = get_page_args(
-        page_parameter='page',
-        per_page_parameter='per_page'
-    )
+    page, per_page, offset = clamped_page_args()  # A6: bound user ?per_page=
 
     if q is not None:
         q_stripped = q.strip()
