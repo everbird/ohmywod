@@ -30,7 +30,7 @@
       <div class="info-step"><span>1</span><p>准备好 WoD 导出的战报 zip 文件。如果还不知道怎么导出，可以先看下面的 <a href="#how_to_export_reports">如何导出战报</a>。</p></div>
       <div class="info-step"><span>2</span><p>登录后进入 <a href="{{ url_for('wodreport.home') }}">我的主页</a>，创建或打开一个目录。</p></div>
       <div class="info-step"><span>3</span><p>在目录页的上传区域找到“拖放文件或浏览”，可以点击选择 zip 文件，也可以把文件直接拖进去。</p></div>
-      <div class="info-step"><span>4</span><p>上传完成后刷新目录页，新战报会出现在列表中，也可以在 <a href="{{ url_for('wodreport.report_page') }}">浏览战报</a> 页面找到。</p></div>
+      <div class="info-step"><span>4</span><p>上传完成后目录页会自动刷新，新战报会出现在列表中，也可以在 <a href="{{ url_for('wodreport.report_page') }}">浏览战报</a> 页面找到。</p></div>
     </div>
     <div class="info-grid compact">
       <div class="info-panel"><i class="fa-solid fa-file-lines"></i><h3>普通战报页</h3><p>点击战报标题或链接可以进入战报页，例如 <a href="{{ url_for('wodreport.view_report', report_id=126) }}" target="_blank">这个战报</a>。页面中可以查看原始战报、元信息，也可以在有权限时编辑简介等内容。</p></div>

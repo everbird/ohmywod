@@ -218,6 +218,7 @@
 
 <script>
 {% if current_user.username == category.owner %}
+    let uploadErrors = 0;
     $("input").filepond({
         allowMultiple: true,
         allowRevert: false,
@@ -229,7 +230,14 @@
                 onerror: (response) => response
             }
         },
-        labelFileProcessingError: (error) => error.body || error.message || error
+        labelFileProcessingError: (error) => error.body || error.message || error,
+        // 记录本批是否有文件上传失败
+        onprocessfile: (error) => { if (error) uploadErrors++; },
+        // 整批处理完后：全成功才刷新页面看到新战报；有失败则停留，保留红色错误提示
+        onprocessfiles: () => {
+            if (uploadErrors === 0) window.location.reload();
+            uploadErrors = 0;
+        }
     })
 {% endif %}
   $(document).ready(function () {
