@@ -35,3 +35,19 @@ class DefaultConfig(object):
     FLASK_ADMIN_SWATCH = "darkly"
     FLASK_ADMIN_USERNAME = "<secret:flask_admin_username>"
     FLASK_ADMIN_PASSWD = "<secret:flask_admin_passwd>"
+
+    # --- Mail (PWR-002, Resend SMTP) ---
+    # Only MAIL_PASSWORD (the Resend API key) is secret; everything else is
+    # public. From must be on a Resend-verified domain (wod.everbird.me).
+    MAIL_SERVER = "smtp.resend.com"
+    MAIL_PORT = 587
+    MAIL_USE_TLS = True
+    MAIL_USERNAME = "resend"
+    MAIL_PASSWORD = "<secret:smtp_password>"
+    MAIL_DEFAULT_SENDER = ("Ohmywod", "noreply@wod.everbird.me")
+
+    # Reset links must be absolute HTTPS (site is HTTPS-only behind nginx);
+    # url_for(..., _external=True) uses this scheme.
+    PREFERRED_URL_SCHEME = "https"
+    # Reset-token lifetime in seconds (30 min).
+    PASSWORD_RESET_TOKEN_MAX_AGE = 1800

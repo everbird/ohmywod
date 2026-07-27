@@ -23,6 +23,8 @@ from wtforms.validators import DataRequired, Email, EqualTo, ValidationError
 from wtforms.widgets import TextArea
 
 from ohmywod import security
+from ohmywod.mailer import send_reset_email
+from ohmywod.tokens import generate_reset_token, verify_reset_token
 from ohmywod.controllers.feedback import FeedbackController
 from ohmywod.controllers.report import ReportController, SITEMAP_CACHE_KEY
 from ohmywod.controllers.user import UserController
@@ -136,6 +138,71 @@ def register():
         )
         return redirect(url_for('frontend.login'))
     return rt('registration.html', form=form)
+
+
+class ForgotPasswordForm(FlaskForm):
+    email = StringField('邮箱', validators=[DataRequired(), Email()])
+    submit = SubmitField('发送重置邮件')
+
+
+def _forgot_email_key():
+    # Per-account dimension so one email can't be hammered to fish for accounts
+    # or spam a mailbox; blank falls back to the IP bucket.
+    email = (request.form.get("email") or "").strip().lower()
+    return f"forgot-pw:{email}" if email else client_ip_key()
+
+
+# Same wording whether or not the address is registered, so the page never
+# reveals which emails have accounts (mirrors the login error's generic copy).
+_RESET_SENT_NOTICE = (
+    "如果该邮箱已注册，我们已发送一封包含重置链接的邮件，请查收（记得看垃圾箱）。"
+)
+
+
+@frontend.route('/forgot-password', methods=['GET', 'POST'])
+@limiter.limit("5 per minute; 20 per hour", methods=["POST"])
+@limiter.limit("3 per minute", methods=["POST"], key_func=_forgot_email_key)
+def forgot_password():
+    form = ForgotPasswordForm()
+    if form.validate_on_submit():
+        uc = UserController()
+        user = uc.get_db_user_by_email(form.email.data.strip())
+        # Only send when the address maps to a real user; the response is
+        # identical either way so no account enumeration is possible.
+        if user is not None and user.email:
+            token = generate_reset_token(user)
+            reset_url = url_for('frontend.reset_password', token=token,
+                                _external=True)
+            send_reset_email(user, reset_url)
+        flash(_RESET_SENT_NOTICE)
+        return redirect(url_for('frontend.login'))
+    return rt('forgot_password.html', form=form)
+
+
+class ResetPasswordForm(FlaskForm):
+    password1 = PasswordField('新密码', validators=[DataRequired()])
+    password2 = PasswordField('确认新密码',
+                              validators=[DataRequired(), EqualTo('password1')])
+    submit = SubmitField('重置密码')
+
+
+@frontend.route('/reset-password/<token>', methods=['GET', 'POST'])
+@limiter.limit("10 per minute; 40 per hour", methods=["GET", "POST"])
+def reset_password(token):
+    # Token authorises this page; a logged-in session is not required.
+    user = verify_reset_token(token)
+    if user is None:
+        flash("重置链接无效或已过期，请重新申请。")
+        return redirect(url_for('frontend.forgot_password'))
+
+    form = ResetPasswordForm()
+    if form.validate_on_submit():
+        # set_password re-hashes and bumps password_updated_at; the hash change
+        # invalidates this (and any other) outstanding reset link.
+        UserController().set_password(user.username, form.password1.data)
+        flash("密码已重置，请用新密码登录。")
+        return redirect(url_for('frontend.login'))
+    return rt('reset_password.html', form=form)
 
 
 @frontend.route("/logout")

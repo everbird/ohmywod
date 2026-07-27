@@ -6,6 +6,7 @@ from flask import (
     Flask, request, redirect, url_for, Response, current_app, render_template
 )
 from flask_admin.contrib import sqla
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 from ohmywod import views
 from ohmywod.config import DefaultConfig
@@ -21,7 +22,7 @@ except ImportError as e:
         raise
 
 from ohmywod.extensions import (
-    db, admin, login_manager, redis, cache, csrf, limiter, client_ip_key,
+    db, admin, login_manager, mail, redis, cache, csrf, limiter, client_ip_key,
     cache_get, cache_set,
 )
 from ohmywod.decorators import check_auth
@@ -48,6 +49,13 @@ def create_app(config=None, app_name=None, modules=None):
     if modules is None:
         modules = DEFAULT_MODULES
     app = Flask(app_name)
+
+    # nginx terminates TLS and sets X-Forwarded-Proto; trust exactly that one
+    # hop so request.scheme is https in production and url_for(_external=True)
+    # (password-reset links, sitemap) emits https. gunicorn isn't reachable
+    # directly (firewall + nginx), so trusting one proto hop is safe. x_for is
+    # left at 0 — client IP for rate limiting comes from CF-Connecting-IP.
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_for=0, x_host=0)
 
     configure_app(app, config)
 
@@ -106,6 +114,7 @@ def configure_app(app, config):
 def configure_extensions(app):
     db.init_app(app)
     login_manager.init_app(app)
+    mail.init_app(app)
     csrf.init_app(app)
 
     # Rate limiting (IMP-006). Reuse the running redis-cache (7379) as an

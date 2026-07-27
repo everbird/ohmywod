@@ -42,6 +42,10 @@ def app():
         FLASK_ADMIN_USERNAME = "admin"
         FLASK_ADMIN_PASSWD = "password"
 
+        # Mail: suppress real SMTP; a sender is still required to build messages.
+        MAIL_SUPPRESS_SEND = True
+        MAIL_DEFAULT_SENDER = ("Ohmywod Test", "noreply@example.com")
+
     app = create_app(config=TestConfig)
 
     # Push application context

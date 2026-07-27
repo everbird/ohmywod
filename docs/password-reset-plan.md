@@ -5,7 +5,7 @@ document_status: draft
 source_of_truth_for: "邮箱找回密码（重置令牌、邮件发送基建、前后端流程）的实现边界、工作项状态与 wave changelog"
 language: zh-CN
 created_at: "2026-07-26"
-last_updated: "2026-07-26"
+last_updated: "2026-07-27"
 review_commit: "f0643df"
 review_worktree: "clean"
 next_item_id: "PWR-005"
@@ -103,13 +103,13 @@ next_item_id: "PWR-005"
 
 ### PWR-001 — 重置令牌的生成与校验（itsdangerous，无状态 / 一次性 / 不动库）
 
-- 状态：`todo`
+- 状态：`done`
 - 优先级：`P1`
 - 波次：Wave 1
-- Drive AI：`unassigned`
+- Drive AI：Claude Code（Opus 4.8）
 - Review AI：`unassigned`
 - 依赖：无
-- 最后更新：2026-07-26
+- 最后更新：2026-07-27
 - 结论置信度：`recommended`
 
 问题与影响：找回密码需要一个“证明持有此邮箱”的凭据。若为此新建重置表 / 令牌字段，会牵连 SQLite / litestream / DR 一致性链，对个人项目过重。用无状态签名令牌可完全避免动库。
@@ -128,18 +128,20 @@ next_item_id: "PWR-005"
 
 Review 关注：`salt` 与密钥使用是否正确；指纹长度是否足以区分不同哈希；令牌是否可能被写进日志 / 异常；`SignatureExpired` 与 `BadSignature` 是否都被吞成“无效令牌”而非 500。
 
-执行证据：尚无。
+执行证据：新增 `ohmywod/tokens.py`（`generate_reset_token` / `verify_reset_token`，`URLSafeTimedSerializer` + `SECRET_KEY` + salt `ohmywod-password-reset`，载荷 `{uid, 密码哈希尾 12 字符}`，`BadData` 统一吞成“无效”）。四条路径单测在 `tests/test_password_reset.py`（往返、篡改 / 垃圾、过期、改密后失效）全绿；无新增数据库字段 / migration。
 
-### PWR-002 — 邮件发送基建与凭据管理（Flask-Mail + Gmail SMTP）
+### PWR-002 — 邮件发送基建与凭据管理（Flask-Mail + Resend SMTP）
 
-- 状态：`assessing`
+- 状态：`in_progress`
 - 优先级：`P1`
 - 波次：Wave 1
-- Drive AI：`unassigned`
+- Drive AI：Claude Code（Opus 4.8）
 - Review AI：`unassigned`
-- 依赖：用户开启 Gmail 两步验证并生成 App Password
-- 最后更新：2026-07-26
+- 依赖：用户在 Resend 生成 Sending API key，并把它作为 `smtp_password` 写入 sops
+- 最后更新：2026-07-27
 - 结论置信度：`recommended, external setup required`
+
+> 决策更新（2026-07-27）：用户直接采用 **Resend + 已验证域名 `wod.everbird.me`**，不走 Gmail 中转。发信方式定为 **Resend SMTP + Flask-Mail**（`smtp.resend.com:587`，user 固定为 `resend`，pass = API key），From = `Ohmywod <noreply@wod.everbird.me>`。原计划里“域名发件”本是 Wave 2 的 PWR-004，现提前并入本项。
 
 问题与影响：全仓无任何邮件能力，这是找回流程唯一必须新建的基建。发信凭据敏感，必须走既有 sops 密钥管理，不能进公开仓库。
 
@@ -155,21 +157,21 @@ Review 关注：`salt` 与密钥使用是否正确；指纹长度是否足以区
 - 封装一个 `send_reset_email(user, reset_url)` 辅助函数：纯文本正文即可（含链接与有效期说明），设发送超时，异常只记日志不外抛。
 - 注意 Gmail 限制：发件人被强制为该 Gmail 地址（可自定义显示名）；免费额度约 500 封/天，找回量级远够用；勿把 From 硬设成未验证的域名地址（会进垃圾箱）。
 
-完成判断：本地用真实 App Password 能成功发出一封测试邮件并收到；密码只存在于 sops，仓库 grep 无明文；发信失败路径不抛 500、只记日志。
+完成判断：本地用真实 API key 能成功发出一封测试邮件并收到；密码只存在于 sops / 本地 gitignore 配置，仓库 grep 无明文；发信失败路径不抛 500、只记日志。
 
-Review 关注：App Password 是否泄漏进日志 / 异常 / 模板 / 版本库；`MAIL_USE_TLS` / 端口组合是否正确；发送超时与失败兜底是否健壮；`MAIL_DEFAULT_SENDER` 是否与真实发件账号一致。
+Review 关注：API key 是否泄漏进日志 / 异常 / 模板 / 版本库；`MAIL_USE_TLS` / 端口组合是否正确；发送兜底是否健壮；`MAIL_DEFAULT_SENDER` 域名是否在 Resend 已验证。
 
-执行证据：尚无；等待用户开启 Gmail 2FA 并提供 App Password。
+执行证据：**代码侧已完成**——`requirements.txt` 加 `Flask-Mail==0.10.0`；`extensions.py` 加 `mail = Mail()`、`app.py` `mail.init_app`；`config.py` 与 dev 模板加入 Resend SMTP 配置（仅 `MAIL_PASSWORD = "<secret:smtp_password>"` 为密钥，复用 ops 已预留的 `SMTP_PASSWORD`）；`ohmywod/mailer.py` 的 `send_reset_email` 用现成 `TESTING`/`MAIL_SUPPRESS_SEND` 在测试中零发信，异常只记日志不外抛（单测 `record_messages` 验证）。**待用户完成**：① Resend 后台建 Sending API key；② 本地把它填进 gitignore 的 `ohmywod/local_config.py` 做一次真实发信联调；③ 生产把 `smtp_password` 写进 ohmywod-ops 的 sops 并在 ansible 的 `ohmywod_local_config.py.j2` 渲染 `MAIL_*`。
 
 ### PWR-003 — 找回密码前后端流程（路由 / 表单 / 页面 + 限流 + 防枚举）
 
-- 状态：`todo`
+- 状态：`done`
 - 优先级：`P1`
 - 波次：Wave 1
-- Drive AI：`unassigned`
+- Drive AI：Claude Code（Opus 4.8）
 - Review AI：`unassigned`
 - 依赖：PWR-001、PWR-002
-- 最后更新：2026-07-26
+- 最后更新：2026-07-27
 - 结论置信度：`recommended`
 
 问题与影响：把令牌与邮件基建接成用户可见的两步流程，并在入口处防住账号枚举与暴力尝试。
@@ -188,18 +190,20 @@ Review 关注：App Password 是否泄漏进日志 / 异常 / 模板 / 版本库
 
 Review 关注：防枚举是否彻底（文案 + 状态码 + 是否存在时序差异）；限流力度；重置页是否要求登录（应**不**要求，靠令牌授权）；`_external` 链接的 scheme / host 是否正确（HTTPS）；成功改密后是否顺带登出其它会话的必要性（可在待决策记录）。
 
-执行证据：尚无。
+执行证据：`views/frontend.py` 新增 `ForgotPasswordForm` / `ResetPasswordForm` 与 `/forgot-password`、`/reset-password/<token>` 两路由：找回入口对已注册 / 未注册邮箱返回同一句提示、仅命中真实用户才发信（防枚举）；重置页仅凭令牌授权、不要求登录；改密走现成 `set_password`（重哈希 + 失效旧链接）。限流按 IP + 邮箱维度（照抄 login 力度）；CSRF 由全局 `CSRFProtect` 覆盖。新增模板 `forgot_password.html` / `reset_password.html` / `emails/reset_password.txt`，并在 `login.html` 加“忘记密码？”入口。端到端 + 防枚举单测在 `tests/test_password_reset.py`（含 `record_messages` 断言未注册邮箱零发信）全绿。另加 `ProxyFix(x_proto=1)`（`app.py`）——nginx 已发 `X-Forwarded-Proto`，据此让 `url_for(_external=True)` 生产直出 https（同时修正 sitemap 的 http 外链），gunicorn 不可直连故只信一跳 proto、不动 `x_for`（限流 IP 仍取 `CF-Connecting-IP`）。
 
 ### PWR-004 — 发件域名与送达率升级（可选：Resend / 自有域名 + SPF/DKIM）
 
-- 状态：`assessing`
+- 状态：`done`（提前并入 PWR-002）
 - 优先级：`P2`
 - 波次：Wave 2
-- Drive AI：`unassigned`
+- Drive AI：Claude Code（Opus 4.8）
 - Review AI：`unassigned`
 - 依赖：PWR-003 上线；用户拥有域名并可改 DNS
-- 最后更新：2026-07-26
+- 最后更新：2026-07-27
 - 结论置信度：`optional`
+
+> 决策更新（2026-07-27）：用户一开始就选了 Resend 并已验证 `wod.everbird.me` 域名（DNS 里 Resend 的 SPF/DKIM 记录已配好），发件人直接用 `noreply@wod.everbird.me`。本项目标（域名发件 + SPF/DKIM）已随 PWR-002 一并达成，无需再作为独立的 Wave 2 升级。剩余只差用户完成一次真实发信 + 查看送达（含垃圾箱）作为最终验证。
 
 问题与影响：Gmail SMTP 能用但发件人是站长私人 gmail，暴露隐私且不够“产品化”；且无法做本域的 SPF/DKIM/DMARC 对齐。若在意可升级到事务邮件服务商，用 `noreply@<域名>` 发信、送达率更好。
 
@@ -276,3 +280,23 @@ Review 关注：DNS / DKIM 是否正确；是否引入了不必要的新依赖�
 - 发生的问题：无
 - 剩余风险：PWR-002 依赖用户开启 Gmail 2FA 并提供 App Password（站外事项，`assessing`）；找回可靠性隐含依赖“注册邮箱属实”，而注册邮箱验证本文不含（第 5 节待决策 5）
 - 下一步：确认草案后先做 PWR-001（纯代码、可先行并补测试），并请用户准备 Gmail App Password 以解锁 PWR-002
+
+### WAVE-20260727-01 — Wave 1 找回流程实现（Resend SMTP）
+
+- 日期：2026-07-27
+- Drive AI：Claude Code（Opus 4.8）
+- Review AI：`unassigned`
+- 关联事项：PWR-001、PWR-002、PWR-003、PWR-004
+- 状态变化：PWR-001 `todo` -> `done`；PWR-003 `todo` -> `done`；PWR-002 `assessing` -> `in_progress`；PWR-004 `assessing` -> `done`（并入 PWR-002）
+- 改动：
+  - 新增 `ohmywod/tokens.py`（无状态一次性重置令牌）、`ohmywod/mailer.py`（`send_reset_email`，best-effort、异常只记日志）
+  - `ohmywod/extensions.py` 加 `mail = Mail()`；`ohmywod/app.py` `mail.init_app` + `ProxyFix(x_proto=1)`
+  - `ohmywod/config.py` 与 `configs/templates/ohmywod_local_config.py.template` 加 Resend SMTP 配置（`MAIL_*`、`PREFERRED_URL_SCHEME`、`PASSWORD_RESET_TOKEN_MAX_AGE`），仅 `MAIL_PASSWORD` 为密钥（复用 ops 预留的 `SMTP_PASSWORD`）
+  - `ohmywod/views/frontend.py` 加 `/forgot-password`、`/reset-password/<token>` 两路由与对应表单（限流 + 防枚举）
+  - 模板 `forgot_password.html` / `reset_password.html` / `emails/reset_password.txt`；`login.html` 加“忘记密码？”入口
+  - `requirements.txt` 加 `Flask-Mail==0.10.0`；`tests/conftest.py` 加 `MAIL_SUPPRESS_SEND`；新增 `tests/test_password_reset.py`（8 例）
+- 关键取舍：决策从 Gmail 改为 **Resend + 已验证域名 `wod.everbird.me`**，域名发件（原 Wave 2 PWR-004）提前并入 PWR-002；令牌坚持无状态、不动库；补 `ProxyFix` 让 `_external` 生产直出 https（顺带修 sitemap），且只信一跳 proto、不动 `x_for` 以保持 `CF-Connecting-IP` 限流不变
+- 验证：`pytest` 全绿（112 passed，其中新增 8 例覆盖令牌四路径、找回防枚举、端到端改密）；`MAIL_SUPPRESS_SEND` 保证测试零真实发信
+- 发生的问题：无
+- 剩余风险：尚未做**真实发信联调**（需用户的 Resend API key）；生产 `MAIL_*` 尚未接进 ohmywod-ops 的 sops + ansible j2；注册邮箱未验证的老问题仍在（第 5 节待决策 5）
+- 下一步：用户建 Resend Sending API key → 填本地 `local_config.py` 联调一次真实找回 → 将 `smtp_password` 写入 sops 并在 ansible `ohmywod_local_config.py.j2` 渲染 `MAIL_*` 后部署

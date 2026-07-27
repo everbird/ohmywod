@@ -43,6 +43,16 @@ class DefaultConfig(object):
     FLASK_ADMIN_USERNAME = "<secret:flask_admin_username>"
     FLASK_ADMIN_PASSWD = "<secret:flask_admin_passwd>"
 
+    # --- Mail (Resend SMTP; only MAIL_PASSWORD is secret) ---
+    MAIL_SERVER = "smtp.resend.com"
+    MAIL_PORT = 587
+    MAIL_USE_TLS = True
+    MAIL_USERNAME = "resend"
+    MAIL_PASSWORD = "<secret:smtp_password>"
+    MAIL_DEFAULT_SENDER = ("Ohmywod", "noreply@wod.everbird.me")
+    PREFERRED_URL_SCHEME = "https"
+    PASSWORD_RESET_TOKEN_MAX_AGE = 1800
+
     # --- Redis Store ---
     REDIS_HOST = '$REDIS_STORE_HOST'
     REDIS_PORT = $REDIS_STORE_PORT
