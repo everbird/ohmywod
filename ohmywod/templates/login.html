@@ -55,13 +55,13 @@
           {% for error in form.password.errors %}
           <div class="invalid-feedback">{{ error }}</div>
           {% endfor %}
+          <a class="field-hint-link" href="{{ url_for('frontend.forgot_password') }}">忘记密码？</a>
         </div>
       </div>
     </section>
 
     <div class="form-actions auth-actions">
       <a class="btn btn-soft" href="{{ url_for('frontend.register') }}">注册账号</a>
-      <a class="btn btn-link" href="{{ url_for('frontend.forgot_password') }}">忘记密码？</a>
       {{ form.submit(value="登录", class="btn btn-primary") }}
     </div>
   </form>

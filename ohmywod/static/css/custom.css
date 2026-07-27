@@ -1318,6 +1318,15 @@ a:focus {
     margin: 0 auto;
 }
 
+/* Cap the hero to the form width so the two stacked cards align edge-to-edge
+   (the page container is wider; the form is intentionally narrow). Keep in
+   sync with .auth-form's max-width. */
+.auth-hero {
+    max-width: 760px;
+    width: 100%;
+    margin: 0 auto;
+}
+
 .form-grid-single {
     grid-template-columns: 1fr;
 }
@@ -1328,6 +1337,23 @@ a:focus {
 
 .auth-actions {
     align-items: center;
+}
+
+/* Small muted helper link under a field (e.g. login "forgot password"). */
+.field-hint-link {
+    display: block;
+    width: fit-content;
+    margin-left: auto;
+    margin-top: 0.45rem;
+    font-size: 0.85rem;
+    color: var(--app-muted);
+    text-decoration: none;
+}
+
+.field-hint-link:hover,
+.field-hint-link:focus {
+    color: var(--app-link);
+    text-decoration: underline;
 }
 
 @media (max-width: 767.98px) {
