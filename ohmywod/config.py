@@ -52,6 +52,22 @@ class DefaultConfig(object):
     # Reset-token lifetime in seconds (30 min).
     PASSWORD_RESET_TOKEN_MAX_AGE = 1800
 
+    # --- Afdian (爱发电) read-only sponsor wall (AFD-002) ---
+    # Credentials for the read-only query-sponsor API. Both default empty so the
+    # sponsor wall stays inert until provisioned; ohmywod/afdian.py treats an
+    # empty (or unrendered "<secret:...>") value as "not configured" and degrades.
+    # Production values are rendered by the ohmywod-ops app role:
+    # AFDIAN_USER_ID (non-secret) from group_vars vars.yml, AFDIAN_TOKEN (secret)
+    # from secrets.sops.yaml. This class is only the schema reference — runtime
+    # uses local_config.py, so populating it here does NOT reach any environment.
+    AFDIAN_USER_ID = ""
+    AFDIAN_TOKEN = ""
+    # Sponsor-wall cache freshness (AFD-003), seconds. Balances display freshness
+    # against source-site load; afdian.get_sponsors falls back to this default
+    # (3600 = 1h) when unset. A long-lived "last good" copy is kept separately so
+    # a transient Afdian failure degrades to the previous result, not an empty wall.
+    AFDIAN_CACHE_TTL = 3600
+
 
 # --- Afdian (爱发电) support entrance (AFD-001) ---
 # Single source of truth for the sponsorship page URL. Kept as a module-level

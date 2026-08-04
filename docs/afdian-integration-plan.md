@@ -6,8 +6,8 @@ source_of_truth_for: "爱发电站内技术集成（入口按钮接线、开放 
 language: zh-CN
 created_at: "2026-07-25"
 last_updated: "2026-08-04"
-review_commit: "5a6a93f"
-review_worktree: "clean"
+review_commit: "b1728f5"
+review_worktree: "dirty (AFD-001 review nit: custom.css text-bright fallback)"
 next_item_id: "AFD-005"
 ---
 
@@ -112,7 +112,7 @@ next_item_id: "AFD-005"
 - 优先级：`P1`
 - 波次：Wave 1
 - Drive AI：`Claude Code（Opus 4.8）`
-- Review AI：`unassigned`
+- Review AI：`Claude Code（Opus 4.8）`
 - 依赖：定位与文案对齐 maintenance-support-plan SUP-004（不阻塞技术接线）
 - 最后更新：2026-08-04
 - 结论置信度：`recommended`
@@ -139,17 +139,18 @@ Review 关注：小屏布局、外链行为、无障碍文本；确认与 SUP-00
 - 文案：改为“核心功能始终免费。如果你愿意让站点继续维持，可以在爱发电支持，或通过微信打赏……”，明确不暗示支持可换取功能，对齐 SUP-004。
 - 样式：`ohmywod/static/css/custom.css` 新增 `.donate-afdian-btn`（`inline-flex` 按钮，含 hover/focus 态，复用 `--app-*` 变量），桌面与移动端均可点。
 - 验证：本地补齐 `.venv` 依赖后整机启动（supervisord + gunicorn，端口 8013），`GET /` 返回 200，首页“支持作者”面板实际渲染出 `href="https://ifdian.net/a/everbird"` 且带 `target="_blank" rel="noopener"`，确认 context processor 注入在真实 Flask config 下生效。真实浏览器小屏视觉与明暗主题对比度仍留待人工复核。
+- Review（2026-08-04，Claude Code Opus 4.8）：复核已提交代码 `b1728f5`。单点配置（模块常量 + context processor）、外链 `target/rel`（爱发电按钮与 GitHub 均补 `rel="noopener"`）、SUP-004 文案、键盘可聚焦与图标+可见文字的无障碍均通过。确认全站为**纯暗色主题**（无 `prefers-color-scheme` / `data-theme` 切换），故“明暗对比”实为单主题对比，按钮复用 `--app-border` / `--app-surface-hover`，与全站一致。**唯一瑕疵**：`.donate-afdian-btn` 的 `color` 用了全站未定义的 `--app-text-bright` 且无兜底，回退到继承色（可读但非预期亮白）；已对齐 `custom.css` 既有写法（line 1651）改为 `var(--app-text-bright, #fff)`。此改动尚未提交（工作树）。
 
 ### AFD-002 — 接入爱发电开放 API 与凭据管理
 
-- 状态：`assessing`
+- 状态：`done`
 - 优先级：`P2`
 - 波次：Wave 2
-- Drive AI：`unassigned`
+- Drive AI：`Claude Code（Opus 4.8）`
 - Review AI：`unassigned`
-- 依赖：AFD-001；用户在爱发电后台获取 `user_id` / `token`
-- 最后更新：2026-07-25
-- 结论置信度：`recommended, external setup required`
+- 依赖：AFD-001；用户已在爱发电后台提供 `user_id` / `token`（已 provision）
+- 最后更新：2026-08-04
+- 结论置信度：`recommended`
 
 问题与影响：赞助者墙需要只读调用 `query-sponsor`，其鉴权依赖 `user_id + token` 与 MD5 签名。token 是敏感凭据，必须走既有密钥管理，不能进公开 app 仓。
 
@@ -166,17 +167,25 @@ Review 关注：小屏布局、外链行为、无障碍文本；确认与 SUP-00
 
 Review 关注：token 是否泄漏进日志 / 异常信息 / 模板；签名与 `ts` 实现是否符合当时爱发电文档；超时与失败路径是否健壮。
 
-执行证据：尚无；等待用户提供 / 确认 `user_id` 与 `token`。
+执行证据（scaffold，2026-08-04；待真实凭据收尾）：
+
+- 只读客户端：新增 `ohmywod/afdian.py`，仅用标准库（`urllib` + `hashlib` + `json`，**不新增依赖**）。`sign()` 实现 `md5(token+"params"+params+"ts"+ts+"user_id"+user_id)`；`query_sponsor()` POST `https://afdian.com/api/open/query-sponsor`，设 `DEFAULT_TIMEOUT=5`，任何网络/HTTP/解码/`ec!=200` 失败都翻译成 `AfdianError` 且**消息不含 token**（只带异常类名 / 安全的 `em`）；`fetch_all_sponsors()` 分页拉取、受 `MAX_PAGES=20` 上界保护。
+- 凭据来源与降级：`_credentials()` 从 Flask config 读 `AFDIAN_USER_ID` / `AFDIAN_TOKEN`；空值或未渲染的 `"<secret:..."` 前缀一律视为"未配置"→ `fetch_all_sponsors()` 返回 `[]`、`is_configured()` 为 `False`，绝不抛错。dev/未配置环境天然降级。
+- config 契约：`ohmywod/config.py` `DefaultConfig` 加 `AFDIAN_USER_ID` / `AFDIAN_TOKEN`（均缺省空串，仅作 schema 参考——运行时用 `local_config.py`，见 AFD-001 教训）。
+- ops 凭据管理（`ohmywod-ops`）：`ohmywod_local_config.py.j2` 加 `AFDIAN_USER_ID = "{{ afdian_user_id | default('') }}"` 与 `AFDIAN_TOKEN = "{{ afdian_token | default('') }}"`（未 provision 时渲染成空串、不 break、不进 secrets 断言）；`secrets.sops.yaml.example` 加 `afdian_token`（密钥，可选）；`vars.yml` 加 `afdian_user_id`（非密钥）。真实 token 由用户经 sops 写入 `secrets.sops.yaml`、`user_id` 写入 `vars.yml`（站外步骤，本文不代为操作）。
+- 验证：`tests/test_afdian.py` 8 项全绿——签名对已知向量、未配置→空、占位符 `"<secret:..."` 不当真值、分页、`MAX_PAGES` 上界、以及两条错误路径断言**不泄漏 token**；全仓 120 项测试通过；`import ohmywod.afdian` 干净；Jinja 渲染验证 `default('')` 在未 provision / 已 provision 两态都正确。仓库 grep 无明文 token（凭据只经 sops）。
+- 真实凭据收尾（2026-08-04，已转 `done`）：用户经 sops 写入 `afdian_token`、`vars.yml` 填 `afdian_user_id`（本机 `sops -d` 解密通过、两者均在）。用真实凭据实调 `https://afdian.com/api/open/query-sponsor` **成功**：HTTP 200、`ec=200`、`em=sponsor`、`data` 含 `list/total_count/total_page`，当前 `total_count=0`（账号暂无赞助者，属正常空态）。签名口径 `md5(token+"params"+params+"ts"+ts+"user_id"+user_id)` 经真实服务端校验通过。经完整客户端路径 `is_configured()=True`、`fetch_all_sponsors()=[]`（空态不报错）。token 全程只在 sops / 进程环境变量，未落任何文件、未入日志/异常。
+- **实调发现并修复的真实缺陷（UA/1010）**：`afdian.com` 在 Cloudflare 后，默认 `Python-urllib` UA 会被 **HTTP 403 error code 1010**（浏览器签名封禁）挡下。客户端已加浏览器 `User-Agent`（`ohmywod/afdian.py` `USER_AGENT` 常量 + 请求头），并加 `Accept: application/json`。另确认正确 host 是 `afdian.com`（`afdian.net` 已不解析）。新增 `tests/test_afdian.py::test_query_sponsor_sends_browser_user_agent` 守此回归。全仓 121 项测试通过。
 
 ### AFD-003 — query-sponsor 拉取与缓存层（以爱发电为真值，不写 SQLite）
 
-- 状态：`todo`
+- 状态：`done`
 - 优先级：`P2`
 - 波次：Wave 2
-- Drive AI：`unassigned`
+- Drive AI：`Claude Code（Opus 4.8）`
 - Review AI：`unassigned`
 - 依赖：AFD-002
-- 最后更新：2026-07-25
+- 最后更新：2026-08-04
 - 结论置信度：`recommended`
 
 问题与影响：直接每次请求都打爱发电 API 会慢且脆。需要一层缓存，同时坚持“爱发电是唯一真值、本地只缓存”的边界，避免污染 SQLite / DR 链。
@@ -194,17 +203,24 @@ Review 关注：token 是否泄漏进日志 / 异常信息 / 模板；签名与 
 
 Review 关注：缓存键与失效行为；故障注入下的降级路径；确认没有任何写库副作用潜入 DR / litestream 链。
 
-执行证据：尚无。
+执行证据（2026-08-04）：
+
+- 缓存包装：`ohmywod/afdian.py` `get_sponsors()` 用现成 `cache_get` / `cache_set`（`ohmywod/extensions.py`，本就 fail-soft）。命中 `afdian_sponsors_fresh` 直接返回；未命中调 `fetch_all_sponsors()` 并同时回填 `fresh`（TTL）与 `last_good`（长存 7 天）两份。
+- TTL：`AFDIAN_CACHE_TTL`（`config.py` 缺省 3600=1h，可覆盖）控制 `fresh` 新鲜度，把展示新鲜度与源站压力平衡好。
+- 故障降级：源站不可达 / `AfdianError` 时，返回 `last_good`（上次成功结果），无则返回 `[]`；只 `logger.warning`（仅异常类名），**绝不抛错、绝不阻塞页面渲染**。未配置直接返回 `[]`。
+- 边界坚守：**不落 SQLite**、无任何赞助相关模型 / migration / 表，数据只活在 Redis 缓存；不进 litestream / DR 链。
+- 验证：`tests/test_afdian.py` 新增 4 项——未配置→空、miss→拉取+回填且二次命中不再拉取、故障→降级到 `last_good`、故障且无缓存→空；`test_afdian` 共 13 项全绿。缓存后端无关（测试用 `simple`，生产用 `RedisCache`，同走 `cache_get/set`）。
+- 剩余：真实赞助者数据形状（`total_page` 分页、档位字段）在账号有赞助者前未见实样，属 AFD-004 展示映射的关注点，不影响缓存机制成立。
 
 ### AFD-004 — 赞助者墙展示与隐私 / 授权
 
-- 状态：`assessing`
+- 状态：`done`
 - 优先级：`P2`
 - 波次：Wave 2
-- Drive AI：`unassigned`
+- Drive AI：`Claude Code（Opus 4.8）`
 - Review AI：`unassigned`
 - 依赖：AFD-003
-- 最后更新：2026-07-25
+- 最后更新：2026-08-04
 - 结论置信度：`optional`
 
 问题与影响：赞助者墙是给支持者的公开致谢，但涉及第三方个人信息展示，需要在“表达感谢”与“保护隐私”之间取一个克制的默认。
@@ -222,9 +238,21 @@ Review 关注：缓存键与失效行为；故障注入下的降级路径；确�
 
 Review 关注：是否泄露 PII；匿名默认是否稳妥；小屏展示与空态；文案是否让人误以为支持可换取功能。
 
-执行证据：尚无。
+用户拍板（2026-08-04，回答待决策 #3/#4/#6）：**仅展示昵称**（不显档位、不显金额）；**显示昵称、缺失/匿名者归"匿名支持者"**；放**独立致谢页**。#5（是否按档位过滤）未单列，当前展示全部发电者、不过滤。
+
+执行证据（2026-08-04）：
+
+- 展示映射：`ohmywod/afdian.py` `sponsor_display_names()` 从 `get_sponsors()`（AFD-003 缓存）取昵称，隐私优先——**只出 `user.name`**，不出金额 / `user_id` / 头像；空白或缺失昵称、以及畸形条目一律归 `ANONYMOUS_NAME="匿名支持者"`，不抛错；未配置 / 空源→`[]`。
+- 独立致谢页：`ohmywod/views/frontend.py` 加 `GET /thanks`（`thanks_page`），渲染 `ohmywod/templates/thanks.html`（继承 `base.html`）。有数据出 `.sponsor-wall` 昵称 chip；空态出克制文案（"暂时还没有赞助者…"）；页脚说明"仅展示昵称、不显金额、缺失昵称显示为匿名支持者"。文案不暗示支持可换功能，对齐 SUP-004/006。
+- 入口：左侧全局侧栏导航加"赞助者致谢"项（`base.html`，`heart` 图标，`url_for('frontend.thanks_page')`，全站可达）；首页"支持作者"面板另加"查看赞助者致谢 →"链接。
+- 隐私 / 安全：第三方昵称经 Jinja 自动转义（测试断言 `<script>` 被转义、不落原样），无反查身份信息、无金额、无持续客服义务。
+- 样式：`custom.css` 加 `.sponsor-wall` / `.sponsor-chip`（圆角 chip，flex wrap，`word-break`）/ `.sponsor-empty` / `.sponsor-note` / `.donate-thanks-link`，复用 `--app-*` 变量。
+- 验证：`tests/test_afdian.py` 加 4 项（映射+匿名化、空、`/thanks` 空态 200、`/thanks` 列表且 XSS 转义），`test_afdian` 共 17 项、全仓 129 项测试全绿；真实 Flask 路由渲染 `/thanks` 实测出正确 chip（`Alice` / `匿名支持者` / `梦想家`）与首页入口链接。
+- 剩余：真实浏览器小屏视觉与明暗（纯暗色单主题）观感未人工验收；账号当前 0 赞助者，线上先呈空态（非缺陷）；真实赞助者数据字段形状未见实样，若 afdian `user.name` 字段路径与预期不符需在有数据时微调（已对畸形条目容错）。
 
 ## 5. 待决策清单
+
+> 状态（2026-08-04）：#2 已定为**做组合 ②**并已落地 AFD-002~004；#3/#4/#6 已由用户回答（见 AFD-004）；#5 当前不过滤、展示全部；#1 已在 AFD-001 定为按钮。以下保留原始清单供追溯。
 
 不阻塞 Wave 1，可在处理对应事项时回答：
 
@@ -296,3 +324,73 @@ Review 关注：是否泄露 PII；匿名默认是否稳妥；小屏展示与空
 - 发生的问题：初版把 `AFDIAN_URL` 放进 `ohmywod/config.py` 的 `DefaultConfig` 类，误以为模板可经 `config['AFDIAN_URL']` 读到；起本地环境时发现本地/生产实际用 `local_config.py` 的 `DefaultConfig`（整体替换而非继承），该类属性根本不加载，会导致首页 `KeyError`。改为模块常量 + context processor 后整机验证通过。教训：`ohmywod/config.py` 的 `DefaultConfig` 在有 `local_config` 时不参与运行，跨环境常量不能挂在它上面。
 - 剩余风险：未在真实浏览器 / 小屏做视觉与无障碍复核；`.donate-afdian-btn` 的明暗主题对比度未实测。
 - 下一步：由 Review AI 做小屏布局 / 外链行为 / 无障碍复核，或直接部署后人工验收；组合 ②（AFD-002~004）视是否需要公开致谢再决定，AFD-002 仍等用户提供 `user_id` / `token`。
+
+### WAVE-20260804-02 — AFD-001 Review 复核与小瑕疵修正
+
+- 日期：2026-08-04
+- Drive AI：无
+- Review AI：Claude Code（Opus 4.8）
+- 关联事项：AFD-001
+- 状态变化：AFD-001 保持 `done`；Review AI 由 `unassigned` -> `Claude Code（Opus 4.8）`
+- 改动：复核已提交代码 `b1728f5`（config 单点、context processor、landing 外链与文案、CSS 按钮）。仅 CSS 一处修正：`ohmywod/static/css/custom.css` 的 `.donate-afdian-btn` 把 `color: var(--app-text-bright)` 改为带兜底的 `var(--app-text-bright, #fff)`，对齐同文件既有写法（line 1651）。未触碰 API / token / 站外账号。
+- 关键取舍：站点为**纯暗色单主题**（无 `prefers-color-scheme` / `data-theme` 切换），故原计划的“明暗对比度”实为单主题对比；按钮复用 `--app-border` / `--app-surface-hover`，与全站一致，不引入新主题变量。
+- 验证：静态代码复核 + 变量定义追踪（确认 `--app-text-bright` 全站未定义，故补兜底）。未起服务（本波仅 CSS 兜底值变更，无逻辑分支）。改动未提交（保留在工作树）。
+- 发生的问题：无
+- 剩余风险：真实浏览器小屏视觉仍未人工验收（纯暗色下按钮 hover/focus 观感）；本波 CSS 兜底改动未提交、未部署。
+- 下一步：等用户决定是否做组合 ②（赞助者墙）。若做，AFD-002 需用户在爱发电后台提供 `user_id` / `token`；若不做，AFD-002~004 整体标 `cancelled`，Wave 1 独立成立。
+
+### WAVE-20260804-03 — AFD-002 只读客户端与凭据管理 scaffold
+
+- 日期：2026-08-04
+- Drive AI：Claude Code（Opus 4.8）
+- Review AI：`unassigned`
+- 关联事项：AFD-002
+- 状态变化：AFD-002 `assessing` -> `in_progress`（用户拍板做组合 ②、承诺提供凭据）
+- 改动：app 端新增 `ohmywod/afdian.py`（纯标准库只读客户端：`sign` / `query_sponsor` / `fetch_all_sponsors` / `is_configured`，超时 + `AfdianError` 兜底 + token 不入异常消息）与 `tests/test_afdian.py`（8 项）；`ohmywod/config.py` `DefaultConfig` 加 `AFDIAN_USER_ID` / `AFDIAN_TOKEN` 空缺省作 schema 参考。ops 端（`ohmywod-ops`）`ohmywod_local_config.py.j2` 加两行 `| default('')` 渲染的 AFDIAN 字段、`secrets.sops.yaml.example` 加可选 `afdian_token`、`vars.yml` 加非密钥 `afdian_user_id`。未写 SQLite、未加依赖、未引入 webhook、仓库无明文 token。
+- 关键取舍：HTTP 用标准库 `urllib` 而非新引 `requests`（`requests` 非现有依赖，为一个 P2 可选功能不值得扩依赖面）。凭据接入走 ops 的 j2 独立全量类而非 `config.py`（生产 `local_config.py` 由 j2 渲染、整体取代 `config.py`；AFD-001 的教训）。所有 AFDIAN 字段 `default('')` + app 侧"空/占位符=未配置降级"，使该功能对生产**可选**：未 provision 不 break 渲染、不进 secrets 硬断言、页面返回空赞助者墙而非 500。
+- 验证：`tests/test_afdian.py` 8 项 + 全仓 120 项测试全绿（`.venv/bin/python -m pytest`）；`import ohmywod.afdian` 干净；两条错误路径断言异常消息不含 token；`sign()` 对独立预计算的 md5 向量匹配；Jinja `default('')` 在 provision / 未 provision 两态渲染均正确。无网络调用（`urlopen` 被 monkeypatch）。改动分两仓，尚未提交。
+- 发生的问题：无
+- 剩余风险：**未用真实凭据实调一次 `query-sponsor`**——签名字段顺序 / `ts` 口径 / 端点是否与当时爱发电文档完全一致，须在用户 provision 后核实（现按通行的 `md5(token+"params"+params+"ts"+ts+"user_id"+user_id)` 实现）。AFD-003 缓存层与 AFD-004 展示 / 隐私尚未动。
+- 下一步：用户在爱发电后台取 `user_id` / `token`，`user_id` 写 `vars.yml`、`token` 经 sops 写 `secrets.sops.yaml`；随后实调一次核签名并把 AFD-002 转 `done`。之后 AFD-003（Redis 缓存层，需定 TTL）与 AFD-004（展示粒度 / 匿名策略，待决策 #3~#6）。
+
+### WAVE-20260804-04 — AFD-002 真实凭据实调收尾 + Cloudflare UA 修复
+
+- 日期：2026-08-04
+- Drive AI：Claude Code（Opus 4.8）
+- Review AI：`unassigned`
+- 关联事项：AFD-002
+- 状态变化：AFD-002 `in_progress` -> `done`
+- 改动：用户 provision 凭据后实调 `query-sponsor` 收尾。发现 `afdian.com` 在 Cloudflare 后默认 `Python-urllib` UA 触发 **HTTP 403 error code 1010**；`ohmywod/afdian.py` 加 `USER_AGENT` 常量与请求头（含 `Accept: application/json`）修复。`tests/test_afdian.py` 加 `test_query_sponsor_sends_browser_user_agent`（共 9 项）。ops 端无新增改动（凭据由用户经 sops / vars.yml 写入，不入本仓）。
+- 关键取舍：正确 API host 为 `afdian.com`（`afdian.net` 已不解析，`ifdian.net` 也在同一 Cloudflare 后）。UA 用通用桌面 Chrome 串即可绕过 1010，不需要更复杂的反爬处理（只读、低频）。
+- 验证：真实凭据实调 `https://afdian.com/api/open/query-sponsor` 成功 —— HTTP 200、`ec=200`、`em=sponsor`、`data` 含 `list/total_count/total_page`（当前 `total_count=0` 空态）；签名 `md5(token+"params"+params+"ts"+ts+"user_id"+user_id)` 经服务端校验通过；完整客户端路径 `is_configured()=True`、`fetch_all_sponsors()=[]` 不报错。`tests/test_afdian.py` 9 项 + 全仓 121 项测试全绿。token 只在 sops / 进程环境变量，未落文件、未入日志/异常。
+- 发生的问题：首次实调对 `afdian.com` 与 `ifdian.net` 均 403 error code 1010（Cloudflare 按 UA 封禁），`afdian.net` DNS 不解析。加浏览器 UA 后 200。
+- 剩余风险：账号当前 `total_count=0`，赞助者墙将呈空态（非缺陷）；`query-sponsor` 分页字段（`total_page` 等）在有真实赞助者时的形状尚未见实样，AFD-004 展示映射需在有数据时再核。
+- 下一步：AFD-003（Redis 缓存层 `get_sponsors()`，需你定 TTL，计划建议 ~1 小时）；AFD-004（展示粒度 / 匿名策略，待决策 #3~#6）。
+
+### WAVE-20260804-05 — AFD-003 只读缓存层（Redis 缓存，不写 SQLite）
+
+- 日期：2026-08-04
+- Drive AI：Claude Code（Opus 4.8）
+- Review AI：`unassigned`
+- 关联事项：AFD-003
+- 状态变化：AFD-003 `todo` -> `done`
+- 改动：`ohmywod/afdian.py` 加 `get_sponsors()`（复用 `extensions.cache_get/cache_set`）：命中 `fresh` 直接返回；miss 拉取并回填 `fresh`（TTL）+ `last_good`（长存 7 天）；源站故障降级到 `last_good`、无则 `[]`，只 `logger.warning`、绝不抛错；未配置→`[]`。`config.py` 加 `AFDIAN_CACHE_TTL=3600`（可覆盖）。`tests/test_afdian.py` 加 4 项（共 13）。未写 SQLite、无 model/migration、不进 DR 链。
+- 关键取舍：TTL 用计划预先认可的 1h 缺省（`AFDIAN_CACHE_TTL` 可调），不再单独等用户拍板即可推进。双键设计（`fresh` 短 TTL + `last_good` 长存）实现"源站抖动降级到上次结果而非空墙"，比单键更稳。缓存逻辑放 `afdian.py` 而非视图层，展示层（AFD-004）只调 `get_sponsors()`。
+- 验证：`tests/test_afdian.py` 13 项全绿（未配置→空、miss→拉取+回填、二次命中不再拉取、故障→`last_good`、故障且无缓存→空）；缓存后端无关（测试 `simple`，生产 `RedisCache`）。
+- 发生的问题：无
+- 剩余风险：真实赞助者数据的字段形状未见实样（账号当前 0 赞助者），影响 AFD-004 展示映射而非缓存机制；生产真实 Redis 命中未用真数据观测（机制已由测试覆盖）。
+- 下一步：仅剩 AFD-004（展示 + 隐私）——需你定待决策 #3~#6（昵称/档位、是否展金额、匿名默认、是否按档位过滤、独立页还是并入支持页）。
+
+### WAVE-20260804-06 — AFD-004 独立赞助者致谢页（仅昵称，隐私优先）
+
+- 日期：2026-08-04
+- Drive AI：Claude Code（Opus 4.8）
+- Review AI：`unassigned`
+- 关联事项：AFD-004（Wave 2 收尾）
+- 状态变化：AFD-004 `assessing` -> `done`
+- 改动：`ohmywod/afdian.py` 加 `sponsor_display_names()`（隐私优先：仅 `user.name`、空/缺失/畸形→`ANONYMOUS_NAME`"匿名支持者"）；`ohmywod/views/frontend.py` 加 `GET /thanks`；新增模板 `ohmywod/templates/thanks.html`（昵称 chip 墙 + 空态 + 克制文案）；`landing.html` 支持面板加致谢页入口链接；`custom.css` 加 `.sponsor-wall`/`.sponsor-chip`/`.sponsor-empty`/`.sponsor-note`/`.donate-thanks-link`。未写 SQLite、未新增路由外副作用。
+- 关键取舍：按用户决策——**仅昵称**（不显档位/金额，最克制、隐私风险最低，对齐 SUP-006 与 maintenance-support-plan"不显精确金额"）；**显示昵称、匿名/缺失归"匿名支持者"**；**独立致谢页** `/thanks`（而非支持页区块），并从首页支持面板给入口。#5 不做档位过滤，展示全部发电者。第三方昵称靠 Jinja autoescape 防 XSS（加断言守回归）。
+- 验证：`tests/test_afdian.py` 加 4 项（映射+匿名化、空、`/thanks` 空态 200、`/thanks` 列表且 `<script>` 被转义），共 17 项；全仓 129 项测试全绿；真实 Flask 路由渲染 `/thanks` 出正确 chip（`Alice`/`匿名支持者`/`梦想家`）与首页入口链接。
+- 发生的问题：无
+- 剩余风险：真实浏览器小屏 / 纯暗色观感未人工验收；账号当前 0 赞助者→线上先空态（非缺陷）；`user.name` 真实字段路径若与预期不符需在有数据时微调（已对畸形条目容错）。整个 Wave 2 改动仍在分支 `afdian-wave2`（app）/`afdian-wave2`（ops），未 push、未部署。
+- 下一步：Wave 2（AFD-001~004）全部 `done`，爱发电"用起来了"。待你：①是否 push 两个分支并部署（app 分支 + ops 已含凭据字段渲染）；②部署后人工验收 `/thanks` 小屏视觉；③账号有赞助者后核 `user.name` 实样。
