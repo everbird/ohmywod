@@ -6,8 +6,8 @@ source_of_truth_for: "爱发电站内技术集成（入口按钮接线、开放 
 language: zh-CN
 created_at: "2026-07-25"
 last_updated: "2026-08-04"
-review_commit: "5a6a93f"
-review_worktree: "clean"
+review_commit: "b1728f5"
+review_worktree: "dirty (AFD-001 review nit: custom.css text-bright fallback)"
 next_item_id: "AFD-005"
 ---
 
@@ -112,7 +112,7 @@ next_item_id: "AFD-005"
 - 优先级：`P1`
 - 波次：Wave 1
 - Drive AI：`Claude Code（Opus 4.8）`
-- Review AI：`unassigned`
+- Review AI：`Claude Code（Opus 4.8）`
 - 依赖：定位与文案对齐 maintenance-support-plan SUP-004（不阻塞技术接线）
 - 最后更新：2026-08-04
 - 结论置信度：`recommended`
@@ -139,6 +139,7 @@ Review 关注：小屏布局、外链行为、无障碍文本；确认与 SUP-00
 - 文案：改为“核心功能始终免费。如果你愿意让站点继续维持，可以在爱发电支持，或通过微信打赏……”，明确不暗示支持可换取功能，对齐 SUP-004。
 - 样式：`ohmywod/static/css/custom.css` 新增 `.donate-afdian-btn`（`inline-flex` 按钮，含 hover/focus 态，复用 `--app-*` 变量），桌面与移动端均可点。
 - 验证：本地补齐 `.venv` 依赖后整机启动（supervisord + gunicorn，端口 8013），`GET /` 返回 200，首页“支持作者”面板实际渲染出 `href="https://ifdian.net/a/everbird"` 且带 `target="_blank" rel="noopener"`，确认 context processor 注入在真实 Flask config 下生效。真实浏览器小屏视觉与明暗主题对比度仍留待人工复核。
+- Review（2026-08-04，Claude Code Opus 4.8）：复核已提交代码 `b1728f5`。单点配置（模块常量 + context processor）、外链 `target/rel`（爱发电按钮与 GitHub 均补 `rel="noopener"`）、SUP-004 文案、键盘可聚焦与图标+可见文字的无障碍均通过。确认全站为**纯暗色主题**（无 `prefers-color-scheme` / `data-theme` 切换），故“明暗对比”实为单主题对比，按钮复用 `--app-border` / `--app-surface-hover`，与全站一致。**唯一瑕疵**：`.donate-afdian-btn` 的 `color` 用了全站未定义的 `--app-text-bright` 且无兜底，回退到继承色（可读但非预期亮白）；已对齐 `custom.css` 既有写法（line 1651）改为 `var(--app-text-bright, #fff)`。此改动尚未提交（工作树）。
 
 ### AFD-002 — 接入爱发电开放 API 与凭据管理
 
@@ -296,3 +297,17 @@ Review 关注：是否泄露 PII；匿名默认是否稳妥；小屏展示与空
 - 发生的问题：初版把 `AFDIAN_URL` 放进 `ohmywod/config.py` 的 `DefaultConfig` 类，误以为模板可经 `config['AFDIAN_URL']` 读到；起本地环境时发现本地/生产实际用 `local_config.py` 的 `DefaultConfig`（整体替换而非继承），该类属性根本不加载，会导致首页 `KeyError`。改为模块常量 + context processor 后整机验证通过。教训：`ohmywod/config.py` 的 `DefaultConfig` 在有 `local_config` 时不参与运行，跨环境常量不能挂在它上面。
 - 剩余风险：未在真实浏览器 / 小屏做视觉与无障碍复核；`.donate-afdian-btn` 的明暗主题对比度未实测。
 - 下一步：由 Review AI 做小屏布局 / 外链行为 / 无障碍复核，或直接部署后人工验收；组合 ②（AFD-002~004）视是否需要公开致谢再决定，AFD-002 仍等用户提供 `user_id` / `token`。
+
+### WAVE-20260804-02 — AFD-001 Review 复核与小瑕疵修正
+
+- 日期：2026-08-04
+- Drive AI：无
+- Review AI：Claude Code（Opus 4.8）
+- 关联事项：AFD-001
+- 状态变化：AFD-001 保持 `done`；Review AI 由 `unassigned` -> `Claude Code（Opus 4.8）`
+- 改动：复核已提交代码 `b1728f5`（config 单点、context processor、landing 外链与文案、CSS 按钮）。仅 CSS 一处修正：`ohmywod/static/css/custom.css` 的 `.donate-afdian-btn` 把 `color: var(--app-text-bright)` 改为带兜底的 `var(--app-text-bright, #fff)`，对齐同文件既有写法（line 1651）。未触碰 API / token / 站外账号。
+- 关键取舍：站点为**纯暗色单主题**（无 `prefers-color-scheme` / `data-theme` 切换），故原计划的“明暗对比度”实为单主题对比；按钮复用 `--app-border` / `--app-surface-hover`，与全站一致，不引入新主题变量。
+- 验证：静态代码复核 + 变量定义追踪（确认 `--app-text-bright` 全站未定义，故补兜底）。未起服务（本波仅 CSS 兜底值变更，无逻辑分支）。改动未提交（保留在工作树）。
+- 发生的问题：无
+- 剩余风险：真实浏览器小屏视觉仍未人工验收（纯暗色下按钮 hover/focus 观感）；本波 CSS 兜底改动未提交、未部署。
+- 下一步：等用户决定是否做组合 ②（赞助者墙）。若做，AFD-002 需用户在爱发电后台提供 `user_id` / `token`；若不做，AFD-002~004 整体标 `cancelled`，Wave 1 独立成立。
