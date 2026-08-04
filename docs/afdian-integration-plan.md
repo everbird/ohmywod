@@ -143,13 +143,13 @@ Review 关注：小屏布局、外链行为、无障碍文本；确认与 SUP-00
 
 ### AFD-002 — 接入爱发电开放 API 与凭据管理
 
-- 状态：`assessing`
+- 状态：`in_progress`
 - 优先级：`P2`
 - 波次：Wave 2
-- Drive AI：`unassigned`
+- Drive AI：`Claude Code（Opus 4.8）`
 - Review AI：`unassigned`
-- 依赖：AFD-001；用户在爱发电后台获取 `user_id` / `token`
-- 最后更新：2026-07-25
+- 依赖：AFD-001；用户在爱发电后台获取 `user_id` / `token`（仍待提供，是收尾唯一外部前置）
+- 最后更新：2026-08-04
 - 结论置信度：`recommended, external setup required`
 
 问题与影响：赞助者墙需要只读调用 `query-sponsor`，其鉴权依赖 `user_id + token` 与 MD5 签名。token 是敏感凭据，必须走既有密钥管理，不能进公开 app 仓。
@@ -167,7 +167,14 @@ Review 关注：小屏布局、外链行为、无障碍文本；确认与 SUP-00
 
 Review 关注：token 是否泄漏进日志 / 异常信息 / 模板；签名与 `ts` 实现是否符合当时爱发电文档；超时与失败路径是否健壮。
 
-执行证据：尚无；等待用户提供 / 确认 `user_id` 与 `token`。
+执行证据（scaffold，2026-08-04；待真实凭据收尾）：
+
+- 只读客户端：新增 `ohmywod/afdian.py`，仅用标准库（`urllib` + `hashlib` + `json`，**不新增依赖**）。`sign()` 实现 `md5(token+"params"+params+"ts"+ts+"user_id"+user_id)`；`query_sponsor()` POST `https://afdian.com/api/open/query-sponsor`，设 `DEFAULT_TIMEOUT=5`，任何网络/HTTP/解码/`ec!=200` 失败都翻译成 `AfdianError` 且**消息不含 token**（只带异常类名 / 安全的 `em`）；`fetch_all_sponsors()` 分页拉取、受 `MAX_PAGES=20` 上界保护。
+- 凭据来源与降级：`_credentials()` 从 Flask config 读 `AFDIAN_USER_ID` / `AFDIAN_TOKEN`；空值或未渲染的 `"<secret:..."` 前缀一律视为"未配置"→ `fetch_all_sponsors()` 返回 `[]`、`is_configured()` 为 `False`，绝不抛错。dev/未配置环境天然降级。
+- config 契约：`ohmywod/config.py` `DefaultConfig` 加 `AFDIAN_USER_ID` / `AFDIAN_TOKEN`（均缺省空串，仅作 schema 参考——运行时用 `local_config.py`，见 AFD-001 教训）。
+- ops 凭据管理（`ohmywod-ops`）：`ohmywod_local_config.py.j2` 加 `AFDIAN_USER_ID = "{{ afdian_user_id | default('') }}"` 与 `AFDIAN_TOKEN = "{{ afdian_token | default('') }}"`（未 provision 时渲染成空串、不 break、不进 secrets 断言）；`secrets.sops.yaml.example` 加 `afdian_token`（密钥，可选）；`vars.yml` 加 `afdian_user_id`（非密钥）。真实 token 由用户经 sops 写入 `secrets.sops.yaml`、`user_id` 写入 `vars.yml`（站外步骤，本文不代为操作）。
+- 验证：`tests/test_afdian.py` 8 项全绿——签名对已知向量、未配置→空、占位符 `"<secret:..."` 不当真值、分页、`MAX_PAGES` 上界、以及两条错误路径断言**不泄漏 token**；全仓 120 项测试通过；`import ohmywod.afdian` 干净；Jinja 渲染验证 `default('')` 在未 provision / 已 provision 两态都正确。仓库 grep 无明文 token（凭据只经 sops）。
+- **收尾缺口**：`done` 需用真实 `user_id` / `token` 成功拉一次 `query-sponsor` 并核签名/`ts` 与当时爱发电文档一致（Review 关注项）。等用户 provision 后再补此证据并转 `done`。
 
 ### AFD-003 — query-sponsor 拉取与缓存层（以爱发电为真值，不写 SQLite）
 
@@ -311,3 +318,17 @@ Review 关注：是否泄露 PII；匿名默认是否稳妥；小屏展示与空
 - 发生的问题：无
 - 剩余风险：真实浏览器小屏视觉仍未人工验收（纯暗色下按钮 hover/focus 观感）；本波 CSS 兜底改动未提交、未部署。
 - 下一步：等用户决定是否做组合 ②（赞助者墙）。若做，AFD-002 需用户在爱发电后台提供 `user_id` / `token`；若不做，AFD-002~004 整体标 `cancelled`，Wave 1 独立成立。
+
+### WAVE-20260804-03 — AFD-002 只读客户端与凭据管理 scaffold
+
+- 日期：2026-08-04
+- Drive AI：Claude Code（Opus 4.8）
+- Review AI：`unassigned`
+- 关联事项：AFD-002
+- 状态变化：AFD-002 `assessing` -> `in_progress`（用户拍板做组合 ②、承诺提供凭据）
+- 改动：app 端新增 `ohmywod/afdian.py`（纯标准库只读客户端：`sign` / `query_sponsor` / `fetch_all_sponsors` / `is_configured`，超时 + `AfdianError` 兜底 + token 不入异常消息）与 `tests/test_afdian.py`（8 项）；`ohmywod/config.py` `DefaultConfig` 加 `AFDIAN_USER_ID` / `AFDIAN_TOKEN` 空缺省作 schema 参考。ops 端（`ohmywod-ops`）`ohmywod_local_config.py.j2` 加两行 `| default('')` 渲染的 AFDIAN 字段、`secrets.sops.yaml.example` 加可选 `afdian_token`、`vars.yml` 加非密钥 `afdian_user_id`。未写 SQLite、未加依赖、未引入 webhook、仓库无明文 token。
+- 关键取舍：HTTP 用标准库 `urllib` 而非新引 `requests`（`requests` 非现有依赖，为一个 P2 可选功能不值得扩依赖面）。凭据接入走 ops 的 j2 独立全量类而非 `config.py`（生产 `local_config.py` 由 j2 渲染、整体取代 `config.py`；AFD-001 的教训）。所有 AFDIAN 字段 `default('')` + app 侧"空/占位符=未配置降级"，使该功能对生产**可选**：未 provision 不 break 渲染、不进 secrets 硬断言、页面返回空赞助者墙而非 500。
+- 验证：`tests/test_afdian.py` 8 项 + 全仓 120 项测试全绿（`.venv/bin/python -m pytest`）；`import ohmywod.afdian` 干净；两条错误路径断言异常消息不含 token；`sign()` 对独立预计算的 md5 向量匹配；Jinja `default('')` 在 provision / 未 provision 两态渲染均正确。无网络调用（`urlopen` 被 monkeypatch）。改动分两仓，尚未提交。
+- 发生的问题：无
+- 剩余风险：**未用真实凭据实调一次 `query-sponsor`**——签名字段顺序 / `ts` 口径 / 端点是否与当时爱发电文档完全一致，须在用户 provision 后核实（现按通行的 `md5(token+"params"+params+"ts"+ts+"user_id"+user_id)` 实现）。AFD-003 缓存层与 AFD-004 展示 / 隐私尚未动。
+- 下一步：用户在爱发电后台取 `user_id` / `token`，`user_id` 写 `vars.yml`、`token` 经 sops 写 `secrets.sops.yaml`；随后实调一次核签名并把 AFD-002 转 `done`。之后 AFD-003（Redis 缓存层，需定 TTL）与 AFD-004（展示粒度 / 匿名策略，待决策 #3~#6）。
