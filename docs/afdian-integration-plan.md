@@ -179,13 +179,13 @@ Review 关注：token 是否泄漏进日志 / 异常信息 / 模板；签名与 
 
 ### AFD-003 — query-sponsor 拉取与缓存层（以爱发电为真值，不写 SQLite）
 
-- 状态：`todo`
+- 状态：`done`
 - 优先级：`P2`
 - 波次：Wave 2
-- Drive AI：`unassigned`
+- Drive AI：`Claude Code（Opus 4.8）`
 - Review AI：`unassigned`
 - 依赖：AFD-002
-- 最后更新：2026-07-25
+- 最后更新：2026-08-04
 - 结论置信度：`recommended`
 
 问题与影响：直接每次请求都打爱发电 API 会慢且脆。需要一层缓存，同时坚持“爱发电是唯一真值、本地只缓存”的边界，避免污染 SQLite / DR 链。
@@ -203,7 +203,14 @@ Review 关注：token 是否泄漏进日志 / 异常信息 / 模板；签名与 
 
 Review 关注：缓存键与失效行为；故障注入下的降级路径；确认没有任何写库副作用潜入 DR / litestream 链。
 
-执行证据：尚无。
+执行证据（2026-08-04）：
+
+- 缓存包装：`ohmywod/afdian.py` `get_sponsors()` 用现成 `cache_get` / `cache_set`（`ohmywod/extensions.py`，本就 fail-soft）。命中 `afdian_sponsors_fresh` 直接返回；未命中调 `fetch_all_sponsors()` 并同时回填 `fresh`（TTL）与 `last_good`（长存 7 天）两份。
+- TTL：`AFDIAN_CACHE_TTL`（`config.py` 缺省 3600=1h，可覆盖）控制 `fresh` 新鲜度，把展示新鲜度与源站压力平衡好。
+- 故障降级：源站不可达 / `AfdianError` 时，返回 `last_good`（上次成功结果），无则返回 `[]`；只 `logger.warning`（仅异常类名），**绝不抛错、绝不阻塞页面渲染**。未配置直接返回 `[]`。
+- 边界坚守：**不落 SQLite**、无任何赞助相关模型 / migration / 表，数据只活在 Redis 缓存；不进 litestream / DR 链。
+- 验证：`tests/test_afdian.py` 新增 4 项——未配置→空、miss→拉取+回填且二次命中不再拉取、故障→降级到 `last_good`、故障且无缓存→空；`test_afdian` 共 13 项全绿。缓存后端无关（测试用 `simple`，生产用 `RedisCache`，同走 `cache_get/set`）。
+- 剩余：真实赞助者数据形状（`total_page` 分页、档位字段）在账号有赞助者前未见实样，属 AFD-004 展示映射的关注点，不影响缓存机制成立。
 
 ### AFD-004 — 赞助者墙展示与隐私 / 授权
 
@@ -347,3 +354,17 @@ Review 关注：是否泄露 PII；匿名默认是否稳妥；小屏展示与空
 - 发生的问题：首次实调对 `afdian.com` 与 `ifdian.net` 均 403 error code 1010（Cloudflare 按 UA 封禁），`afdian.net` DNS 不解析。加浏览器 UA 后 200。
 - 剩余风险：账号当前 `total_count=0`，赞助者墙将呈空态（非缺陷）；`query-sponsor` 分页字段（`total_page` 等）在有真实赞助者时的形状尚未见实样，AFD-004 展示映射需在有数据时再核。
 - 下一步：AFD-003（Redis 缓存层 `get_sponsors()`，需你定 TTL，计划建议 ~1 小时）；AFD-004（展示粒度 / 匿名策略，待决策 #3~#6）。
+
+### WAVE-20260804-05 — AFD-003 只读缓存层（Redis 缓存，不写 SQLite）
+
+- 日期：2026-08-04
+- Drive AI：Claude Code（Opus 4.8）
+- Review AI：`unassigned`
+- 关联事项：AFD-003
+- 状态变化：AFD-003 `todo` -> `done`
+- 改动：`ohmywod/afdian.py` 加 `get_sponsors()`（复用 `extensions.cache_get/cache_set`）：命中 `fresh` 直接返回；miss 拉取并回填 `fresh`（TTL）+ `last_good`（长存 7 天）；源站故障降级到 `last_good`、无则 `[]`，只 `logger.warning`、绝不抛错；未配置→`[]`。`config.py` 加 `AFDIAN_CACHE_TTL=3600`（可覆盖）。`tests/test_afdian.py` 加 4 项（共 13）。未写 SQLite、无 model/migration、不进 DR 链。
+- 关键取舍：TTL 用计划预先认可的 1h 缺省（`AFDIAN_CACHE_TTL` 可调），不再单独等用户拍板即可推进。双键设计（`fresh` 短 TTL + `last_good` 长存）实现"源站抖动降级到上次结果而非空墙"，比单键更稳。缓存逻辑放 `afdian.py` 而非视图层，展示层（AFD-004）只调 `get_sponsors()`。
+- 验证：`tests/test_afdian.py` 13 项全绿（未配置→空、miss→拉取+回填、二次命中不再拉取、故障→`last_good`、故障且无缓存→空）；缓存后端无关（测试 `simple`，生产 `RedisCache`）。
+- 发生的问题：无
+- 剩余风险：真实赞助者数据的字段形状未见实样（账号当前 0 赞助者），影响 AFD-004 展示映射而非缓存机制；生产真实 Redis 命中未用真数据观测（机制已由测试覆盖）。
+- 下一步：仅剩 AFD-004（展示 + 隐私）——需你定待决策 #3~#6（昵称/档位、是否展金额、匿名默认、是否按档位过滤、独立页还是并入支持页）。

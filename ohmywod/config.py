@@ -62,6 +62,11 @@ class DefaultConfig(object):
     # uses local_config.py, so populating it here does NOT reach any environment.
     AFDIAN_USER_ID = ""
     AFDIAN_TOKEN = ""
+    # Sponsor-wall cache freshness (AFD-003), seconds. Balances display freshness
+    # against source-site load; afdian.get_sponsors falls back to this default
+    # (3600 = 1h) when unset. A long-lived "last good" copy is kept separately so
+    # a transient Afdian failure degrades to the previous result, not an empty wall.
+    AFDIAN_CACHE_TTL = 3600
 
 
 # --- Afdian (爱发电) support entrance (AFD-001) ---

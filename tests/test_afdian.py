@@ -143,3 +143,64 @@ def test_fetch_all_sponsors_respects_max_pages(app, monkeypatch):
         app.config["AFDIAN_TOKEN"] = "tok123"
         sponsors = afdian.fetch_all_sponsors(max_pages=3)
     assert len(sponsors) == 3
+
+
+# --- AFD-003 cache layer ---
+
+@pytest.fixture
+def configured_app(app):
+    from ohmywod.extensions import cache
+    with app.app_context():
+        app.config["AFDIAN_USER_ID"] = "uid123"
+        app.config["AFDIAN_TOKEN"] = "tok123"
+        cache.delete(afdian._FRESH_KEY)
+        cache.delete(afdian._LAST_GOOD_KEY)
+        yield app
+
+
+def test_get_sponsors_unconfigured_returns_empty(app):
+    with app.app_context():
+        app.config["AFDIAN_USER_ID"] = ""
+        app.config["AFDIAN_TOKEN"] = ""
+        assert afdian.get_sponsors() == []
+
+
+def test_get_sponsors_miss_then_hit(configured_app, monkeypatch):
+    calls = {"n": 0}
+
+    def one_fetch(**kwargs):
+        calls["n"] += 1
+        return [{"user": {"name": "a"}}]
+
+    monkeypatch.setattr(afdian, "fetch_all_sponsors", one_fetch)
+    with configured_app.app_context():
+        first = afdian.get_sponsors()   # miss -> fetch + cache
+        second = afdian.get_sponsors()  # hit -> no second fetch
+    assert first == second == [{"user": {"name": "a"}}]
+    assert calls["n"] == 1
+
+
+def test_get_sponsors_degrades_to_last_good_on_failure(configured_app, monkeypatch):
+    from ohmywod.extensions import cache
+
+    # Seed a successful refresh, then force a failure and drop only the fresh key.
+    monkeypatch.setattr(afdian, "fetch_all_sponsors", lambda **k: [{"user": {"name": "a"}}])
+    with configured_app.app_context():
+        afdian.get_sponsors()
+        cache.delete(afdian._FRESH_KEY)  # fresh expired; last-good survives
+
+        def boom(**k):
+            raise afdian.AfdianError("afdian request failed: URLError")
+
+        monkeypatch.setattr(afdian, "fetch_all_sponsors", boom)
+        degraded = afdian.get_sponsors()
+    assert degraded == [{"user": {"name": "a"}}]
+
+
+def test_get_sponsors_failure_without_cache_returns_empty(configured_app, monkeypatch):
+    def boom(**k):
+        raise afdian.AfdianError("afdian request failed: URLError")
+
+    monkeypatch.setattr(afdian, "fetch_all_sponsors", boom)
+    with configured_app.app_context():
+        assert afdian.get_sponsors() == []

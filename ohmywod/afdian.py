@@ -153,3 +153,53 @@ def fetch_all_sponsors(*, per_page=100, max_pages=MAX_PAGES, timeout=DEFAULT_TIM
             break
         page += 1
     return sponsors
+
+
+# --- Cache layer (AFD-003): Afdian is the single source of truth; Redis only
+# caches. Never writes SQLite, never touches the litestream / DR chain. ---
+
+# Fresh copy honours the display-freshness vs. source-load trade-off (default 1h,
+# override with AFDIAN_CACHE_TTL). The "last good" copy lives much longer so a
+# transient Afdian/Cloudflare failure degrades to the previous result instead of
+# an empty wall.
+DEFAULT_CACHE_TTL = 3600
+LAST_GOOD_TTL = 7 * 24 * 3600
+_FRESH_KEY = "afdian_sponsors_fresh"
+_LAST_GOOD_KEY = "afdian_sponsors_last_good"
+
+
+def get_sponsors():
+    """Cached sponsor list for the wall; Afdian stays the only source of truth.
+
+    Serves the fresh Redis copy on hit. On miss, pulls from Afdian and refreshes
+    both the fresh (TTL) and last-good (long-lived) copies. If Afdian is
+    unreachable or errors, degrades to the last-good copy, else an empty list —
+    never raises, never blocks the page. Returns ``[]`` when unconfigured.
+    """
+    from ohmywod.extensions import cache_get, cache_set
+
+    if not is_configured():
+        return []
+
+    cached = cache_get(_FRESH_KEY)
+    if cached is not None:
+        return cached
+
+    ttl = DEFAULT_CACHE_TTL
+    if has_app_context():
+        ttl = current_app.config.get("AFDIAN_CACHE_TTL", DEFAULT_CACHE_TTL)
+
+    try:
+        sponsors = fetch_all_sponsors()
+    except AfdianError as error:
+        if has_app_context():
+            current_app.logger.warning(
+                "afdian sponsor refresh failed (%s); serving last-good cache",
+                error.__class__.__name__,
+            )
+        last_good = cache_get(_LAST_GOOD_KEY)
+        return last_good if last_good is not None else []
+
+    cache_set(_FRESH_KEY, sponsors, timeout=ttl)
+    cache_set(_LAST_GOOD_KEY, sponsors, timeout=LAST_GOOD_TTL)
+    return sponsors
