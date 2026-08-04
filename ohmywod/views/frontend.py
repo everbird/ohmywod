@@ -42,6 +42,17 @@ def landing_page():
     return rt("landing.html")
 
 
+@frontend.route("/thanks")
+def thanks_page():
+    # Standalone, read-only thank-you wall (AFD-004). Sponsor data is served from
+    # the Redis-cached Afdian source (get_sponsors); Afdian stays the single
+    # source of truth. Any source failure degrades to last-good/empty inside
+    # afdian.py, so this view never fails on Afdian being down.
+    from ohmywod import afdian
+    sponsors = afdian.sponsor_display_names()
+    return rt("thanks.html", sponsors=sponsors, anonymous_name=afdian.ANONYMOUS_NAME)
+
+
 class LoginForm(FlaskForm):
     username = StringField('用户名', validators=[DataRequired()])
     password = PasswordField('密码', validators=[DataRequired()])

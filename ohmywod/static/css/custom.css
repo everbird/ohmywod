@@ -1492,6 +1492,56 @@ a:focus {
     padding: 0.35rem;
 }
 
+.donate-thanks-link {
+    margin-top: 0.6rem;
+    margin-bottom: 0;
+    font-size: 0.9rem;
+}
+
+/* Sponsor thank-you wall (AFD-004): privacy-first, nickname-only chips. */
+.sponsor-wall {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+}
+
+.sponsor-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.4rem 0.85rem;
+    border: 1px solid var(--app-border);
+    border-radius: 999px;
+    background-color: var(--app-surface-muted, var(--app-surface));
+    color: var(--app-text-bright, #fff);
+    font-weight: 600;
+    word-break: break-word;
+}
+
+.sponsor-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.6rem;
+    text-align: center;
+    padding: 2rem 1rem;
+    color: var(--app-muted);
+}
+
+.sponsor-empty i {
+    font-size: 1.6rem;
+    color: var(--app-link);
+}
+
+.sponsor-note {
+    margin-top: 1.1rem;
+    margin-bottom: 0;
+    font-size: 0.85rem;
+    color: var(--app-muted);
+}
+
 .info-list {
     display: grid;
     gap: 0.65rem;

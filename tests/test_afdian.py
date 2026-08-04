@@ -204,3 +204,45 @@ def test_get_sponsors_failure_without_cache_returns_empty(configured_app, monkey
     monkeypatch.setattr(afdian, "fetch_all_sponsors", boom)
     with configured_app.app_context():
         assert afdian.get_sponsors() == []
+
+
+# --- AFD-004 display mapping + thanks page ---
+
+def test_sponsor_display_names_maps_and_anonymizes(monkeypatch):
+    monkeypatch.setattr(afdian, "get_sponsors", lambda: [
+        {"user": {"name": "Alice"}},
+        {"user": {"name": "  "}},   # blank -> anonymous
+        {"user": {}},               # no name -> anonymous
+        {"nope": True},             # malformed -> anonymous, must not raise
+    ])
+    assert afdian.sponsor_display_names() == [
+        "Alice", afdian.ANONYMOUS_NAME, afdian.ANONYMOUS_NAME, afdian.ANONYMOUS_NAME,
+    ]
+
+
+def test_sponsor_display_names_empty_when_no_sponsors(monkeypatch):
+    monkeypatch.setattr(afdian, "get_sponsors", lambda: [])
+    assert afdian.sponsor_display_names() == []
+
+
+def test_thanks_page_renders_empty_state(client, monkeypatch):
+    monkeypatch.setattr(afdian, "get_sponsors", lambda: [])
+    res = client.get("/thanks")
+    assert res.status_code == 200
+    body = res.get_data(as_text=True)
+    assert "赞助者致谢" in body
+    assert "暂时还没有赞助者" in body
+
+
+def test_thanks_page_lists_and_escapes_sponsors(client, monkeypatch):
+    # Third-party nicknames must be HTML-escaped (Jinja autoescape) to avoid XSS.
+    monkeypatch.setattr(afdian, "get_sponsors", lambda: [
+        {"user": {"name": "Bob"}},
+        {"user": {"name": "<script>x</script>"}},
+    ])
+    res = client.get("/thanks")
+    assert res.status_code == 200
+    body = res.get_data(as_text=True)
+    assert "Bob" in body
+    assert "<script>x</script>" not in body
+    assert "&lt;script&gt;" in body

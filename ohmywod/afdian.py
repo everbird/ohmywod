@@ -203,3 +203,24 @@ def get_sponsors():
     cache_set(_FRESH_KEY, sponsors, timeout=ttl)
     cache_set(_LAST_GOOD_KEY, sponsors, timeout=LAST_GOOD_TTL)
     return sponsors
+
+
+# --- Display mapping (AFD-004): privacy-first thank-you wall. ---
+
+ANONYMOUS_NAME = "匿名支持者"
+
+
+def sponsor_display_names():
+    """Display-ready sponsor nicknames for the thank-you wall.
+
+    Privacy-first per plan AFD-004 / SUP-006: nickname only — nothing that could
+    reverse-map to a real identity (no amount, no user_id, no avatar). A sponsor
+    with no usable Afdian nickname is shown as :data:`ANONYMOUS_NAME`. Returns
+    ``[]`` when unconfigured or when the (cached) source is empty; never raises.
+    """
+    names = []
+    for entry in get_sponsors():
+        user = entry.get("user") if isinstance(entry, dict) else None
+        name = ((user or {}).get("name") or "").strip()
+        names.append(name or ANONYMOUS_NAME)
+    return names

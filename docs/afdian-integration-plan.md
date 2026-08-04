@@ -214,13 +214,13 @@ Review 关注：缓存键与失效行为；故障注入下的降级路径；确�
 
 ### AFD-004 — 赞助者墙展示与隐私 / 授权
 
-- 状态：`assessing`
+- 状态：`done`
 - 优先级：`P2`
 - 波次：Wave 2
-- Drive AI：`unassigned`
+- Drive AI：`Claude Code（Opus 4.8）`
 - Review AI：`unassigned`
 - 依赖：AFD-003
-- 最后更新：2026-07-25
+- 最后更新：2026-08-04
 - 结论置信度：`optional`
 
 问题与影响：赞助者墙是给支持者的公开致谢，但涉及第三方个人信息展示，需要在“表达感谢”与“保护隐私”之间取一个克制的默认。
@@ -238,9 +238,21 @@ Review 关注：缓存键与失效行为；故障注入下的降级路径；确�
 
 Review 关注：是否泄露 PII；匿名默认是否稳妥；小屏展示与空态；文案是否让人误以为支持可换取功能。
 
-执行证据：尚无。
+用户拍板（2026-08-04，回答待决策 #3/#4/#6）：**仅展示昵称**（不显档位、不显金额）；**显示昵称、缺失/匿名者归"匿名支持者"**；放**独立致谢页**。#5（是否按档位过滤）未单列，当前展示全部发电者、不过滤。
+
+执行证据（2026-08-04）：
+
+- 展示映射：`ohmywod/afdian.py` `sponsor_display_names()` 从 `get_sponsors()`（AFD-003 缓存）取昵称，隐私优先——**只出 `user.name`**，不出金额 / `user_id` / 头像；空白或缺失昵称、以及畸形条目一律归 `ANONYMOUS_NAME="匿名支持者"`，不抛错；未配置 / 空源→`[]`。
+- 独立致谢页：`ohmywod/views/frontend.py` 加 `GET /thanks`（`thanks_page`），渲染 `ohmywod/templates/thanks.html`（继承 `base.html`）。有数据出 `.sponsor-wall` 昵称 chip；空态出克制文案（"暂时还没有赞助者…"）；页脚说明"仅展示昵称、不显金额、缺失昵称显示为匿名支持者"。文案不暗示支持可换功能，对齐 SUP-004/006。
+- 入口：首页"支持作者"面板加"查看赞助者致谢 →"链接（`url_for('frontend.thanks_page')`）。
+- 隐私 / 安全：第三方昵称经 Jinja 自动转义（测试断言 `<script>` 被转义、不落原样），无反查身份信息、无金额、无持续客服义务。
+- 样式：`custom.css` 加 `.sponsor-wall` / `.sponsor-chip`（圆角 chip，flex wrap，`word-break`）/ `.sponsor-empty` / `.sponsor-note` / `.donate-thanks-link`，复用 `--app-*` 变量。
+- 验证：`tests/test_afdian.py` 加 4 项（映射+匿名化、空、`/thanks` 空态 200、`/thanks` 列表且 XSS 转义），`test_afdian` 共 17 项、全仓 129 项测试全绿；真实 Flask 路由渲染 `/thanks` 实测出正确 chip（`Alice` / `匿名支持者` / `梦想家`）与首页入口链接。
+- 剩余：真实浏览器小屏视觉与明暗（纯暗色单主题）观感未人工验收；账号当前 0 赞助者，线上先呈空态（非缺陷）；真实赞助者数据字段形状未见实样，若 afdian `user.name` 字段路径与预期不符需在有数据时微调（已对畸形条目容错）。
 
 ## 5. 待决策清单
+
+> 状态（2026-08-04）：#2 已定为**做组合 ②**并已落地 AFD-002~004；#3/#4/#6 已由用户回答（见 AFD-004）；#5 当前不过滤、展示全部；#1 已在 AFD-001 定为按钮。以下保留原始清单供追溯。
 
 不阻塞 Wave 1，可在处理对应事项时回答：
 
@@ -368,3 +380,17 @@ Review 关注：是否泄露 PII；匿名默认是否稳妥；小屏展示与空
 - 发生的问题：无
 - 剩余风险：真实赞助者数据的字段形状未见实样（账号当前 0 赞助者），影响 AFD-004 展示映射而非缓存机制；生产真实 Redis 命中未用真数据观测（机制已由测试覆盖）。
 - 下一步：仅剩 AFD-004（展示 + 隐私）——需你定待决策 #3~#6（昵称/档位、是否展金额、匿名默认、是否按档位过滤、独立页还是并入支持页）。
+
+### WAVE-20260804-06 — AFD-004 独立赞助者致谢页（仅昵称，隐私优先）
+
+- 日期：2026-08-04
+- Drive AI：Claude Code（Opus 4.8）
+- Review AI：`unassigned`
+- 关联事项：AFD-004（Wave 2 收尾）
+- 状态变化：AFD-004 `assessing` -> `done`
+- 改动：`ohmywod/afdian.py` 加 `sponsor_display_names()`（隐私优先：仅 `user.name`、空/缺失/畸形→`ANONYMOUS_NAME`"匿名支持者"）；`ohmywod/views/frontend.py` 加 `GET /thanks`；新增模板 `ohmywod/templates/thanks.html`（昵称 chip 墙 + 空态 + 克制文案）；`landing.html` 支持面板加致谢页入口链接；`custom.css` 加 `.sponsor-wall`/`.sponsor-chip`/`.sponsor-empty`/`.sponsor-note`/`.donate-thanks-link`。未写 SQLite、未新增路由外副作用。
+- 关键取舍：按用户决策——**仅昵称**（不显档位/金额，最克制、隐私风险最低，对齐 SUP-006 与 maintenance-support-plan"不显精确金额"）；**显示昵称、匿名/缺失归"匿名支持者"**；**独立致谢页** `/thanks`（而非支持页区块），并从首页支持面板给入口。#5 不做档位过滤，展示全部发电者。第三方昵称靠 Jinja autoescape 防 XSS（加断言守回归）。
+- 验证：`tests/test_afdian.py` 加 4 项（映射+匿名化、空、`/thanks` 空态 200、`/thanks` 列表且 `<script>` 被转义），共 17 项；全仓 129 项测试全绿；真实 Flask 路由渲染 `/thanks` 出正确 chip（`Alice`/`匿名支持者`/`梦想家`）与首页入口链接。
+- 发生的问题：无
+- 剩余风险：真实浏览器小屏 / 纯暗色观感未人工验收；账号当前 0 赞助者→线上先空态（非缺陷）；`user.name` 真实字段路径若与预期不符需在有数据时微调（已对畸形条目容错）。整个 Wave 2 改动仍在分支 `afdian-wave2`（app）/`afdian-wave2`（ops），未 push、未部署。
+- 下一步：Wave 2（AFD-001~004）全部 `done`，爱发电"用起来了"。待你：①是否 push 两个分支并部署（app 分支 + ops 已含凭据字段渲染）；②部署后人工验收 `/thanks` 小屏视觉；③账号有赞助者后核 `user.name` 实样。
