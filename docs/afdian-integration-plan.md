@@ -244,7 +244,7 @@ Review 关注：是否泄露 PII；匿名默认是否稳妥；小屏展示与空
 
 - 展示映射：`ohmywod/afdian.py` `sponsor_display_names()` 从 `get_sponsors()`（AFD-003 缓存）取昵称，隐私优先——**只出 `user.name`**，不出金额 / `user_id` / 头像；空白或缺失昵称、以及畸形条目一律归 `ANONYMOUS_NAME="匿名支持者"`，不抛错；未配置 / 空源→`[]`。
 - 独立致谢页：`ohmywod/views/frontend.py` 加 `GET /thanks`（`thanks_page`），渲染 `ohmywod/templates/thanks.html`（继承 `base.html`）。有数据出 `.sponsor-wall` 昵称 chip；空态出克制文案（"暂时还没有赞助者…"）；页脚说明"仅展示昵称、不显金额、缺失昵称显示为匿名支持者"。文案不暗示支持可换功能，对齐 SUP-004/006。
-- 入口：首页"支持作者"面板加"查看赞助者致谢 →"链接（`url_for('frontend.thanks_page')`）。
+- 入口：左侧全局侧栏导航加"赞助者致谢"项（`base.html`，`heart` 图标，`url_for('frontend.thanks_page')`，全站可达）；首页"支持作者"面板另加"查看赞助者致谢 →"链接。
 - 隐私 / 安全：第三方昵称经 Jinja 自动转义（测试断言 `<script>` 被转义、不落原样），无反查身份信息、无金额、无持续客服义务。
 - 样式：`custom.css` 加 `.sponsor-wall` / `.sponsor-chip`（圆角 chip，flex wrap，`word-break`）/ `.sponsor-empty` / `.sponsor-note` / `.donate-thanks-link`，复用 `--app-*` 变量。
 - 验证：`tests/test_afdian.py` 加 4 项（映射+匿名化、空、`/thanks` 空态 200、`/thanks` 列表且 XSS 转义），`test_afdian` 共 17 项、全仓 129 项测试全绿；真实 Flask 路由渲染 `/thanks` 实测出正确 chip（`Alice` / `匿名支持者` / `梦想家`）与首页入口链接。
