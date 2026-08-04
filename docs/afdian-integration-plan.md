@@ -143,14 +143,14 @@ Review 关注：小屏布局、外链行为、无障碍文本；确认与 SUP-00
 
 ### AFD-002 — 接入爱发电开放 API 与凭据管理
 
-- 状态：`in_progress`
+- 状态：`done`
 - 优先级：`P2`
 - 波次：Wave 2
 - Drive AI：`Claude Code（Opus 4.8）`
 - Review AI：`unassigned`
-- 依赖：AFD-001；用户在爱发电后台获取 `user_id` / `token`（仍待提供，是收尾唯一外部前置）
+- 依赖：AFD-001；用户已在爱发电后台提供 `user_id` / `token`（已 provision）
 - 最后更新：2026-08-04
-- 结论置信度：`recommended, external setup required`
+- 结论置信度：`recommended`
 
 问题与影响：赞助者墙需要只读调用 `query-sponsor`，其鉴权依赖 `user_id + token` 与 MD5 签名。token 是敏感凭据，必须走既有密钥管理，不能进公开 app 仓。
 
@@ -174,7 +174,8 @@ Review 关注：token 是否泄漏进日志 / 异常信息 / 模板；签名与 
 - config 契约：`ohmywod/config.py` `DefaultConfig` 加 `AFDIAN_USER_ID` / `AFDIAN_TOKEN`（均缺省空串，仅作 schema 参考——运行时用 `local_config.py`，见 AFD-001 教训）。
 - ops 凭据管理（`ohmywod-ops`）：`ohmywod_local_config.py.j2` 加 `AFDIAN_USER_ID = "{{ afdian_user_id | default('') }}"` 与 `AFDIAN_TOKEN = "{{ afdian_token | default('') }}"`（未 provision 时渲染成空串、不 break、不进 secrets 断言）；`secrets.sops.yaml.example` 加 `afdian_token`（密钥，可选）；`vars.yml` 加 `afdian_user_id`（非密钥）。真实 token 由用户经 sops 写入 `secrets.sops.yaml`、`user_id` 写入 `vars.yml`（站外步骤，本文不代为操作）。
 - 验证：`tests/test_afdian.py` 8 项全绿——签名对已知向量、未配置→空、占位符 `"<secret:..."` 不当真值、分页、`MAX_PAGES` 上界、以及两条错误路径断言**不泄漏 token**；全仓 120 项测试通过；`import ohmywod.afdian` 干净；Jinja 渲染验证 `default('')` 在未 provision / 已 provision 两态都正确。仓库 grep 无明文 token（凭据只经 sops）。
-- **收尾缺口**：`done` 需用真实 `user_id` / `token` 成功拉一次 `query-sponsor` 并核签名/`ts` 与当时爱发电文档一致（Review 关注项）。等用户 provision 后再补此证据并转 `done`。
+- 真实凭据收尾（2026-08-04，已转 `done`）：用户经 sops 写入 `afdian_token`、`vars.yml` 填 `afdian_user_id`（本机 `sops -d` 解密通过、两者均在）。用真实凭据实调 `https://afdian.com/api/open/query-sponsor` **成功**：HTTP 200、`ec=200`、`em=sponsor`、`data` 含 `list/total_count/total_page`，当前 `total_count=0`（账号暂无赞助者，属正常空态）。签名口径 `md5(token+"params"+params+"ts"+ts+"user_id"+user_id)` 经真实服务端校验通过。经完整客户端路径 `is_configured()=True`、`fetch_all_sponsors()=[]`（空态不报错）。token 全程只在 sops / 进程环境变量，未落任何文件、未入日志/异常。
+- **实调发现并修复的真实缺陷（UA/1010）**：`afdian.com` 在 Cloudflare 后，默认 `Python-urllib` UA 会被 **HTTP 403 error code 1010**（浏览器签名封禁）挡下。客户端已加浏览器 `User-Agent`（`ohmywod/afdian.py` `USER_AGENT` 常量 + 请求头），并加 `Accept: application/json`。另确认正确 host 是 `afdian.com`（`afdian.net` 已不解析）。新增 `tests/test_afdian.py::test_query_sponsor_sends_browser_user_agent` 守此回归。全仓 121 项测试通过。
 
 ### AFD-003 — query-sponsor 拉取与缓存层（以爱发电为真值，不写 SQLite）
 
@@ -332,3 +333,17 @@ Review 关注：是否泄露 PII；匿名默认是否稳妥；小屏展示与空
 - 发生的问题：无
 - 剩余风险：**未用真实凭据实调一次 `query-sponsor`**——签名字段顺序 / `ts` 口径 / 端点是否与当时爱发电文档完全一致，须在用户 provision 后核实（现按通行的 `md5(token+"params"+params+"ts"+ts+"user_id"+user_id)` 实现）。AFD-003 缓存层与 AFD-004 展示 / 隐私尚未动。
 - 下一步：用户在爱发电后台取 `user_id` / `token`，`user_id` 写 `vars.yml`、`token` 经 sops 写 `secrets.sops.yaml`；随后实调一次核签名并把 AFD-002 转 `done`。之后 AFD-003（Redis 缓存层，需定 TTL）与 AFD-004（展示粒度 / 匿名策略，待决策 #3~#6）。
+
+### WAVE-20260804-04 — AFD-002 真实凭据实调收尾 + Cloudflare UA 修复
+
+- 日期：2026-08-04
+- Drive AI：Claude Code（Opus 4.8）
+- Review AI：`unassigned`
+- 关联事项：AFD-002
+- 状态变化：AFD-002 `in_progress` -> `done`
+- 改动：用户 provision 凭据后实调 `query-sponsor` 收尾。发现 `afdian.com` 在 Cloudflare 后默认 `Python-urllib` UA 触发 **HTTP 403 error code 1010**；`ohmywod/afdian.py` 加 `USER_AGENT` 常量与请求头（含 `Accept: application/json`）修复。`tests/test_afdian.py` 加 `test_query_sponsor_sends_browser_user_agent`（共 9 项）。ops 端无新增改动（凭据由用户经 sops / vars.yml 写入，不入本仓）。
+- 关键取舍：正确 API host 为 `afdian.com`（`afdian.net` 已不解析，`ifdian.net` 也在同一 Cloudflare 后）。UA 用通用桌面 Chrome 串即可绕过 1010，不需要更复杂的反爬处理（只读、低频）。
+- 验证：真实凭据实调 `https://afdian.com/api/open/query-sponsor` 成功 —— HTTP 200、`ec=200`、`em=sponsor`、`data` 含 `list/total_count/total_page`（当前 `total_count=0` 空态）；签名 `md5(token+"params"+params+"ts"+ts+"user_id"+user_id)` 经服务端校验通过；完整客户端路径 `is_configured()=True`、`fetch_all_sponsors()=[]` 不报错。`tests/test_afdian.py` 9 项 + 全仓 121 项测试全绿。token 只在 sops / 进程环境变量，未落文件、未入日志/异常。
+- 发生的问题：首次实调对 `afdian.com` 与 `ifdian.net` 均 403 error code 1010（Cloudflare 按 UA 封禁），`afdian.net` DNS 不解析。加浏览器 UA 后 200。
+- 剩余风险：账号当前 `total_count=0`，赞助者墙将呈空态（非缺陷）；`query-sponsor` 分页字段（`total_page` 等）在有真实赞助者时的形状尚未见实样，AFD-004 展示映射需在有数据时再核。
+- 下一步：AFD-003（Redis 缓存层 `get_sponsors()`，需你定 TTL，计划建议 ~1 小时）；AFD-004（展示粒度 / 匿名策略，待决策 #3~#6）。

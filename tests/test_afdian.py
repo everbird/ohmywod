@@ -75,6 +75,31 @@ def test_query_sponsor_error_ec_raises_without_token(monkeypatch):
     assert "super-secret-token" not in str(exc.value)
 
 
+def test_query_sponsor_sends_browser_user_agent(monkeypatch):
+    # afdian.com's Cloudflare 403-bans the default urllib UA; the request must
+    # carry a browser-like User-Agent or every call fails in production.
+    captured = {}
+
+    class FakeResp:
+        def read(self):
+            return b'{"ec":200,"em":"ok","data":{"list":[]}}'
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            return False
+
+    def fake_urlopen(req, timeout=None):
+        captured["ua"] = req.get_header("User-agent")
+        return FakeResp()
+
+    monkeypatch.setattr(afdian.urllib.request, "urlopen", fake_urlopen)
+    afdian.query_sponsor("uid", "tok")
+    assert captured["ua"] == afdian.USER_AGENT
+    assert "urllib" not in (captured["ua"] or "").lower()
+
+
 def test_query_sponsor_network_failure_translates(monkeypatch):
     import urllib.error
 

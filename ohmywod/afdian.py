@@ -33,6 +33,13 @@ QUERY_SPONSOR_URL = "https://afdian.com/api/open/query-sponsor"
 DEFAULT_TIMEOUT = 5
 # Upper bound so a bad total_page from the API can never loop forever.
 MAX_PAGES = 20
+# afdian.com sits behind Cloudflare, which returns HTTP 403 "error code: 1010"
+# (browser-signature ban) to the default Python-urllib User-Agent. A normal
+# browser UA is required for the API to answer at all — verified 2026-08-04.
+USER_AGENT = (
+    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
+    "(KHTML, like Gecko) Chrome/124.0 Safari/537.36"
+)
 
 
 class AfdianError(Exception):
@@ -81,7 +88,12 @@ def query_sponsor(user_id, token, page=1, per_page=None, *, timeout=DEFAULT_TIME
     req = urllib.request.Request(
         QUERY_SPONSOR_URL,
         data=body,
-        headers={"Content-Type": "application/json"},
+        headers={
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+            # Required: Cloudflare 1010-bans the default urllib UA (see USER_AGENT).
+            "User-Agent": USER_AGENT,
+        },
         method="POST",
     )
     try:
