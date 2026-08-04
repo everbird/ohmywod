@@ -51,3 +51,14 @@ class DefaultConfig(object):
     PREFERRED_URL_SCHEME = "https"
     # Reset-token lifetime in seconds (30 min).
     PASSWORD_RESET_TOKEN_MAX_AGE = 1800
+
+
+# --- Afdian (爱发电) support entrance (AFD-001) ---
+# Single source of truth for the sponsorship page URL. Kept as a module-level
+# constant (not a DefaultConfig attribute) because local/production runs replace
+# DefaultConfig wholesale via ohmywod/local_config.py, so a class attribute here
+# would not reach those environments. app.py injects this into templates as
+# `afdian_url` via a context processor, so the entrance stays wired in exactly
+# one place across every environment. Public (non-secret); change the homepage by
+# editing only this line.
+AFDIAN_URL = "https://ifdian.net/a/everbird"

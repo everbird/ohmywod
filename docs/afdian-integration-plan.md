@@ -5,7 +5,7 @@ document_status: draft
 source_of_truth_for: "爱发电站内技术集成（入口按钮接线、开放 API 接入、赞助者墙展示）的实现边界、工作项状态与 wave changelog"
 language: zh-CN
 created_at: "2026-07-25"
-last_updated: "2026-07-25"
+last_updated: "2026-08-04"
 review_commit: "5a6a93f"
 review_worktree: "clean"
 next_item_id: "AFD-005"
@@ -108,13 +108,13 @@ next_item_id: "AFD-005"
 
 ### AFD-001 — 支持面板加入爱发电入口（纯前端）
 
-- 状态：`todo`
+- 状态：`done`
 - 优先级：`P1`
 - 波次：Wave 1
-- Drive AI：`unassigned`
+- Drive AI：`Claude Code（Opus 4.8）`
 - Review AI：`unassigned`
 - 依赖：定位与文案对齐 maintenance-support-plan SUP-004（不阻塞技术接线）
-- 最后更新：2026-07-25
+- 最后更新：2026-08-04
 - 结论置信度：`recommended`
 
 问题与影响：爱发电主页已存在，但站内支持面板只有微信码，用户无从发现可持续支持渠道。这是把爱发电用起来的最低成本一步，零后端。
@@ -132,7 +132,13 @@ next_item_id: "AFD-005"
 
 Review 关注：小屏布局、外链行为、无障碍文本；确认与 SUP-004 的支持入口收敛不冲突、不重复。
 
-执行证据：尚无。
+执行证据：
+
+- URL 单点配置：`ohmywod/config.py` 新增**模块级常量** `AFDIAN_URL = "https://ifdian.net/a/everbird"`（公开非密钥）。**注意**：不能放 `DefaultConfig` 类属性——本地/生产运行时 `DefaultConfig` 被 `ohmywod/local_config.py` 整体替换（见 `app.py:12-16`），类属性到不了这些环境。改为模块常量后由 `app.py` 的 context processor `inject_afdian_url` 统一注入模板变量 `afdian_url`，跨所有环境单点一致，换主页只改此一行。
+- 入口接线：`ohmywod/templates/landing.html` “支持作者”面板加入 `<a class="donate-afdian-btn" href="{{ afdian_url }}" target="_blank" rel="noopener">`，与微信码并列；顺手给同面板既有 GitHub 外链补上 `rel="noopener"`。
+- 文案：改为“核心功能始终免费。如果你愿意让站点继续维持，可以在爱发电支持，或通过微信打赏……”，明确不暗示支持可换取功能，对齐 SUP-004。
+- 样式：`ohmywod/static/css/custom.css` 新增 `.donate-afdian-btn`（`inline-flex` 按钮，含 hover/focus 态，复用 `--app-*` 变量），桌面与移动端均可点。
+- 验证：本地补齐 `.venv` 依赖后整机启动（supervisord + gunicorn，端口 8013），`GET /` 返回 200，首页“支持作者”面板实际渲染出 `href="https://ifdian.net/a/everbird"` 且带 `target="_blank" rel="noopener"`，确认 context processor 注入在真实 Flask config 下生效。真实浏览器小屏视觉与明暗主题对比度仍留待人工复核。
 
 ### AFD-002 — 接入爱发电开放 API 与凭据管理
 
@@ -276,3 +282,17 @@ Review 关注：是否泄露 PII；匿名默认是否稳妥；小屏展示与空
 - 发生的问题：无
 - 剩余风险：组合 ② 依赖用户在爱发电后台取 `user_id` / `token`（站外事项，AFD-002 `assessing`）；赞助者墙展示粒度与匿名策略待用户决定
 - 下一步：确认草案后先执行 Wave 1（AFD-001，纯前端）；组合 ② 视是否需要公开致谢再决定
+
+### WAVE-20260804-01 — Wave 1 落地：支持面板加入爱发电入口
+
+- 日期：2026-08-04
+- Drive AI：Claude Code（Opus 4.8）
+- Review AI：`unassigned`
+- 关联事项：AFD-001
+- 状态变化：AFD-001 `todo` -> `done`
+- 改动：`ohmywod/config.py` 新增**模块级常量** `AFDIAN_URL`（单点配置，公开非密钥）；`ohmywod/app.py` 加 context processor `inject_afdian_url` 注入模板变量 `afdian_url`；`ohmywod/templates/landing.html` “支持作者”面板加入爱发电入口按钮（与微信码并列，`target="_blank" rel="noopener"`，读 `{{ afdian_url }}`），并给同面板 GitHub 外链补 `rel="noopener"`，文案改为强调核心功能免费、不暗示回报；`ohmywod/static/css/custom.css` 新增 `.donate-afdian-btn` 按钮样式。未触碰 API / token / 站外账号。
+- 关键取舍：入口形态选“带图标的按钮链接”而非纯文字或二维码（回答待决策 #1）——微信码保留原二维码给移动端可保存路径，爱发电用可点按钮即可，两者形态各取所长。URL 单点方式从“`DefaultConfig` 类属性”改为“模块常量 + context processor”：因本地/生产的 `DefaultConfig` 被 `local_config.py` 整体替换，类属性到不了运行环境，会让模板 `config['AFDIAN_URL']` 抛 `KeyError`、首页 500；模块常量经 context processor 注入才真正做到跨环境单点一致。
+- 验证：本地补齐 `.venv` 依赖后整机启动（supervisord + gunicorn @ 8013），`GET /` 返回 200，首页面板实际渲染出正确 `href="https://ifdian.net/a/everbird"` 与 `rel="noopener"`，确认真实 Flask 下注入生效。改动未提交（保留在工作树）。
+- 发生的问题：初版把 `AFDIAN_URL` 放进 `ohmywod/config.py` 的 `DefaultConfig` 类，误以为模板可经 `config['AFDIAN_URL']` 读到；起本地环境时发现本地/生产实际用 `local_config.py` 的 `DefaultConfig`（整体替换而非继承），该类属性根本不加载，会导致首页 `KeyError`。改为模块常量 + context processor 后整机验证通过。教训：`ohmywod/config.py` 的 `DefaultConfig` 在有 `local_config` 时不参与运行，跨环境常量不能挂在它上面。
+- 剩余风险：未在真实浏览器 / 小屏做视觉与无障碍复核；`.donate-afdian-btn` 的明暗主题对比度未实测。
+- 下一步：由 Review AI 做小屏布局 / 外链行为 / 无障碍复核，或直接部署后人工验收；组合 ②（AFD-002~004）视是否需要公开致谢再决定，AFD-002 仍等用户提供 `user_id` / `token`。

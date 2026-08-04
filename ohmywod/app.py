@@ -9,7 +9,7 @@ from flask_admin.contrib import sqla
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 from ohmywod import views
-from ohmywod.config import DefaultConfig
+from ohmywod.config import DefaultConfig, AFDIAN_URL
 from ohmywod.controllers.user import UserController
 
 try:
@@ -72,6 +72,11 @@ def configure_app(app, config):
     if config is not None:
         app.config.from_object(config)
     app.config.from_envvar('APP_CONFIG', silent=True)
+
+    @app.context_processor
+    def inject_afdian_url():
+        # Single-point support entrance URL (AFD-001); see ohmywod/config.py.
+        return {"afdian_url": AFDIAN_URL}
 
     @app.context_processor
     def inject_disk_usage():

@@ -1462,6 +1462,26 @@ a:focus {
     margin-bottom: 0;
 }
 
+.donate-afdian-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-top: 0.75rem;
+    padding: 0.45rem 0.95rem;
+    border: 1px solid var(--app-border);
+    border-radius: 8px;
+    color: var(--app-text-bright);
+    text-decoration: none;
+    font-weight: 600;
+    transition: background-color var(--app-shell-transition);
+}
+
+.donate-afdian-btn:hover,
+.donate-afdian-btn:focus {
+    background-color: var(--app-surface-hover);
+    text-decoration: none;
+}
+
 .donate-qr {
     display: block;
     margin-top: 0.75rem;
