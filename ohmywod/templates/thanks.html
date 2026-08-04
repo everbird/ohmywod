@@ -25,10 +25,10 @@
     {% else %}
     <div class="sponsor-empty">
       <i class="fa-solid fa-heart"></i>
-      <p>致谢墙暂时还没有赞助者。如果你愿意让站点继续维持，欢迎在爱发电支持——这里之后会展示支持者的爱发电昵称。</p>
+      <p>致谢墙暂时还没有赞助者。如果你愿意让站点继续维持，欢迎在爱发电支持——这里之后会展示支持者填写的致谢页显示名，留空则使用爱发电昵称。</p>
     </div>
     {% endif %}
-    <p class="sponsor-note">仅展示爱发电昵称、不显示金额；未提供昵称的支持者显示为“{{ anonymous_name }}”。</p>
+    <p class="sponsor-note">优先展示赞助方案里填写的“致谢页显示名”；留空使用爱发电昵称，填“匿名”则显示为“{{ anonymous_name }}”。不显示金额。</p>
   </section>
 
   <section class="content-section info-section">

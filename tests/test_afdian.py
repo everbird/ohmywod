@@ -155,6 +155,8 @@ def configured_app(app):
         app.config["AFDIAN_TOKEN"] = "tok123"
         cache.delete(afdian._FRESH_KEY)
         cache.delete(afdian._LAST_GOOD_KEY)
+        cache.delete(afdian._ORDER_OVERRIDES_FRESH_KEY)
+        cache.delete(afdian._ORDER_OVERRIDES_LAST_GOOD_KEY)
         yield app
 
 
@@ -218,6 +220,101 @@ def test_sponsor_display_names_maps_and_anonymizes(monkeypatch):
     assert afdian.sponsor_display_names() == [
         "Alice", afdian.ANONYMOUS_NAME, afdian.ANONYMOUS_NAME, afdian.ANONYMOUS_NAME,
     ]
+
+
+def test_sponsor_display_names_uses_custom_thanks_name(monkeypatch):
+    monkeypatch.setattr(afdian, "get_sponsors", lambda: [
+        {
+            "user": {"name": "Afdian Nick"},
+            "custom_fields": [
+                {"name": afdian.THANKS_DISPLAY_FIELD_LABEL, "value": "档案管理员"},
+            ],
+        },
+    ])
+    assert afdian.sponsor_display_names() == ["档案管理员"]
+
+
+def test_sponsor_display_names_custom_anonymous_marker(monkeypatch):
+    monkeypatch.setattr(afdian, "get_sponsors", lambda: [
+        {
+            "user": {"name": "Visible Nick"},
+            "custom_fields": [
+                {"label": afdian.THANKS_DISPLAY_FIELD_LABEL, "answer": "  “匿名”  "},
+            ],
+        },
+    ])
+    assert afdian.sponsor_display_names() == [afdian.ANONYMOUS_NAME]
+
+
+def test_sponsor_display_names_blank_custom_field_falls_back_to_nickname(monkeypatch):
+    monkeypatch.setattr(afdian, "get_sponsors", lambda: [
+        {
+            "user": {"name": "Fallback Nick"},
+            "custom_fields": [
+                {"name": afdian.THANKS_DISPLAY_FIELD_LABEL, "value": "  "},
+            ],
+        },
+    ])
+    assert afdian.sponsor_display_names() == ["Fallback Nick"]
+
+
+def test_sponsor_display_names_parses_thanks_name_from_remark(monkeypatch):
+    monkeypatch.setattr(afdian, "get_sponsors", lambda: [
+        {
+            "user": {"name": "Afdian Nick"},
+            "remark": "致谢页显示名（可选）：深井探险者",
+        },
+    ])
+    assert afdian.sponsor_display_names() == ["深井探险者"]
+
+
+def test_sponsor_display_names_uses_order_remark_override(monkeypatch):
+    monkeypatch.setattr(afdian, "get_sponsors", lambda: [
+        {"user": {"name": "Afdian Nick", "user_private_id": "priv-1"}},
+    ])
+    monkeypatch.setattr(afdian, "get_thanks_display_overrides", lambda: {
+        "priv-1": "蓓兰妮琪·碎羽",
+    })
+    assert afdian.sponsor_display_names() == ["蓓兰妮琪·碎羽"]
+
+
+def test_sponsor_display_names_order_remark_anonymous(monkeypatch):
+    monkeypatch.setattr(afdian, "get_sponsors", lambda: [
+        {"user": {"name": "Afdian Nick", "user_private_id": "priv-1"}},
+    ])
+    monkeypatch.setattr(afdian, "get_thanks_display_overrides", lambda: {"priv-1": "匿名"})
+    assert afdian.sponsor_display_names() == [afdian.ANONYMOUS_NAME]
+
+
+def test_thanks_display_overrides_from_orders_uses_latest_remark():
+    orders = [
+        {"user_private_id": "priv-1", "remark": "旧名字", "create_time": 1},
+        {"user_private_id": "priv-1", "remark": "新名字", "create_time": 2},
+    ]
+    assert afdian._thanks_display_overrides_from_orders(orders) == {"priv-1": "新名字"}
+
+
+def test_get_thanks_display_overrides_caches_minimal_mapping(configured_app, monkeypatch):
+    from ohmywod.extensions import cache
+
+    with configured_app.app_context():
+        cache.delete(afdian._ORDER_OVERRIDES_FRESH_KEY)
+        cache.delete(afdian._ORDER_OVERRIDES_LAST_GOOD_KEY)
+
+    monkeypatch.setattr(afdian, "fetch_all_orders", lambda **k: [
+        {
+            "user_private_id": "priv-1",
+            "remark": "蓓兰妮琪·碎羽",
+            "show_amount": "5.00",
+            "out_trade_no": "must-not-be-cached",
+            "create_time": 1,
+        },
+    ])
+    with configured_app.app_context():
+        overrides = afdian.get_thanks_display_overrides()
+    assert overrides == {"priv-1": "蓓兰妮琪·碎羽"}
+    assert "must-not-be-cached" not in repr(overrides)
+    assert "5.00" not in repr(overrides)
 
 
 def test_sponsor_display_names_empty_when_no_sponsors(monkeypatch):

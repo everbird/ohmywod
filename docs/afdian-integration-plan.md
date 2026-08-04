@@ -51,7 +51,7 @@ next_item_id: "AFD-005"
 2. 爱发电入口 URL 作为**单一配置或模板变量**管理，避免多处硬编码。
 3. 赞助数据**以爱发电为唯一真值源**：本地只做 Redis 缓存，绝不写入 SQLite，不进 litestream / DR 备份链。缓存坏了重拉即可。
 4. 只读、按需拉取即可满足赞助者墙；**不引入 webhook 或常驻在线校验**，避免新增攻击面与运维负担。
-5. 展示以致谢为目的、非排他：只展示爱发电昵称（及可选档位），默认保护隐私，不暴露任何可反查真实身份的信息。
+5. 展示以致谢为目的、非排他：优先展示用户在爱发电赞助方案自定义字段填写的“致谢页显示名（可选）”；留空用爱发电昵称，填“匿名”则显示为“匿名支持者”。默认保护隐私，不暴露任何可反查真实身份的信息。
 6. token 只进 `ohmywod-ops` 的 sops；仓库不保存 token、订单明细或赞助者 PII。
 7. 渠道与展示宁少勿杂；每增加一处展示都要评估隐私、授权与长期维护负担。
 
@@ -238,12 +238,12 @@ Review 关注：缓存键与失效行为；故障注入下的降级路径；确�
 
 Review 关注：是否泄露 PII；匿名默认是否稳妥；小屏展示与空态；文案是否让人误以为支持可换取功能。
 
-用户拍板（2026-08-04，回答待决策 #3/#4/#6）：**仅展示昵称**（不显档位、不显金额）；**显示昵称、缺失/匿名者归"匿名支持者"**；放**独立致谢页**。#5（是否按档位过滤）未单列，当前展示全部发电者、不过滤。
+用户拍板（2026-08-04，回答待决策 #3/#4/#6）：**仅展示昵称**（不显档位、不显金额）；**显示昵称、缺失/匿名者归"匿名支持者"**；放**独立致谢页**。#5（是否按档位过滤）未单列，当前展示全部发电者、不过滤。2026-08-04 追加口径：爱发电赞助方案新增自定义字段“致谢页显示名（可选）”，说明为“自定义留名，留空用昵称。匿名请填“匿名””。展示时优先使用该字段；字段留空回落爱发电昵称；字段为“匿名”时显示“匿名支持者”。
 
 执行证据（2026-08-04）：
 
-- 展示映射：`ohmywod/afdian.py` `sponsor_display_names()` 从 `get_sponsors()`（AFD-003 缓存）取昵称，隐私优先——**只出 `user.name`**，不出金额 / `user_id` / 头像；空白或缺失昵称、以及畸形条目一律归 `ANONYMOUS_NAME="匿名支持者"`，不抛错；未配置 / 空源→`[]`。
-- 独立致谢页：`ohmywod/views/frontend.py` 加 `GET /thanks`（`thanks_page`），渲染 `ohmywod/templates/thanks.html`（继承 `base.html`）。有数据出 `.sponsor-wall` 昵称 chip；空态出克制文案（"暂时还没有赞助者…"）；页脚说明"仅展示昵称、不显金额、缺失昵称显示为匿名支持者"。文案不暗示支持可换功能，对齐 SUP-004/006。
+- 展示映射：`ohmywod/afdian.py` `sponsor_display_names()` 从 `get_sponsors()`（AFD-003 缓存）取显示名，隐私优先——优先识别爱发电赞助方案自定义字段“致谢页显示名（可选）”；字段留空回落 `user.name`；字段为“匿名”或昵称空白/缺失、畸形条目时显示 `ANONYMOUS_NAME="匿名支持者"`；不出金额 / `user_id` / 头像；未配置 / 空源→`[]`。
+- 独立致谢页：`ohmywod/views/frontend.py` 加 `GET /thanks`（`thanks_page`），渲染 `ohmywod/templates/thanks.html`（继承 `base.html`）。有数据出 `.sponsor-wall` 昵称 chip；空态出克制文案（"暂时还没有赞助者…"）；页脚说明"自定义致谢页显示名优先、留空用爱发电昵称、填匿名显示匿名支持者、不显金额"。文案不暗示支持可换功能，对齐 SUP-004/006。
 - 入口：左侧全局侧栏导航加"赞助者致谢"项（`base.html`，`heart` 图标，`url_for('frontend.thanks_page')`，全站可达）；首页"支持作者"面板另加"查看赞助者致谢 →"链接。
 - 隐私 / 安全：第三方昵称经 Jinja 自动转义（测试断言 `<script>` 被转义、不落原样），无反查身份信息、无金额、无持续客服义务。
 - 样式：`custom.css` 加 `.sponsor-wall` / `.sponsor-chip`（圆角 chip，flex wrap，`word-break`）/ `.sponsor-empty` / `.sponsor-note` / `.donate-thanks-link`，复用 `--app-*` 变量。
@@ -408,3 +408,17 @@ Review 关注：是否泄露 PII；匿名默认是否稳妥；小屏展示与空
 - 发生的问题：无
 - 剩余风险：真实浏览器小屏观感未人工验收；该段属公开对外表态，用户可自行删改措辞。
 - 下一步：随 `/thanks` 一起部署即可对外可见；如需也在 maintenance-support-plan 记一笔，可加一条对应 SUP changelog。
+
+### WAVE-20260804-08 — 致谢页接入爱发电自定义显示名口径
+
+- 日期：2026-08-04
+- Drive AI：Codex
+- Review AI：`unassigned`
+- 关联事项：AFD-004（赞助者墙展示与隐私 / 授权）
+- 状态变化：AFD-004 保持 `done`；展示口径更新
+- 改动：用户在爱发电赞助方案中新增自定义字段“致谢页显示名（可选）”（说明：“自定义留名，留空用昵称。匿名请填“匿名””）。app 侧 `ohmywod/afdian.py` 新增 `query-order` 只读读取：`query-sponsor` 负责当前赞助者列表，`query-order` 的 `remark` 负责按 `user_private_id` 映射“致谢页显示名（可选）”；字段留空回落爱发电昵称；字段为“匿名”时显示“匿名支持者”；仍不展示金额、档位、头像、`user_id` 或订单信息，Redis 只缓存最小显示名映射、不缓存完整订单。`ohmywod/templates/thanks.html` 同步更新页面说明。`tests/test_afdian.py` 增加自定义留名、匿名、留空回落、`remark` 文本解析、订单映射与最小缓存覆盖。
+- 关键取舍：真实实调确认 `query-sponsor` 只返回 `user/current_plan/sponsor_plans/amount/time` 等信息，不含自定义字段；`query-order` 返回的订单 `remark` 字段包含用户填写的显示名。因此采用“双源只读”：赞助者资格以 `query-sponsor` 为准，显示名覆盖以 `query-order.remark` 为准。继续不写 SQLite，不保存本地支持者名单或完整订单。
+- 验证：`tests/test_afdian.py` 覆盖自定义字段覆盖昵称、填“匿名”匿名化、留空回落昵称、`remark` 中 `致谢页显示名（可选）：...` 解析、`query-order.remark` 按 `user_private_id` 覆盖赞助者昵称、只缓存最小映射；`tests/test_afdian.py` 25 项全绿；真实 API 实调 `query-sponsor total_count=1` 且不含自定义字段，`query-order remark` 返回“蓓兰妮琪·碎羽”，当前 `sponsor_display_names()` 输出 `["蓓兰妮琪·碎羽"]`。
+- 发生的问题：无
+- 剩余风险：`query-order.remark` 被用作自定义显示名来源；若未来爱发电把 `remark` 改作其他含义，可能误把普通订单备注显示到致谢页。当前赞助方案只有“致谢页显示名（可选）”这类自定义留名用途，风险可接受。
+- 下一步：上线后清理生产 Redis 对应缓存或等待 TTL，使 `/thanks` 读取新的订单显示名映射。
