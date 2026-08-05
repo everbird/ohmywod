@@ -38,7 +38,7 @@
             <!-- Sidebar -->
             <nav id="sidebar" class="d-flex flex-column flex-shrink-0 p-3 text-white bg-dark app-sidebar {{ 'active' if session['sidebar_is_active'] else ''}}">
                 <div class="sidebar-header">
-                    <h3 class="sidebar-brand"><a class="text-white text-decoration-none" href="{{ url_for('frontend.landing_page') }}"><img src="{{ url_for('static', filename='img/logo.png') }}" class="brand-logo" alt="Logo"></a></h3>
+                    <h3 class="sidebar-brand"><a class="text-white text-decoration-none" href="{{ url_for('frontend.landing_page') }}"><picture><source srcset="{{ url_for('static', filename='img/logo-512.webp') }}" type="image/webp"><img src="{{ url_for('static', filename='img/logo-256.png') }}" class="brand-logo" alt="Logo" width="256" height="256"></picture></a></h3>
                 </div>
 
 
