@@ -135,6 +135,12 @@ def _report_raw_response(body, etag, status=200):
     # Reports can be replaced by a later upload. Let browsers retain the body,
     # but require a cheap metadata revalidation rather than shared/CDN caching.
     response.headers["Cache-Control"] = "private, no-cache"
+    # Public raw reports are effectively immutable, so let Cloudflare hold a
+    # shared copy at the edge (GAP-004). This directive is CDN-only: browsers
+    # keep revalidating via the private Cache-Control above, while a matching
+    # Cloudflare Cache Rule for /r/raw/* serves edge HITs and revalidates the
+    # origin with the weak ETag when the day-long window expires.
+    response.headers["Cloudflare-CDN-Cache-Control"] = "public, max-age=86400"
     # Keep the sandbox on 304 responses too; a revalidation must not weaken the
     # security contract of the cached user-uploaded HTML.
     response.headers["Content-Security-Policy"] = REPORT_RAW_CSP
