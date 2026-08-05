@@ -6,8 +6,9 @@ source_of_truth_for: "domestic and international access performance risks, impro
 language: zh-CN
 created_at: "2026-08-04"
 last_updated: "2026-08-05"
-review_commit: "uncommitted"
-review_worktree: "Wave 0..2 (GAP-001..007) applied; GAP-004 CF rule live; GAP-007 FA subset deferred; uncommitted"
+next_step: "评估大陆 CDN / Cloudflare China Network（见 §6）；reader 浏览器功能回归"
+review_commit: "73ca443 (Merge PR #9, perf/global-access-waves)"
+review_worktree: "Wave 0..2 (GAP-001..007) merged to main and deployed; GAP-004 CF rule live; GAP-007 FA subset deferred"
 next_item_id: "GAP-008"
 ---
 
@@ -247,7 +248,7 @@ Wave 0 和 Wave 1 完成后先复测，不自动进入大陆 CDN 或多地域源
 
 ## 6. 暂不做或需重新评估
 
-- 大陆 CDN / Cloudflare China Network：只有 Wave 0/1 完成后，国内真实用户仍明显慢，且愿意承担 ICP、供应商、证书和缓存规则维护时再评估。
+- 大陆 CDN / Cloudflare China Network：**待评估**（原为暂不做）。Wave 0..2 上线后 WAVE-20260805-04 探针显示：本站资源侧该做的都做了（raw `HIT`、跨境 DNS 消除、字节大降），但国内约 1s 总耗时的大头是到 Cloudflare 海外 PoP 的 TCP/TLS 握手，非本站可控。若要继续压国内体验，下一步就是评估大陆 CDN / Cloudflare China Network，代价是 ICP 备案、供应商、证书和缓存规则维护。
 - 动态 HTML Cache Everything：当前页面有 `Vary: Cookie`、匿名 session cookie、CSRF、登录态和 metadata，不值得承担串内容风险。
 - 国内外资源域名分流：先用本站本地静态资源解决；分流会增加缓存碎片、调试成本和误判。
 - Afdian API 请求链路优化：`/thanks` 有 Redis fresh/last-good 缓存，普通首页只提供链接；当前不是主要瓶颈。
@@ -263,6 +264,21 @@ Wave 0 和 Wave 1 完成后先复测，不自动进入大陆 CDN 或多地域源
 - 浏览器检查：匿名首页、全部目录、公开目录、报告详情、reader、登录页、拥有者上传页。
 
 ## 8. Changelog
+
+### WAVE-20260805-04 — 上线后 Globalping 探针复测
+
+- 日期：2026-08-05
+- Drive AI：Claude
+- Review AI：`unassigned`
+- 关联事项：GAP-003 / GAP-004 / GAP-005 生产验证
+- 背景：Wave 0..2 已合并 main（PR #9，`73ca443`）并部署。用 Globalping 对国内（广州/深圳/北京）和美国（Buffalo）节点做 HTTP 复测，对比 §2.1 基线。
+- 结果：
+  - `static/wod/js/wod_standard.js`（GAP-005）：CN 总耗时约 `1610ms → ~976ms`，其中跨境 DNS 由约 `866ms`（德国源站）降到约 `5ms`（本站 Cloudflare，`cf: REVALIDATED`）。跨境 DNS/TLS 关键链路已消除。
+  - raw 战报（GAP-004）：三个 CN 节点均 `cf: HIT`，`firstByte` 约 `240–533ms`（US `HIT`，`firstByte` 约 `115ms`）；基线是 `1044ms` 的 `DYNAMIC` 回源东京。边缘命中、不再回源确认生效。
+  - logo（GAP-003）：普通页面加载 `logo-512.webp` 约 `49KB`（原 `logo.png` `956467 bytes`），`cf: REVALIDATED`。
+  - 首页 `/`：仍 `cf: DYNAMIC`，CN 总耗时约 `1035ms`（≈基线 `1061ms`）——符合预期，动态 HTML 不共享缓存。
+- 关键洞察：剩余的国内约 1s 总耗时几乎全部来自到 Cloudflare 海外 PoP 的 TCP/TLS 握手（本次未改、属 out-of-scope），CN 各 probe 的冷 DNS/TLS 抖动较大（个别 TLS 一次性 1176ms）。这正是第 6 节「Wave 0/1 后国内仍明显慢再评估大陆 CDN / Cloudflare China Network」的触发条件，探针数据已指向该方向。
+- 下一步：把「大陆 CDN / Cloudflare China Network」从「暂不做」升级为「待评估」（见第 6 节）；GAP-005 的 reader tooltip/皮肤/跳转仍建议做一次真实浏览器回归。
 
 ### WAVE-20260805-03 — Wave 2 落地（GAP-006 / GAP-007 部分）
 
