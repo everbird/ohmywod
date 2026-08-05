@@ -1462,7 +1462,7 @@ a:focus {
     margin-bottom: 0;
 }
 
-.donate-afdian-btn {
+.donate-cta-btn {
     display: inline-flex;
     align-items: center;
     gap: 0.4rem;
@@ -1476,26 +1476,71 @@ a:focus {
     transition: background-color var(--app-shell-transition);
 }
 
-.donate-afdian-btn:hover,
-.donate-afdian-btn:focus {
+.donate-cta-btn:hover,
+.donate-cta-btn:focus {
     background-color: var(--app-surface-hover);
     text-decoration: none;
 }
 
-.donate-qr {
-    display: block;
-    margin-top: 0.75rem;
-    width: min(100%, 12rem);
+/* Support-methods block: low-key at the bottom of the thank-you page — the wall
+   is the focus. Three equal-height cards (Afdian link + two reward-code QRs). */
+.support-intro {
+    color: var(--app-muted);
+    font-size: 0.9rem;
+}
+
+.support-methods {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: stretch;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.support-method {
+    flex: 1 1 8rem;
+    max-width: 12rem;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.55rem;
+    padding: 1rem;
     border: 1px solid var(--app-border);
+    border-radius: 10px;
+    background-color: var(--app-surface-muted, var(--app-surface));
+    text-align: center;
+    text-decoration: none;
+    color: inherit;
+}
+
+a.support-method:hover,
+a.support-method:focus {
+    background-color: var(--app-surface-hover);
+    text-decoration: none;
+}
+
+.support-method-icon {
+    font-size: 2.6rem;
+    line-height: 1;
+}
+
+.support-method-name {
+    font-weight: 600;
+}
+
+.support-method-hint {
+    font-size: 0.8rem;
+    color: var(--app-muted);
+}
+
+.support-method-qr {
+    display: block;
+    width: min(100%, 9rem);
     border-radius: 8px;
     background-color: #fff;
     padding: 0.35rem;
-}
-
-.donate-thanks-link {
-    margin-top: 0.6rem;
-    margin-bottom: 0;
-    font-size: 0.9rem;
 }
 
 /* Sponsor thank-you wall (AFD-004): privacy-first, nickname-only chips. */
@@ -1518,6 +1563,29 @@ a:focus {
     color: var(--app-text-bright, #fff);
     font-weight: 600;
     word-break: break-word;
+}
+
+.sponsor-source-icon {
+    margin-right: 0.45rem;
+    font-size: 0.9em;
+}
+
+/* Per-channel icon colours: WeChat brand green, Afdian brand purple. */
+.sponsor-icon--wechat {
+    color: #07c160;
+}
+
+.sponsor-icon--afdian {
+    color: #9a6cf0;
+}
+
+.sponsor-icon--alipay {
+    color: #1677ff;
+}
+
+/* Sponsor names in gold, regardless of channel. */
+.sponsor-name {
+    color: #e0b44c;
 }
 
 .sponsor-empty {

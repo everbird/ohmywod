@@ -68,6 +68,25 @@ class DefaultConfig(object):
     # a transient Afdian failure degrades to the previous result, not an empty wall.
     AFDIAN_CACHE_TTL = 3600
 
+    # --- Manual reward-code sponsors (WMS-001) ---
+    # WeChat / Alipay reward codes are plain QR images with no reliable server
+    # callback, so the (currently few) sponsors from those channels are maintained
+    # by hand here instead of via a merchant API. ohmywod/sponsors.py merges these
+    # into the /thanks wall next to the Afdian list, tagged by `source` for the
+    # per-channel icon (`wechat`, `alipay`). Only `display_name` + `source` ever
+    # reach the template; `amount` / `sponsored_at` are internal maintenance fields
+    # the front-end never shows, and `visible: False` hides a row while keeping the
+    # record. Default empty so the wall stays Afdian-only until populated. Like the
+    # other values here this is only the schema reference — runtime uses
+    # local_config.py. Example (edit local_config.py, then reload the app):
+    #   MANUAL_SPONSORS = [
+    #       {"display_name": "某某", "source": "wechat",
+    #        "amount": "20.00", "sponsored_at": "2026-08-05", "visible": True},
+    #       {"display_name": "匿名", "source": "alipay",
+    #        "amount": "10.00", "sponsored_at": "2026-08-05", "visible": True},
+    #   ]
+    MANUAL_SPONSORS = []
+
 
 # --- Afdian (爱发电) support entrance (AFD-001) ---
 # Single source of truth for the sponsorship page URL. Kept as a module-level

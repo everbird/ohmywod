@@ -1,41 +1,67 @@
 {% extends "base.html" %}
 
 {% block title %}赞助者致谢{% endblock %}
-{% block meta_description %}战报网赞助者致谢 —— 感谢在爱发电支持站点持续维护的朋友。{% endblock %}
+{% block meta_description %}战报网赞助者致谢与支持方式 —— 感谢在爱发电、微信、支付宝支持站点持续维护的朋友。{% endblock %}
 
 {% block content %}
 <div class="page-stack info-page">
   <div class="page-hero info-hero">
     <div>
       <h1 class="page-title">赞助者致谢</h1>
-      <p class="page-subtitle">核心功能始终免费。感谢在爱发电支持、让站点得以持续维护的每一位朋友。</p>
-    </div>
-    <div class="page-actions">
-      <a class="btn btn-primary" href="{{ afdian_url }}" target="_blank" rel="noopener"><i class="fa-solid fa-mug-hot me-1"></i>在爱发电支持</a>
+      <p class="page-subtitle">核心功能始终免费。感谢在爱发电、微信、支付宝支持，让站点得以持续维护的每一位朋友。</p>
     </div>
   </div>
 
   <section class="content-section info-section">
     {% if sponsors %}
     <ul class="sponsor-wall" aria-label="赞助者列表">
-      {% for name in sponsors %}
-      <li class="sponsor-chip">{{ name }}</li>
+      {% for entry in sponsors %}
+      <li class="sponsor-chip">
+        {% if entry.source == 'wechat' %}
+        <i class="fa-solid fa-qrcode sponsor-source-icon sponsor-icon--wechat" title="微信赞赏码" aria-label="微信赞赏码来源"></i>
+        {% elif entry.source == 'alipay' %}
+        <i class="fa-solid fa-qrcode sponsor-source-icon sponsor-icon--alipay" title="支付宝" aria-label="支付宝来源"></i>
+        {% else %}
+        <i class="fa-solid fa-mug-hot sponsor-source-icon sponsor-icon--afdian" title="爱发电" aria-label="爱发电来源"></i>
+        {% endif %}
+        <span class="sponsor-name">{{ entry.display_name }}</span>
+      </li>
       {% endfor %}
     </ul>
     {% else %}
     <div class="sponsor-empty">
       <i class="fa-solid fa-heart"></i>
-      <p>致谢墙暂时还没有赞助者。如果你愿意让站点继续维持，欢迎在爱发电支持——这里之后会展示支持者填写的致谢页显示名，留空则使用爱发电昵称。</p>
+      <p>致谢墙暂时还没有可展示的赞助者。如果你愿意让站点继续维持，欢迎在爱发电或通过微信、支付宝打赏支持——这里之后会展示支持者的致谢显示名。</p>
     </div>
     {% endif %}
-    <p class="sponsor-note">优先展示赞助方案里填写的“致谢页显示名”；留空使用爱发电昵称，填“匿名”则显示为“{{ anonymous_name }}”。不显示金额。</p>
+    <p class="sponsor-note">名字前的图标区分来源：<i class="fa-solid fa-mug-hot sponsor-icon--afdian"></i> 爱发电、<i class="fa-solid fa-qrcode sponsor-icon--wechat"></i> 微信赞赏码、<i class="fa-solid fa-qrcode sponsor-icon--alipay"></i> 支付宝。爱发电优先展示赞助方案里填写的“致谢页显示名”，留空使用爱发电昵称；微信、支付宝打赏来源的致谢名由站长按备注手工维护。填“匿名”则显示为“{{ anonymous_name }}”。不显示金额与赞助时间。</p>
   </section>
 
   <section class="content-section info-section">
     <div class="section-header"><h2 class="section-title">为什么这儿没有广告</h2></div>
     <p>之前我也在站上挂过 Google AdSense 试水。但战报网是个挺小众的中文 WoD 工具站，来的多半是老面孔；再加上众所周知的原因，Google 的广告在墙内本就没法好好加载，覆盖率常年只有个位数百分比，挣的那点钱跟服务器、存储、域名这些开销根本不成比例。换来的倒是一堆第三方脚本、被广告挤来挤去的排版，还有隔三差五得伺候的平台政策。</p>
     <p>算下来实在划不来，索性把 AdSense 全撤了、广告一个不留，改成靠自愿赞助贴补维护。</p>
-    <p>站照常用，赞不赞助都随意、也换不来什么特别待遇，更不会拿弹窗、倒计时来烦你。要是你愿意让这个小站继续开着，去爱发电支持一下就好——这页就是想跟每位支持者说声谢谢。</p>
+    <p>站照常用，赞不赞助都随意、也换不来什么特别待遇，更不会拿弹窗、倒计时来烦你。要是你愿意让这个小站继续开着，在下面选个方式支持一下就好——这页就是想跟每位支持者说声谢谢。</p>
+  </section>
+
+  <section class="content-section info-section support-section">
+    <div class="section-header"><h2 class="section-title">支持方式</h2></div>
+    <p class="support-intro">赞不赞助都随意、也换不来特别待遇。如果你愿意让站点继续维持，可以选择下面任一方式。</p>
+    <div class="support-methods">
+      <a class="support-method" href="{{ afdian_url }}" target="_blank" rel="noopener">
+        <i class="fa-solid fa-mug-hot support-method-icon sponsor-icon--afdian"></i>
+        <span class="support-method-name">爱发电</span>
+        <span class="support-method-hint">前往支持 →</span>
+      </a>
+      <figure class="support-method">
+        <img class="support-method-qr" src="{{ url_for('static', filename='img/wechat-reward-code.jpg') }}" alt="微信打赏二维码">
+        <figcaption class="support-method-name"><i class="fa-solid fa-qrcode sponsor-icon--wechat"></i> 微信</figcaption>
+      </figure>
+      <figure class="support-method">
+        <img class="support-method-qr" src="{{ url_for('static', filename='img/alipay-reward-code.jpg') }}" alt="支付宝打赏二维码">
+        <figcaption class="support-method-name"><i class="fa-solid fa-qrcode sponsor-icon--alipay"></i> 支付宝</figcaption>
+      </figure>
+    </div>
   </section>
 </div>
 {% endblock %}

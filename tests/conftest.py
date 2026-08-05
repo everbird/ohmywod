@@ -42,6 +42,14 @@ def app():
         FLASK_ADMIN_USERNAME = "admin"
         FLASK_ADMIN_PASSWD = "password"
 
+        # Isolate the suite from whatever a developer keeps in local_config
+        # (configure_app loads local_config's DefaultConfig as the base). Sponsor
+        # tests set these explicitly per-case; default them off so the wall is
+        # deterministically empty/unconfigured otherwise.
+        AFDIAN_USER_ID = ""
+        AFDIAN_TOKEN = ""
+        MANUAL_SPONSORS = []
+
         # Mail: suppress real SMTP; a sender is still required to build messages.
         MAIL_SUPPRESS_SEND = True
         MAIL_DEFAULT_SENDER = ("Ohmywod Test", "noreply@example.com")

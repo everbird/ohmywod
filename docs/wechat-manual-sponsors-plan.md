@@ -1,7 +1,7 @@
 ---
 document_id: ohmywod-wechat-manual-sponsors-plan
 schema_version: 1
-document_status: draft
+document_status: implemented
 source_of_truth_for: "微信打赏码来源赞助者以配置方式进入致谢页的实现边界、工作项与决策记录"
 language: zh-CN
 created_at: "2026-08-05"
@@ -103,10 +103,11 @@ MANUAL_SPONSORS = [
 
 ### WMS-001 — 新增配置读取与规范化
 
-- 状态：`todo`
+- 状态：`done`
 - 优先级：`P1`
 - 依赖：无
 - 最后更新：2026-08-05
+- 落地：`ohmywod/config.py` 增加 `MANUAL_SPONSORS = []` 默认值与示例注释；`ohmywod/sponsors.py` 新增 `manual_sponsor_entries()`，读取配置、过滤 `visible is False`、把缺失/空白/`匿名` 统一映射为 `匿名支持者`，只输出 `display_name` 与 `source`（不含 `amount`/`sponsored_at`），畸形项 fail-soft 跳过。
 
 方向：
 
@@ -126,10 +127,11 @@ MANUAL_SPONSORS = [
 
 ### WMS-002 — 合并到致谢页
 
-- 状态：`todo`
+- 状态：`done`
 - 优先级：`P1`
 - 依赖：WMS-001
 - 最后更新：2026-08-05
+- 落地：`ohmywod/sponsors.py` 新增 `thanks_entries()`，把爱发电展示名（`source=afdian`）与微信手工名单合并为统一 `{display_name, source}` 列表；`views/frontend.py` 的 `/thanks` 改用它；`templates/thanks.html` 按 `source` 显示来源 icon（爱发电 `fa-mug-hot`、微信 `fa-qrcode`，均带 `title`/`aria-label`），空态与说明文案不再只提爱发电，并说明微信来源由站长手工维护。
 
 方向：
 
@@ -150,10 +152,11 @@ MANUAL_SPONSORS = [
 
 ### WMS-003 — 测试与维护说明
 
-- 状态：`todo`
+- 状态：`done`
 - 优先级：`P2`
 - 依赖：WMS-001、WMS-002
 - 最后更新：2026-08-05
+- 落地：`tests/test_sponsors.py` 覆盖手工名单解析、匿名规则、隐藏项过滤、`amount`/`sponsored_at`/`note` 不外泄、爱发电+微信合并、来源 icon 渲染与 XSS 转义；`tests/test_afdian.py` 空态断言同步更新。配置示例记录在 `config.py` `MANUAL_SPONSORS` 注释与本文 §3。
 
 方向：
 
@@ -186,3 +189,6 @@ MANUAL_SPONSORS = [
 
 - 2026-08-05：新增本文。确定微信打赏来源先采用配置维护方案，不接微信支付商户 API，不做后台 CRUD，不写 SQLite。
 - 2026-08-05：按方案微调：配置中保留微信赞助金额与赞助时间，但前台不展示；致谢页用来源 icon 区分爱发电与微信赞赏码。
+- 2026-08-05：实现 WMS-001/002/003。新增 `ohmywod/sponsors.py`（`manual_sponsor_entries()` + `thanks_entries()`），`config.py` 增加 `MANUAL_SPONSORS`，`/thanks` 与模板改为合并展示并按来源显示 icon，新增 `tests/test_sponsors.py`。全量测试 155 通过。
+- 2026-08-05：扩展手工来源支持支付宝（`source: "alipay"`，蓝色 `fa-qrcode` icon），新增 `static/img/alipay-reward-code.jpg`；来源配色统一为爱发电紫 / 微信绿 / 支付宝蓝，赞助者名字金色。`conftest.py` 显式清空 `AFDIAN_*`/`MANUAL_SPONSORS`，隔离测试与本地 `local_config`。
+- 2026-08-05：信息架构调整。落地页 `donate-panel` 精简为单个「支持作者 / 查看致谢」入口按钮（移除二维码与外链）；致谢页升级为完整支持页——赞助者墙置于主位、突出致谢，「支持方式」（爱发电 + 微信 + 支付宝，三栏等高卡片）下沉到页面末尾。清理失效 CSS（`donate-afdian-btn`/`donate-thanks-link`/`donate-qr*`）。

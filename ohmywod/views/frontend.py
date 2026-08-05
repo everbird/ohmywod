@@ -44,12 +44,13 @@ def landing_page():
 
 @frontend.route("/thanks")
 def thanks_page():
-    # Standalone, read-only thank-you wall (AFD-004). Sponsor data is served from
-    # the Redis-cached Afdian source (get_sponsors); Afdian stays the single
-    # source of truth. Any source failure degrades to last-good/empty inside
-    # afdian.py, so this view never fails on Afdian being down.
-    from ohmywod import afdian
-    sponsors = afdian.sponsor_display_names()
+    # Standalone, read-only thank-you wall (AFD-004 / WMS-002). Merges the
+    # Redis-cached Afdian source (the single source of truth for that channel)
+    # with the hand-maintained WeChat list from config; each entry carries a
+    # `source` so the template can show a per-channel icon. Afdian failures
+    # degrade to last-good/empty inside afdian.py, so this view never 500s.
+    from ohmywod import afdian, sponsors as sponsors_mod
+    sponsors = sponsors_mod.thanks_entries()
     return rt("thanks.html", sponsors=sponsors, anonymous_name=afdian.ANONYMOUS_NAME)
 
 

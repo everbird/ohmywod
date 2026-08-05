@@ -328,7 +328,7 @@ def test_thanks_page_renders_empty_state(client, monkeypatch):
     assert res.status_code == 200
     body = res.get_data(as_text=True)
     assert "赞助者致谢" in body
-    assert "暂时还没有赞助者" in body
+    assert "暂时还没有可展示的赞助者" in body
 
 
 def test_thanks_page_lists_and_escapes_sponsors(client, monkeypatch):
