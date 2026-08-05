@@ -6,7 +6,10 @@
 
 {% block head %}
     {{ super() }}
+{# FilePond styles only matter to the owner's upload widget (GAP-007). #}
+{% if current_user.username == category.owner %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/filepond.css' )}}">
+{% endif %}
 <style type="text/css">
     #category-desc {
         overflow: hidden;
@@ -210,10 +213,17 @@
 {% endblock %}
 
 {% block footer %}
+    {# FilePond JS (437KB) is only needed for the owner's upload widget; public
+       and non-owner viewers no longer download it (GAP-007). filepond.jquery.js
+       must load after jQuery, which comes in via super() below. #}
+    {% if current_user.username == category.owner %}
     <script src="{{ url_for('static', filename='js/filepond.js') }}"></script>
+    {% endif %}
     {{ super() }}
 
+    {% if current_user.username == category.owner %}
     <script src="{{ url_for('static', filename='js/filepond.jquery.js') }}"></script>
+    {% endif %}
 
 <script>
 {% if current_user.username == category.owner %}

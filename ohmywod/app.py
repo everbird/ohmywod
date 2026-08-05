@@ -9,7 +9,7 @@ from flask_admin.contrib import sqla
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 from ohmywod import views
-from ohmywod.config import DefaultConfig, AFDIAN_URL
+from ohmywod.config import DefaultConfig, AFDIAN_URL, GOOGLE_ANALYTICS_ID
 from ohmywod.controllers.user import UserController
 
 try:
@@ -77,6 +77,11 @@ def configure_app(app, config):
     def inject_afdian_url():
         # Single-point support entrance URL (AFD-001); see ohmywod/config.py.
         return {"afdian_url": AFDIAN_URL}
+
+    @app.context_processor
+    def inject_google_analytics_id():
+        # GA4 id (GAP-006); empty string disables the tag. See ohmywod/config.py.
+        return {"google_analytics_id": GOOGLE_ANALYTICS_ID}
 
     @app.context_processor
     def inject_disk_usage():

@@ -157,6 +157,52 @@ def test_view_category(authenticated_client, db):
     assert "cat1" in res.data.decode('utf-8')
 
 
+def test_google_analytics_is_lazy_loaded(client):
+    # GAP-006: the GA tag must not hard-load in <head> anymore; it is injected
+    # after the load event via requestIdleCallback so it never blocks first paint.
+    res = client.get('/')
+    assert res.status_code == 200
+    page = res.data.decode('utf-8')
+    # Configured id is present, but not as an eager blocking <script src=...>.
+    assert 'G-TYGCT601XW' in page
+    assert '<script async src="https://www.googletagmanager.com/gtag/js' not in page
+    # The deferred loader wiring is present.
+    assert 'requestIdleCallback' in page
+    assert "addEventListener('load'" in page
+
+
+def test_base_pages_drop_standalone_popper(client):
+    # GAP-007: Popper is bundled in bootstrap.bundle.min.js; the standalone build
+    # must no longer be loaded on base-extending pages.
+    res = client.get('/')
+    assert res.status_code == 200
+    assert 'popper-v2.11.6.js' not in res.data.decode('utf-8')
+
+
+def test_category_owner_loads_filepond(authenticated_client, db):
+    # GAP-007: the owner still gets the upload widget assets.
+    rc = ReportController()
+    cat = rc.create_category("owncat", "Cat Desc", "testuser")
+    res = authenticated_client.get(f'/r/category/{cat.id}')
+    assert res.status_code == 200
+    page = res.data.decode('utf-8')
+    assert 'js/filepond.js' in page
+    assert 'css/filepond.css' in page
+
+
+def test_category_non_owner_skips_filepond(client, db):
+    # GAP-007: a public/non-owner viewer must not download the 437KB FilePond JS
+    # (or its CSS) since they never see the upload widget.
+    rc = ReportController()
+    cat = rc.create_category("pubcat", "Cat Desc", "someoneelse")
+    res = client.get(f'/r/category/{cat.id}')
+    assert res.status_code == 200
+    page = res.data.decode('utf-8')
+    assert 'js/filepond.js' not in page
+    assert 'js/filepond.jquery.js' not in page
+    assert 'css/filepond.css' not in page
+
+
 def test_reorder_category_switches_to_manual_order(authenticated_client, db):
     rc = ReportController()
     cat = rc.create_category("cat1", "Cat Desc", "testuser")
