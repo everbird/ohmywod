@@ -5,9 +5,9 @@ document_status: draft
 source_of_truth_for: "domestic and international access performance risks, improvement order, and non-regression guardrails"
 language: zh-CN
 created_at: "2026-08-04"
-last_updated: "2026-08-04"
+last_updated: "2026-08-05"
 review_commit: "uncommitted"
-review_worktree: "clean before this document"
+review_worktree: "Wave 0..2 (GAP-001..007) applied; GAP-004 CF rule live; GAP-007 FA subset deferred; uncommitted"
 next_item_id: "GAP-008"
 ---
 
@@ -89,7 +89,7 @@ Wave 0 和 Wave 1 完成后先复测，不自动进入大陆 CDN 或多地域源
 
 ### GAP-001 — 移除 Google Fonts 渲染关键路径依赖
 
-- 状态：`todo`
+- 状态：`done`
 - 优先级：`P0`
 - 依赖：无
 
@@ -108,7 +108,7 @@ Wave 0 和 Wave 1 完成后先复测，不自动进入大陆 CDN 或多地域源
 
 ### GAP-002 — 删除 unpkg FilePond CSS 外链
 
-- 状态：`todo`
+- 状态：`done`
 - 优先级：`P0`
 - 依赖：无
 
@@ -127,7 +127,7 @@ Wave 0 和 Wave 1 完成后先复测，不自动进入大陆 CDN 或多地域源
 
 ### GAP-003 — 缩小普通页面 logo 下载字节
 
-- 状态：`todo`
+- 状态：`done`
 - 优先级：`P1`
 - 依赖：无
 
@@ -147,9 +147,11 @@ Wave 0 和 Wave 1 完成后先复测，不自动进入大陆 CDN 或多地域源
 
 ### GAP-004 — 为公开 raw 战报增加 Cloudflare 边缘缓存
 
-- 状态：`todo`
+- 状态：`done`（应用层 + 生产 Cache Rule 均完成，已实测 `HIT`；国内/海外探针对比为建议后续项）
 - 优先级：`P1`
 - 依赖：Cloudflare Cache Rule 修改授权、生产发布授权
+
+生产配置实况（重要坑）：`Cache-Control: private, no-cache` 会让 Cloudflare 在 Edge TTL「respect origin」（"Use cache-control header if present..."）模式下直接 `BYPASS`，即使 origin 同时发了 `Cloudflare-CDN-Cache-Control: public, max-age=86400`（该头会被 CF 消费后从返回给客户端的响应里删除，`curl` 看不到，无法据此判断 origin 是否发了）。最终解决办法是不依赖 header 覆盖：把这条 Cache Rule 的 **Edge TTL 改为 "Ignore cache-control header and use this TTL" = 1 day**，**Browser TTL 保持 respect origin**。这样边缘强制缓存 24h、浏览器仍拿 `private, no-cache` 继续 revalidate。app 里的 `Cloudflare-CDN-Cache-Control` 头在此模式下闲置但保留（自文档 + 备用）。实测同一 raw URL 第二次请求 `cf-cache-status: HIT`（带 `age`），浏览器头不变。
 
 问题与影响：`/r/raw/*` 是公开且基本不可变的战报 HTML，但当前响应为 `Cache-Control: private, no-cache` 和 `CF-Cache-Status: DYNAMIC`。国内访问需要动态回源东京，热门战报重复访问无法利用边缘。
 
@@ -168,7 +170,7 @@ Wave 0 和 Wave 1 完成后先复测，不自动进入大陆 CDN 或多地域源
 
 ### GAP-005 — reader 页 WoD 德国站 CSS/JS 本地镜像
 
-- 状态：`todo`
+- 状态：`done`（代码完成并测试；建议部署后做浏览器功能回归：tooltip/皮肤/跳转）
 - 优先级：`P1`
 - 依赖：功能兼容验证
 
@@ -195,9 +197,11 @@ Wave 0 和 Wave 1 完成后先复测，不自动进入大陆 CDN 或多地域源
 
 ### GAP-006 — Google tag 改为非阻塞增强能力
 
-- 状态：`todo`
+- 状态：`done`（配置开关 + 延迟加载；已测试。建议部署后确认 GA 仍能收到数据）
 - 优先级：`P2`
 - 依赖：是否仍需要 Google Analytics 数据
+
+实现方式：GA4 measurement id 抽成模块级常量 `config.py::GOOGLE_ANALYTICS_ID`（默认保留现有 `G-TYGCT601XW`，置空即完全关闭），经 `app.py` context processor 注入为 `google_analytics_id`。`base.html` 仅在其非空时渲染；且不再在 `<head>` 里硬加载 `<script async src=...gtag/js>`，改为在 `load` 事件后经 `requestIdleCallback`（无则 `setTimeout` 兜底）动态插入 gtag，彻底移出首屏关键路径。
 
 问题与影响：`base.html` 全站加载 `https://www.googletagmanager.com/gtag/js?id=G-TYGCT601XW`。它是 `async`，通常不阻塞 DOM，但国内网络会长时间 pending，影响浏览器连接队列和开发者工具观感。
 
@@ -215,9 +219,16 @@ Wave 0 和 Wave 1 完成后先复测，不自动进入大陆 CDN 或多地域源
 
 ### GAP-007 — 通用 JS/CSS 按页加载与图标瘦身
 
-- 状态：`todo`
+- 状态：`partial`（Popper 去重 + FilePond 按拥有者加载已完成并测试；Font Awesome 瘦身按计划推迟）
 - 优先级：`P3`
 - 依赖：Wave 0/1 复测后仍有明显资源瓶颈
+
+已完成：
+- 确认 `bootstrap.bundle.min.js`（v5.2.2）已内置 Popper（供侧边栏 dropdown 使用），且没有任何继承 `base.html` 的页面直接用全局 `Popper`，故从 `base.html` 删除多余的 `popper-v2.11.6.js`。`report_reader.html` 是独立页且直接用全局 `Popper.createPopper`，保留自带的那份。
+- `category.html` 的 `filepond.css`、`filepond.js`（437KB）、`filepond.jquery.js` 全部改为仅在 `current_user.username == category.owner` 时加载；匿名/非拥有者浏览公开目录不再下载上传相关 JS/CSS。
+
+推迟：
+- Font Awesome subset / 换 inline SVG：风险与工作量较高，计划明确「不放前面」，留待 Wave 0/1/2 部署复测后仍有明显字节瓶颈时再评估。
 
 问题与影响：`base.html` 每页加载 `jquery-3.3.1.js`、`bootstrap.bundle.min.js`、`js.cookie`、`popper-v2.11.6.js`、Font Awesome 全量 CSS 和 webfonts。分类页额外加载 `filepond.js` `437217 bytes`。这些资源多数能缓存，但冷启动和远端 Cloudflare PoP 下仍有成本。
 
@@ -252,6 +263,59 @@ Wave 0 和 Wave 1 完成后先复测，不自动进入大陆 CDN 或多地域源
 - 浏览器检查：匿名首页、全部目录、公开目录、报告详情、reader、登录页、拥有者上传页。
 
 ## 8. Changelog
+
+### WAVE-20260805-03 — Wave 2 落地（GAP-006 / GAP-007 部分）
+
+- 日期：2026-08-05
+- Drive AI：Claude
+- Review AI：`unassigned`
+- 关联事项：GAP-006 → `done`；GAP-007 → `partial`
+- 改动：
+  - GAP-006：新增 `config.py::GOOGLE_ANALYTICS_ID`（模块级常量，默认 `G-TYGCT601XW`，置空即关闭）+ `app.py` context processor `inject_google_analytics_id`；`base.html` 改为条件渲染 + `load`/`requestIdleCallback` 延迟加载 gtag，移除 `<head>` 里的阻塞式 `<script async ...gtag/js>`。
+  - GAP-007：`base.html` 删除多余 `popper-v2.11.6.js`（bootstrap.bundle 已内置 Popper，无页面用全局 Popper；reader 独立页保留自带）；`category.html` 把 `filepond.css/js/jquery.js` 收进 `owner` 判断，非拥有者/匿名不再下载 437KB 上传 JS。
+- 关键取舍：GA 用配置开关（模块级常量，和 `AFDIAN_URL` 同套路，能到达生产 `local_config.py`），不引入国内统计 SDK。Font Awesome 瘦身按计划推迟。未上 bundler。
+- 验证：`pytest tests/`（144 passed）。新增测试：GA 延迟加载/不硬加载、base 页无 `popper-v2.11.6.js`、category 拥有者加载 FilePond、非拥有者不加载 FilePond。
+- 下一步（建议，非阻塞）：部署后浏览器回归——GA 是否仍上报、侧边栏 dropdown/上传/AJAX CSRF/布局切换正常、公开目录确无 FilePond 请求。
+
+### WAVE-20260805-02 — GAP-004 生产 Cache Rule 上线并实测 HIT
+
+- 日期：2026-08-05
+- Drive AI：Claude
+- Review AI：`unassigned`
+- 关联事项：GAP-004 由 `in-progress` 改为 `done`
+- 改动：在 Cloudflare zone `everbird.me` 增加 Cache Rule `raw-report-edge-cache`，匹配 `http.host eq "wod.everbird.me" and starts_with(http.request.uri.path, "/r/raw/")`，Cache eligibility = Eligible for cache。
+- 关键取舍与坑：最初按计划把 Edge TTL 设为「respect origin」，期望 `Cloudflare-CDN-Cache-Control: public, max-age=86400` 覆盖浏览器的 `Cache-Control: private`，但实测持续 `BYPASS`——CF 在该模式下认了 `private`。排查确认响应无 `Set-Cookie`、无 `Vary`（排除串内容）。最终改为 **Edge TTL = "Ignore cache-control header and use this TTL" = 1 day**、**Browser TTL = respect origin**，绕开 header 覆盖不生效的问题。app 的 CDN 头保留不动。
+- 验证：同一 raw URL 连续请求 `cf-cache-status` 由 `MISS` → `HIT`（带 `age`），浏览器仍收到 `cache-control: private, no-cache`。
+- 下一步（建议，非阻塞）：按 §7 用 Globalping 做国内/海外探针的前后对比并记录；确认 `/r/report/*`、`/r/category/*` 等动态页仍为 `DYNAMIC`/`BYPASS`。
+
+### WAVE-20260805-01 — Wave 1 落地（GAP-004 应用层 / GAP-005）
+
+- 日期：2026-08-05
+- Drive AI：Claude
+- Review AI：`unassigned`
+- 关联事项：GAP-004 改为 `in-progress`（应用层完成，待生产 Cache Rule/发布/复测）；GAP-005 改为 `done`
+- 改动：
+  - GAP-004：`views/report.py::_report_raw_response` 在保留浏览器 `Cache-Control: private, no-cache` 的同时新增 `Cloudflare-CDN-Cache-Control: public, max-age=86400`，仅对公开 raw 战报（`/r/raw/*`，蓝图前缀 `/r`）开启共享边缘缓存。测试：扩展 `test_report_raw_revalidates_without_reading_body` 断言 200/304/替换后 200 三种情况都带该 CDN 头且浏览器头不变；新增 `test_dynamic_report_page_has_no_cdn_cache_header` 确认 `/r/report/*`、`/r/category/*` 动态页不发该头（守护 DYNAMIC/BYPASS）。
+  - GAP-005：把 reader 固定版本（`?1662631467`）的 `wod_standard.js`、`layout.css`、`skin-cn.css` 及其 `@import` 的 `ajax.css`/`news.css` 共 5 个文件镜像到 `static/wod/`；`report_reader.html` 三处外链改为本地 `url_for('static', ...)`。CSS 内 106 处相对 `url()` 图片引用改写为绝对 delta URL（图片非渲染阻塞，故仍走 delta，满足“无 delta CSS/JS 请求”判断）；`@import` 保持本地。每个镜像文件加了来源 URL / 抓取日期 / 版本 query 注释头。保留 `wodInitialize('delta.world-of-dungeons.org',...)` 运行时 host 与 `/wod/spiel/` 外站跳转链接。测试：新增 `test_reader_uses_local_wod_mirror_not_delta`、`test_wod_mirror_static_files_are_served`。
+- 关键取舍：
+  - GAP-004 应用层只发 CDN 专用头，浏览器仍走私有 revalidation，弱 ETag 让 Cloudflare 到期回源校验；24h 边缘窗口对“基本不可变”的公开战报可接受。真正开启缓存还需一条只匹配 `/r/raw/*` 的 Cloudflare Cache Rule（“Eligible for cache / Cache Everything”），属需授权的生产配置，尚未执行。
+  - GAP-005 只镜像渲染关键的 CSS/JS，CSS 引用的图片改为绝对 delta URL 而非全量镜像（约 90+ 图片），把维护面控制住，同时把 1610ms 的 `wod_standard.js` 与两份 CSS 移出跨境渲染关键路径。未改渲染的死模板 `templates/layout.html`（无任何引用），仅记录待清理。
+- 验证：`pytest tests/`（140 passed）。`grep` 确认 `report_reader.html` 无 delta 的 CSS/JS 资源请求，仅剩运行时 host 配置与外站跳转。未做：生产 `curl -I` 响应头、`CF-Cache-Status` HIT、国内/海外探针复测（需部署后），以及 reader tooltip/皮肤/跳转的真实浏览器回归。
+- 下一步：请授权并配置 Cloudflare `/r/raw/*` Cache Rule 后发布，按第 7 节做生产响应头与国内/海外探针复测确认 GAP-004；部署后对 reader 做一次浏览器功能回归以关闭 GAP-005。之后按需评估 Wave 2（GAP-006/007）。
+
+### WAVE-20260804-02 — Wave 0 落地（GAP-001/002/003）
+
+- 日期：2026-08-04
+- Drive AI：Claude
+- Review AI：`unassigned`
+- 关联事项：GAP-001、GAP-002、GAP-003 状态改为 `done`
+- 改动：
+  - GAP-001：删除 `static/css/bootstrap.min.css` 顶部的 Google Fonts `@import`，`--bs-font-sans-serif` 去掉 `Lato,` 前缀改为系统字体栈；同时清理未被模板引用的 `static/css/themes/{cyborg,vapor,darkly}/bootstrap.min.css` 中的同类 `@import`，全仓无 `fonts.googleapis.com` / `fonts.gstatic.com`。
+  - GAP-002：删除 `templates/root.html` 与 `templates/category.html` 的 `unpkg.com/filepond` 外链；`category.html` 仅保留本地 `static/css/filepond.css`，`root.html` 无上传控件故直接移除，全仓无 `unpkg.com`。
+  - GAP-003：由 1024×1024、`956467 bytes` 的 `logo.png` 生成 `logo-512.webp`（49KB）与 `logo-256.png`（75KB）新文件；`base.html` 侧边栏改用 `<picture>`（WebP 主 + PNG 回退，带 `width/height`）；`report_details.html` 的 OG 图仍用原图（非首屏、不阻塞渲染）。
+- 关键取舍：只做本地化/去重/减重，未引入地理分流、国内镜像或缓存动态 HTML；logo 采用新文件名避免依赖同名旧缓存 purge；主题 CSS 虽未被引用仍一并清理以满足“全仓无 Google Fonts”的完成判断。
+- 验证：`pytest tests/test_views.py` 全部 34 项通过（覆盖 landing、category、root 等 base.html 渲染路径）；`grep` 确认全仓（排除 docs/git）已无 `fonts.googleapis`/`fonts.gstatic`/`unpkg.com`；本地生成图片字节均满足 GAP-003 完成判断（<120KB 目标）。未做生产响应头/国内外探针复测（需部署后进行）。
+- 下一步：进入 Wave 1（GAP-004 raw 战报 Cloudflare 缓存、GAP-005 reader WoD 资源本地镜像）；上线后按第 7 节验证矩阵做生产响应头与国内/海外探针复测。
 
 ### WAVE-20260804-01 — Repo 扫描与全局访问计划
 
