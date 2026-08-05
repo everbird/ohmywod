@@ -22,15 +22,40 @@
             })();
         </script>
         <title>{% block title %}{% endblock %} - 战报网</title>
-        <!-- Google tag (gtag.js) -->
-        <script async src="https://www.googletagmanager.com/gtag/js?id=G-TYGCT601XW"></script>
+        {% if google_analytics_id %}
+        <!-- Google tag (gtag.js) — lazy-loaded after first paint (GAP-006).
+             Deferred to load + requestIdleCallback so it never competes with the
+             first screen; on slow CN networks it used to pend for a long time.
+             Disable entirely by setting GOOGLE_ANALYTICS_ID = "" in config. -->
         <script>
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-
-            gtag('config', 'G-TYGCT601XW');
+            (function() {
+                var GA_ID = "{{ google_analytics_id }}";
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){dataLayer.push(arguments);}
+                window.gtag = gtag;
+                function loadGtag() {
+                    var s = document.createElement('script');
+                    s.async = true;
+                    s.src = 'https://www.googletagmanager.com/gtag/js?id=' + GA_ID;
+                    document.head.appendChild(s);
+                    gtag('js', new Date());
+                    gtag('config', GA_ID);
+                }
+                function schedule() {
+                    if ('requestIdleCallback' in window) {
+                        requestIdleCallback(loadGtag, { timeout: 3000 });
+                    } else {
+                        setTimeout(loadGtag, 1200);
+                    }
+                }
+                if (document.readyState === 'complete') {
+                    schedule();
+                } else {
+                    window.addEventListener('load', schedule);
+                }
+            })();
         </script>
+        {% endif %}
         {% endblock %}
     </head>
     <body>
@@ -38,7 +63,7 @@
             <!-- Sidebar -->
             <nav id="sidebar" class="d-flex flex-column flex-shrink-0 p-3 text-white bg-dark app-sidebar {{ 'active' if session['sidebar_is_active'] else ''}}">
                 <div class="sidebar-header">
-                    <h3 class="sidebar-brand"><a class="text-white text-decoration-none" href="{{ url_for('frontend.landing_page') }}"><img src="{{ url_for('static', filename='img/logo.png') }}" class="brand-logo" alt="Logo"></a></h3>
+                    <h3 class="sidebar-brand"><a class="text-white text-decoration-none" href="{{ url_for('frontend.landing_page') }}"><picture><source srcset="{{ url_for('static', filename='img/logo-512.webp') }}" type="image/webp"><img src="{{ url_for('static', filename='img/logo-256.png') }}" class="brand-logo" alt="Logo" width="256" height="256"></picture></a></h3>
                 </div>
 
 
@@ -151,7 +176,10 @@
                     <script src="{{ url_for('static', filename='js/vendor/jquery-3.3.1.js') }}"></script>
                     <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
                     <script src="{{ url_for('static', filename='js/vendor/js.cookie.min-3.0.1.js') }}"></script>
-                    <script src="{{ url_for('static', filename='js/vendor/popper-v2.11.6.js') }}"></script>
+                    {# Popper is bundled inside bootstrap.bundle.min.js (v5.2.2) for
+                       the sidebar dropdowns; no base-extending page uses a global
+                       Popper directly, so the standalone build is redundant (GAP-007).
+                       report_reader.html is standalone and keeps its own Popper. #}
                     <script>
                         // Attach the CSRF token to every jQuery AJAX POST/PUT/PATCH/DELETE
                         // so existing $.post()/$.ajax() calls don't need to be touched.

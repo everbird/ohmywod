@@ -1,0 +1,76 @@
+/*
+ * Mirrored from World of Dungeons for the 战报网 reader (GAP-005).
+ * Source : https://delta.world-of-dungeons.org/wod/css/news.css?1662631467
+ * Fetched: 2026-08-05   Version query: 1662631467
+ * Note   : Served locally to drop a render-blocking cross-border DNS/TLS
+ *          chain. Relative image url() were rewritten to absolute delta
+ *          URLs; @import stays local (ajax.css/news.css also mirrored).
+ *          Re-fetch and re-run the url() rewrite if the version query bumps.
+ */
+
+ 
+ 
+
+ .news_body {
+    background-position:        left top;
+    padding:                    0px 0px 0px 0px;
+ }
+ .news_body_element {
+    padding:                    10px 0px 10px 0px;
+    /* width:                      480px; */
+ }
+
+ .news_title_font {
+    font-size:                  16px;
+    font-weight:                bold;
+ }
+ .news_subtitle_font{
+    font-weight:                bold;
+    font-size:                  12px;
+ }
+
+ .news_body_element .type{
+    float:                      left;
+    margin:                     0;
+    padding:                    20px 10px 0px 25px;
+    width:                      60px;
+    overflow:                   hidden;
+    clear:                      both;
+ }
+
+ .news_body_element .main{
+    position:                   relative;
+    clear:                      none;
+    overflow:                   auto;
+    font-size:                  12px;
+    padding:                    20px 100px 5px 0px;
+ }
+
+ .news_body_element .date{
+    font-size:                  10px;
+    font-style:                 italic;
+ }
+
+.news_body_element .text{
+    padding:                    10px 0px 0px 0px;
+ }
+
+ .news_body_element .line {
+/*    width:                      510px;*/
+    height:                     2px;
+}
+
+.news_body_element .image {
+    float:                      right;
+    padding:                    0px 10px 10px 10px;
+    width:                      120px;
+}
+
+.news_body_element .subtext{
+    font-size:                  10px;
+    font-style:                 italic;
+}
+
+.news_body_element .moreLink{
+    padding:                    10px 0px 0px 0px;
+}

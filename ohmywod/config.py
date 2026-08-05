@@ -78,3 +78,14 @@ class DefaultConfig(object):
 # one place across every environment. Public (non-secret); change the homepage by
 # editing only this line.
 AFDIAN_URL = "https://ifdian.net/a/everbird"
+
+
+# --- Google Analytics (gtag.js) toggle (GAP-006) ---
+# Public (non-secret) GA4 measurement id. Kept as a module-level constant for the
+# same reason as AFDIAN_URL above: production replaces DefaultConfig wholesale via
+# local_config.py, so a class attribute would not reach it. app.py injects this as
+# `google_analytics_id` via a context processor. Set to "" to disable analytics
+# entirely — base.html renders nothing when it is empty. Even when set, the tag is
+# lazy-loaded after the load event so it never competes with first paint (it used
+# to pend for a long time on mainland-China networks).
+GOOGLE_ANALYTICS_ID = "G-TYGCT601XW"

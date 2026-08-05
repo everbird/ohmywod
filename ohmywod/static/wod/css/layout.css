@@ -1,0 +1,947 @@
+/*
+ * Mirrored from World of Dungeons for the 战报网 reader (GAP-005).
+ * Source : https://delta.world-of-dungeons.org/wod/css/layout.css?1662631467
+ * Fetched: 2026-08-05   Version query: 1662631467
+ * Note   : Served locally to drop a render-blocking cross-border DNS/TLS
+ *          chain. Relative image url() were rewritten to absolute delta
+ *          URLs; @import stays local (ajax.css/news.css also mirrored).
+ *          Re-fetch and re-run the url() rewrite if the version query bumps.
+ */
+
+
+@import "ajax.css";
+@import "news.css";
+
+.heroClass {
+    white-space: nowrap;
+}
+
+h1.arena {
+    margin-bottom: 0;
+}
+
+.button {
+    white-space: nowrap;
+}
+
+a.button_minor:visited,
+a.button_minor:active,
+a.button_minor:link,
+a.button_minor:hover,
+.button_minor {
+    padding-left: 0.5em;
+    padding-right: 0.5em;
+    background-color: transparent;
+    border: none;
+    color: #FFCF00;
+}
+
+a.button_minor:hover,
+.button_minor:hover {
+    color: white;
+}
+
+
+
+.column {
+    width: 50%;
+}
+
+.layout_left {
+    float:left;
+}
+
+.layout_right {
+    float:right;
+}
+
+.layout_clear {
+    clear: both;
+}
+
+
+.left {
+    text-align: left;
+}
+
+.right {
+    text-align: right;
+}
+
+.center {
+    text-align: center;
+}
+
+.top,
+table.top > tbody > tr > td,
+table.top > tbody > tr > th {
+    vertical-align: top;
+}
+
+.middle,
+table.middle > tbody > tr > td,
+table.middle > tbody > tr > th
+{
+    vertical-align: middle;
+}
+
+.bottom,
+table.bottom > tbody > tr > td,
+table.bottom > tbody > tr > th {
+    vertical-align: bottom;
+}
+
+
+table.content_table > tbody > tr.header > th {
+    vertical-align: middle;
+}
+
+
+table.content_table > tbody > tr.header > * > input {
+    font-weight: bold;
+}
+
+
+
+
+
+
+/**********************************************************************
+ * Dungeon rating table
+ **********************************************************************/
+table.ratetable            {
+    border-collapse:         collapse;
+    border-left-width:       thin;
+    border-top-width:        thin;
+    border-left-style:       solid;
+    border-top-style:        solid;
+    border-color:            #909090;
+    background-color:         #555555;
+}
+table.ratetable > * > tr > td,
+table.ratetable > * > tr > th {
+    text-align: left;
+    border-bottom-width:     thin;
+    border-right-width:      thin;
+    border-right-style:      solid;
+    border-bottom-style:     solid;
+    border-color:            #909090;
+    background-color:        #555555;
+    border-left-style:       none;
+    border-top-style:        none;
+    padding:                 1mm;
+    color:                   #FFFFFF;
+}
+
+table.ratetable > * > tr > td.left {
+    width:                   10em;
+    vertical-align:          top;
+}
+table.ratetable > * > tr > td.right {
+    width:                   20em;
+    vertical-align:          middel;
+}
+
+
+table.ratetable > * > tr > td.above_hl {
+    font-size: 80%;
+}
+
+
+.small_selector {
+    font-size: 75%;
+}
+
+
+tr.offset_row > td {
+    padding-top: 0.6em;
+}
+
+.search_container {
+    border-collapse: collapse;
+    float: left;
+    margin-top: 0.5em;
+}
+.search_details {
+    padding: 0.5em;
+}
+
+.texttoken {
+    white-space: nowrap;
+}
+
+.hero_full .bar_text,
+.progressBarId,
+.hidden {
+    display: none;
+}
+
+.inline {
+	display: inline;
+}
+
+.intro_open {
+    margin-bottom: 0.5em;
+}
+
+
+/* These elements the custom skins of the players need to implement - so hidden they are by default */
+
+/* 27. Juli 2009: */
+.progressBar_container {
+    display: none;
+}
+
+
+.dropdown_headline {
+    font-style:italic;
+    font-weight:bold;
+    font-size:110%;
+    margin-top: 0.4em;
+
+}
+
+
+
+.atbottom {
+    margin-top: 10em;
+}
+
+.box_container {
+    position: relative;
+}
+
+span.box_container {
+    display: inline-block;
+    position: relative;
+}
+
+.box_right {
+    position: absolute;
+    top: 0;
+    right: 0;
+}
+
+.box_bottom_right {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+}
+
+.box_bottom_right {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+}
+
+
+.button,
+.button_minor,
+.medal,
+.clickable {
+    cursor: pointer;
+}
+
+.pointable {
+    cursor: default;
+}
+
+ .editor_img {
+    margin: 10px;
+ }
+
+ .editor_img_selected {
+    border: 5px ridge green;
+    margin: 5px;
+ }
+
+ .vote.banner,
+ .vote.reward {
+     float: left;
+}
+.vote.reward {
+    margin-top: 5px;
+    margin-left: 5px;
+}
+
+.vote.clear {
+    clear: both;
+}
+
+
+
+.vote_reward {
+    position: relative;
+    bottom: 14px;
+}
+
+
+.votebutton_bottombanner {
+    margin-top: 50px;
+}
+
+
+
+table.rep_status_table > tbody > tr > * {
+    padding-left: 3px;
+    padding-right: 3px;
+}
+
+table.rep_status_table > tbody > tr > td {
+    text-align: center;
+}
+
+
+table.rep_status_table > tbody > tr > td.hero,
+table.rep_status_table > tbody > tr > td.position,
+table.rep_status_table > tbody > tr > .resource {
+    text-align: left;
+}
+
+table.rep_status_table > tbody > tr > td.number {
+    text-align: right;
+}
+
+
+
+div.textblock,
+p {
+    margin-top: 0.8em;
+    margin-bottom: 0.8em;
+}
+
+
+/**********************************************************************
+ * List selector
+ **********************************************************************/
+
+td.selector:hover,
+table.selector > tbody > tr:hover,
+table.selector > tbody > tr:hover > td
+{
+    background-color: #c3921d;
+}
+
+td.selector.marked,
+table.selector > tbody > tr.marked,
+table.selector > tbody > tr.marked > td {
+    background-color: #0fae21;
+}
+
+
+td.selector,
+table.selector > tbody > tr > td {
+    padding-left: 0.3em;
+    padding-right: 0.3em;
+}
+
+
+table.selector,
+table.selector > tbody > tr,
+table.selector > tbody > tr > td {
+    border-spacing: 0px;
+    border-collapse: collapse;
+}
+
+
+table.selector > tbody > tr.headline > th {
+    padding-top: 3px;
+    text-align: left;
+}
+
+div.list_selector_container{
+    border: 5px ridge #999999;
+    position: relative;
+    overflow: auto;
+    height: 6em;
+    width: 20em;
+    overflow: hidden;
+}
+
+
+div.list_selector_container > div.box {
+    position: absolute;
+    overflow: auto;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    padding: 5px;
+}
+
+div.list_selector_container > div.edit_button {
+    position: absolute;
+    right: 15px;
+    bottom: 0;
+}
+
+
+
+/**********************************************************************
+ * Default dungeon type colors
+ **********************************************************************/
+.dungeon_def_1 {
+    color: #00ff20;
+}
+
+.dungeon_def_2 {
+    color: #0fae21;
+}
+
+.dungeon_def_3 {
+    color: #FF5555;
+}
+
+.dungeon_def_4 {
+    color: #c3921d;
+}
+
+.dungeon_def_5 {
+}
+
+.dungeon_def_6 {
+}
+
+.dungeon_def_7 {
+}
+
+.dungeon_def_8 {
+}
+
+.dungeon_def_9 {
+}
+
+.dungeon_def_10 {
+}
+
+
+
+
+
+
+
+
+
+
+/**********************************************************************
+ * Green button
+ **********************************************************************/
+.colored_button_inner {
+    display: table;
+    height: 100%;
+    width: 100%;
+    #position: relative;
+    overflow: hidden;
+    text-align: center;
+}
+
+.colored_button_inner > div {
+    #position: absolute;
+    #top: 50%;
+    #left: 0;
+    width: 100%;
+    display: table-cell;
+    vertical-align: middle;
+    text-align: center;
+}
+
+.colored_button_inner > div > div {
+
+    #position: relative;
+    #top: -50%;
+    #left: 0;
+    width: 100%;
+    text-align: center;
+}
+
+
+
+
+.big_green_button_container {
+    position: relative;
+    background: transparent url(https://delta.world-of-dungeons.org/wod/css/img/big_green_button.png) repeat scroll 0 0;
+    height: 90px;
+    width:  160px;
+    z-index: 998;
+    cursor: pointer;
+    display: inline-block;
+    margin: 0.5em;
+}
+
+
+
+.big_green_button_container:hover {
+    background: transparent url(https://delta.world-of-dungeons.org/wod/css/img/big_green_button_hover.png) repeat scroll 0 0;
+}
+
+
+.big_green_button_text {
+    height: 89px;
+    width:  159px;
+    font-weight: bold;
+    font-size: 20px;
+}
+
+
+
+
+.medium_green_button_container {
+    position: relative;
+    background: transparent url(https://delta.world-of-dungeons.org/wod/css/img/medium_green_button.png) repeat scroll 0 0;
+    height: 50px;
+    width:  160px;
+    z-index: 998;
+    cursor: pointer;
+    display: inline-block;
+    margin: 0.5em;
+}
+
+
+
+.medium_green_button_container:hover {
+    background: transparent url(https://delta.world-of-dungeons.org/wod/css/img/medium_green_button_hover.png) repeat scroll 0 0;
+}
+
+
+.medium_green_button_text {
+    height: 49px;
+    width:  159px;
+    font-weight: bold;
+    font-size: 20px;
+}
+
+
+
+
+
+.green_button_container {
+    position: relative;
+    background: transparent url(https://delta.world-of-dungeons.org/wod/css/img/green_button.png) repeat scroll 0 0;
+    z-index: 998;
+    cursor: pointer;
+}
+
+.green_button_container,
+.green_button {
+    height: 20px;
+    width: 180px;
+    display: inline-block;
+}
+
+a.green_button,
+.green_button_container.ie_fix,
+.green_button.ie_fix {
+    display: inline;
+}
+
+.green_button_container:hover {
+    background: transparent url(https://delta.world-of-dungeons.org/wod/css/img/green_button_hover.png) repeat scroll 0 0;
+}
+
+.green_button_text {
+    height: 19px;
+    width: 180px;
+    font-weight: bold;
+    font-size: 12px;
+    white-space: nowrap;
+
+}
+
+
+
+
+.green_button_text:hover,
+.medium_green_button_text:hover,
+.big_green_button_text:hover,
+.green_button_text:hover {
+    color:#F0A015;
+}
+
+.green_button_text,
+.medium_green_button_text,
+.big_green_button_text {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    z-index: 1001;
+    color: white !important;
+    text-shadow: #06280e 1px 1px 1px;
+}
+
+
+.button_image {
+    vertical-align: bottom;
+}
+
+
+
+/**********************************************************************
+ * Gadgets
+ **********************************************************************/
+.gadget_table_cell.merged > div,
+.gadget_table_cell.merged > div > div,
+.gadget_table_cell.merged > div > div > div {
+    display: inline-block;
+}
+
+div.blockHeadline {
+   white-space: nowrap;
+}
+
+.group_cash_box_short {
+    padding-left: 0.3em;
+    padding-right: 0.3em;
+}
+
+.gadget_table_cell.merged.ie_fix > div,
+.gadget_table_cell.merged.ie_fix > div > div,
+.gadget_table_cell.merged.ie_fix > div > div > div {
+    display: inline;
+}
+
+.blockParagraph > .heroname {
+    float:left;
+    overflow:hidden;
+    max-width:160px;
+}
+
+.blockParagraph > .idletime {
+    float:right;
+    font-size: 80%;
+    text-align:right;
+    cursor: default;
+}
+
+.blockParagraph > .headline {
+    font-size: 80%;
+}
+
+.blockParagraph > .lineend {
+    clear: both;
+}
+
+
+
+img {
+    display: inline;
+    vertical-align: middle;
+}
+
+#FooterMenu {
+    width: 100%;
+}
+
+
+
+.gadget_icon > a,
+.gadget_icon > a > img {
+    outline-style:none;
+    outline-width:0;
+}
+
+.gadget.chat > .gadget_inner > .gadget_scroll {
+    overflow: hidden;
+}
+
+.gadget.chat > .gadget_inner > .gadget_scroll > .gadget_body > .block > .block_body > .block_inner,
+.gadget.chat > .gadget_inner > .gadget_body > .block > .block_body > .block_inner
+{
+    padding: 0;
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    right: 0px;
+    bottom: 0px;
+
+}
+
+#chatplugin,
+.chatplugin_cover
+{
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+
+#chatplugin {
+    z-index: 0;
+}
+.chatplugin_cover {
+    z-index: 1;
+    background-color: black;
+}
+
+/**********************************************************************
+ * bbCode, forum, mail
+ **********************************************************************/
+.board_signature {
+    overflow: hidden;
+    max-height: 200px;
+    max-width: 600px;
+}
+
+table.quote {
+    border: none;
+    border-collapse: collapse;
+    padding: 0px;
+    margin: 1px;
+}
+
+td.quotebody {
+    padding: 5px;
+}
+
+td.boardtext {
+    padding: 5px;
+}
+
+span.rep_decimal {
+    opacity: 0.6;
+    font-size: 80%;
+}
+
+
+
+
+
+/**********************************************************************
+ * design editors
+ **********************************************************************/
+ .readonly {
+    color: #AAAAAA;
+}
+
+.debug_info {
+    font-size: 50%;
+    opacity: 0.5;
+    background-image: url(https://delta.world-of-dungeons.org/wod/css/img/bug_small.png);
+    background-repeat: no-repeat; float:left;
+    padding-left: 18px;
+    cursor: crosshair;
+}
+
+/**********************************************************************
+ * battles / clan quests
+ **********************************************************************/
+.battle_list_abstract {
+    clear:              none;
+    overflow:           auto;
+    overflow-x:         hidden;
+    overflow-y:         auto;
+    position:           relative;
+    height:             160px;
+    width:              100%;
+ }
+
+ .battle_list_regiment {
+    clear:              none;
+    overflow:           auto;
+    overflow-x:         hidden;
+    overflow-y:         auto;
+    position:           relative;
+    height:             160px;
+    width:              200px;
+    text-align:         left;
+ }
+
+
+
+/**********************************************************************
+ * Resitzing text areas
+ **********************************************************************/
+.resizing {
+    border: 1px dashed lime;
+}
+
+.resizer {
+  position:absolute;zoom:1;
+  background: url(https://delta.world-of-dungeons.org/wod/css/img/resize.png) 0 100% repeat;
+  width:10px;
+  height:19px;
+  bottom:0px;
+  right:0px;
+  z-index:1;
+
+  cursor:se-resize;
+}
+
+.resizer.horizontal {
+  cursor:e-resize;
+}
+
+.resizer.vertical {
+  cursor:s-resize;
+}
+
+.resizeable {
+  position:relative;zoom:1;
+  display: inline-block;
+}
+
+*+html .resizeable { /* ie */
+  position:relative;zoom:1;
+  display: inline;
+}
+
+
+.inputarea {
+    background-color: #444444;
+    padding: 0.5em;
+    border: solid 1px black;
+}
+
+
+/* Market Item Request */
+.layout_left.trade {
+  width: 100%;
+}
+
+.request_list.sell {
+    max-height: 320px;
+    overflow: auto;
+    width: 100%;
+}
+
+.request_list.sell_usage {
+    max-height: 280px;
+    overflow: auto;
+    width: 100%;
+}
+
+
+.request_list.long {
+    max-height: 340px;
+    overflow: auto;
+    width: 100%;
+}
+
+.request_list.short {
+    max-height: 200px;
+    overflow: auto;
+    width: 100%;
+}
+
+
+.container_below_table {
+    margin-top:   1em;
+    margin-bottom: 2em;
+}
+
+
+
+
+
+
+.decimals {
+    font-size: 80%;
+    opacity: 0.6;
+}
+
+
+
+.bbcode_b {
+    font-weight: bold;
+}
+
+.bbcode_i {
+    font-style: italic;
+}
+
+.bbcode_s {
+    text-decoration: line-through;
+}
+
+.bbcode_o {
+    text-decoration: overline;
+}
+
+.bbcode_u {
+    text-decoration: underline;
+}
+
+.bbcode_em {
+    font-weight: bold;
+    font-style: italic;
+}
+
+
+
+
+
+
+
+div.happyhour.now{
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
+    background-color: yellow;
+    color: black;
+    font-size: 120%;
+    background-color: yellow;
+}
+
+div.happyhour.soon{
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
+    font-size: 120%;
+    background-color: #444;
+}
+
+span.happyhour {
+    font-size: 120%;
+    color: red;
+}
+
+span.happyhour.link {
+    font-size: 140%;
+    text-decoration:underline;
+    color: red;
+    cursor: pointer;
+}
+
+div.happyhour.soon span.happyhour {
+    color: yellow;
+}
+
+.nomsg {
+    font-size: italic;
+}
+
+
+
+.combatnote_headline {
+    font-size: 80%;
+}
+
+.combatnote_msg {
+    max-height: 10em;
+    overflow: auto;
+}
+
+/*  tr.standalone_category > td,
+    tr.parent_category > td,  */
+tr.child_category > td.main {
+    padding-left: 1.9em;
+}
+
+
+tr.boardforum.child_category > td.main {
+    padding-left: 2.2em;
+}
+
+
+
+span.entity_version_select,
+span.entity_version_select select
+{
+    font-size: 80%;
+    font-weight: normal;
+}
+
+.holiday_replacement {
+    font-style: italic;
+}
+
+

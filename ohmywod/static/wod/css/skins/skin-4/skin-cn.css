@@ -1,0 +1,3356 @@
+/*
+ * Mirrored from World of Dungeons for the 战报网 reader (GAP-005).
+ * Source : https://delta.world-of-dungeons.org/wod/css/skins/skin-4/skin-cn.css?1662631467
+ * Fetched: 2026-08-05   Version query: 1662631467
+ * Note   : Served locally to drop a render-blocking cross-border DNS/TLS
+ *          chain. Relative image url() were rewritten to absolute delta
+ *          URLs; @import stays local (ajax.css/news.css also mirrored).
+ *          Re-fetch and re-run the url() rewrite if the version query bumps.
+ */
+/*
+
+SKIN -4 - WoD Alternative
+
+A short on on how to make this skin availble for other languages
+
+Please note that images/icons/lang/XX  directory contains language
+the specific icons ep.gif, gold.gif and fame.gif.
+
+If you modify these icons, please put an appropiate copy in each of
+this directory.
+
+If you want to use language specif images in your css file, you can
+use the phrase '/xLANGx/' (remove the ' and replace x by *).
+This is  for example replaced by 'lang/en' (without the ').
+
+E.g. to use an language specific Icon for the eps, use (replace the x by *):
+
+    url(https://delta.world-of-dungeons.org/wod/css/skins/skin-4/images/icons/lang/xLANGx/ep.png)
+
+For English players, this becomes:
+    url(https://delta.world-of-dungeons.org/wod/css/skins/skin-4/images/icons/lang/en/ep.png)
+
+For German players, it becomes:
+    url(https://delta.world-of-dungeons.org/wod/css/skins/skin-4/images/icons/lang/de/ep.png)
+
+Then put an ep.png icon in the directories images/icons/lang/de /en /..
+
+*/
+
+
+/******************************************************************************
+ * This file contains the parts of the css design that will change between
+ * different skins.
+ */
+/*********************************************************
+ * Ajax Dialogs
+ *********************************************************/
+.ajax_window {
+  border: ridge #F0A015 5px;
+  background-color: #444;
+  background: transparent url(https://delta.world-of-dungeons.org/wod/css/skins/skin-4/images/page/ajax_dialog_bg.jpg) repeat scroll 0 0;
+}
+
+.ajax_window_title {
+    padding-right: 5px;
+    background-color: black;
+}
+
+.ajax_window_title > h1 {
+    color: #C08010;
+}
+
+.ajax_window_content {
+    border-top: solid #F0A015 1px;
+    padding: 5px;
+    padding-top: 10px;
+}
+
+.ajax_window_buttons {
+    border-top: solid #F0A015 1px;
+    padding: 5px;
+    padding-top: 15px;
+    background-color: black;
+}
+
+
+
+
+
+
+
+
+.layout_buttons {
+  position: absolute;
+  top:5px;
+  right:5px;
+  z-index:600;
+}
+
+.gadget.edit_mode {
+  z-index: 500;
+}
+
+.gadget_title {
+  text-align: left;
+}
+
+/*
+.gadget {
+    border: 1px solid cyan;
+}
+.gadget_inner {
+    border: 1px solid yellow;
+}
+.gadgettable-column {border: 2px dashed blue;}
+#gadgettable-left,
+#gadgettable-center,
+#gadgettable-right {border: 2px dashed red;}
+#gadgettable-top-gadgets,
+#gadgettable-left-gadgets,
+#gadgettable-center-gadgets,
+#gadgettable-right-gadgets,
+#gadgettable-bottom-gadgets {border: 2px dashed green;}
+*/
+
+.gadget_inner {
+  /*overflow: hidden; -- Bugfix für Opera - Christian 3.6.09 */
+}
+
+#gadgettable.edit_mode {
+  z-index: 500;
+  position: absolute;
+}
+
+.gadget.edit_mode,
+.gadget.edit_mode > .gadget_inner,
+.gadget.edit_mode > .gadget_title {
+    min-height: 20px;
+}
+
+.gadget.edit_mode .property_button {
+  position: absolute;
+  top:8px;
+  right:10px;
+}
+/*right:0px*/
+
+body {
+    height:100%;
+    font-size:                14px;
+    font-family:              Arial, Helvetica, sans-serif;
+    text-decoration:          none;
+    color:                    #FFFFFF;
+}
+.gadget.edit_mode {padding:5px;}
+.gadget.edit_mode {border:1px outset white;}
+.gadget.edit_mode .gadget_title {
+  display:block;
+  font-weight: bold;
+  font-size:75%;
+  background-color: #000000;
+  color: #CCCCCC;
+  padding: 2px 2px 2px 10px;
+  border-bottom:1px solid #CCCCCC;
+}
+.gadget.edit_mode .gadget_body {
+  margin: 2px;
+}
+
+/* top:0px;left:0px;right:0px;bottom:0px; */
+
+html,body{
+   margin:0;
+   padding:0;
+   width:100%;
+   height:100%;
+   border:none;
+}
+
+html {
+    background-color:#000000;
+}
+
+.page_bg_with_image {background: url(https://delta.world-of-dungeons.org/wod/css/skins/skin-4/images/page/page-background.jpg) no-repeat scroll; background-color:#000000; }
+.page_bg_without_image { background-color:#000000; }
+
+
+#page-border {
+  width:100%;height:100%;
+  position:absolute;
+}
+
+#gadgettable-padding-top {height:0px;}
+#gadgettable-padding-left {width:0px;}
+#gadgettable-padding-right {width:0px;}
+#gadgettable-padding-bottom {height:0px; display: none; }
+
+#gadgettable-top,
+#gadgettable-left,
+#gadgettable-center,
+#gadgettable-right,
+#gadgettable-bottom {position:relative;zoom: 1;}
+
+.gadgettable-column {min-height:100%;}
+
+/*.page-area {z-index:-1;}*/
+
+#gadgettable-top > .background      {background-color: #000000; top:50px;left:0px;right:0px;bottom:200px;}
+#gadgettable-top > .border-bottom   {background: url(https://delta.world-of-dungeons.org/wod/css/skins/skin-4/images/page/area-top-border-bottom.png) 0 100% repeat-x;top:0px;left:0px;right:0px;bottom:0px;}
+
+#page-border > .border-top,
+#page-border > .border-bottom,
+#page-border > .border-top-left-01,
+#page-border > .border-top-left-02,
+#page-border > .border-top-left-03,
+#page-border > .border-bottom-left-01,
+#page-border > .border-bottom-left-02             {z-index:110;}
+#page-border > .border-top-right-01,
+#page-border > .border-top-right-02,
+#page-border > .border-top-right-03,
+#page-border > .border-bottom-right-01,
+#page-border > .border-bottom-right-02            {z-index:130;}
+
+.gadget.main_content {border: 2px ridge rgb(80, 64, 0);}
+
+/* ----------------------------------------------------------------------------
+ * Gadget
+ */
+
+.logo > .border-left { background: url(https://delta.world-of-dungeons.org/wod/css/skins/skin-4/images/page/arche_links.png) no-repeat;width:55px;height:96px;left:0px;bottom:-20px;}
+.logo > .border-right { background: url(https://delta.world-of-dungeons.org/wod/css/skins/skin-4/images/page/drache_arche_rechts.png) 0px -20px no-repeat;width:587px;height:155px;right:-209px;bottom:-20px;}
+
+drache_arche_rechts.png
+
+.body > .inner {
+  padding:10px 30px 25px 30px;
+}
+
+.table.caption > .title_text {
+  color:rgb(240,190,80);font-size:18px;
+  padding:10px 0px 10px 55px;
+  top:-5px;
+    text-align:left;
+  position:relative;zoom: 1;z-index:20;overflow:hidden;
+}
+
+table caption {
+  text-align:left;
+}
+
+.font_Table_Caption {
+  padding:14px 0px 6px 15px;
+  bottom:5px; left:20px;
+  position:relative;zoom: 1;z-index:20;overflow:hidden;
+  float: left;
+}
+
+.gadget {
+  position:relative;zoom:1;
+}
+
+.gadget.buttons .gadget_body {background: url(https://delta.world-of-dungeons.org/wod/css/skins/skin-4/images/page/buttons-background.png) no-repeat; width:339px; height:57px;}
+
+.gadget.main_content > .background {
+  /*Transparente Farbe wird ignoriert in IE7, ist ok so*/
+  background-color: rgba(0,0,0,0.3);
+  top:0px;
+  left:0px;
+  right:0px;
+  bottom:0px;
+}
+
+.gadget.main_content {
+  z-index: 2;
+  padding-bottom: 8px;
+}
+.gadget.logo {
+  z-index: 2;
+  position:relative;zoom:1;
+}
+.gadget.languages {
+  z-index: 1;
+  position:relative;zoom:1;
+  padding-top: 10px;
+}
+.gadget.menu {
+  z-index: 0;
+  position:relative;zoom:1;
+}
+
+
+.gadget.languages > .background {background: url(https://delta.world-of-dungeons.org/wod/css/skins/skin-4/images/page/languages-background.png) 0 0 repeat;top:10px;left:0px;right:0px;bottom:10px;}
+.gadget.languages > .border-top {background: url(https://delta.world-of-dungeons.org/wod/css/skins/skin-4/images/page/languages-border-top.png) 0 0 repeat-x;top:0px;left:0px;right:0px;bottom:0px;}
+.gadget.languages >  .border-right          {background: url(https://delta.world-of-dungeons.org/wod/css/skins/skin-4/images/page/menu-border-right.png) 100% 0 repeat-y;top:0px;left:0px;right:0px;bottom:0px;}
+.gadget.languages > .border-bottom {background: url(https://delta.world-of-dungeons.org/wod/css/skins/skin-4/images/page/languages-border-bottom.png) 0 100% repeat-x;top:0px;left:0px;right:0px;bottom:-5px;}
+.gadget.languages { padding-top: 10px; padding-bottom: 15px;}
+
+.gadget.menu > .background {background: url(https://delta.world-of-dungeons.org/wod/css/skins/skin-4/images/page/menu-background.jpg) 0 0 repeat;top:0px;left:0px;right:0px;bottom:0px;}
+
+.gadget.menu {padding-top:10px;}
+
+/*
+.gadget.menu > .border-left {background: url(https://delta.world-of-dungeons.org/wod/css/skins/skin-4/images/page/menu-border-left.jpg) 0 0 repeat-y;top:0px;left:0px;right:0px;bottom:0px;}
+*/
+.gadget.menu > .border-right {background: url(https://delta.world-of-dungeons.org/wod/css/skins/skin-4/images/page/menu-border-right.png) 100% 0 repeat-y;top:0px;left:0px;right:0px;bottom:0px;}
+
+/* ----------------------------------------------------------------------------
+ * Menu Allgemein
+ */
+
+.menu-1 {
+    font-size: 1.3em;
+    font-weight: bold;
+}
+
+.menu-1-caption,
+.menu-2-caption,
+.menu-3-caption {
+  position: relative;zoom: 1;
+  padding-right:20px;
+  cursor: pointer;
+}
+
+.menu-2-caption {
+    padding-bottom:4px;
+    font-size: 13px;
+    font-weight: normal;
+}
+.menu-3-caption {
+    font-size: 11px;
+    font-weight: normal;
+}
+
+.menu-1-caption img,
+.menu-2-caption img,
+.menu-3-caption img {
+    border:none;
+}
+
+.menu-vertical a,
+.menu-vertical a:link,
+.menu-vertical a:visited,
+.menu-vertical a:focus,
+.menu-vertical a:hover,
+.menu-vertical a:active,
+.menu-vertical img {
+    outline: none;
+    display: block;
+    text-decoration: none;
+    border: 0 none;
+}
+
+
+.menu-1 > .menu-1-body {display: none;}
+.menu-1.open > .menu-1-body {display: block;}
+
+.menu-1-caption > .font_menu-1          {display: block;}
+.menu-1-caption > .font_menu-1-hovered  {display: none;}
+.menu-1-caption > .font_menu-1-selected {display: none;}
+
+.menu-1-caption:hover > .font_menu-1          {display: none;}
+.menu-1-caption:hover > .font_menu-1-hovered  {display: block;}
+.menu-1-caption:hover > .font_menu-1-selected {display: none;}
+
+.menu-1-caption.selected > .font_menu-1          {display: none;}
+.menu-1-caption.selected > .font_menu-1-hovered  {display: none;}
+.menu-1-caption.selected > .font_menu-1-selected {display: block;}
+
+.menu-2 > .menu-2-body {display: none;}
+.menu-2.open > .menu-2-body {display: block;}
+
+.menu-3 > .menu-3-body {display: none;}
+.menu-3.open > .menu-3-body {display: block;}
+
+.menu-2-caption,
+.menu-3-caption {color: #FFD700;}
+
+.menu-2-caption:hover,
+.menu-3-caption:hover {color: #CCFFCC;}
+
+.menu-2-caption.selected,
+.menu-3-caption.selected {color: #CC6633;}
+
+.menu-2-caption {
+  font-weight: bold;
+  padding-left: 5px;
+}
+
+.menu-3-caption {
+  padding-left: 5px;
+}
+
+.menu-1-arrow,
+.menu-2-arrow {
+  width:16px;height:16px;
+  position:absolute;
+}
+
+.menu-1-arrow {
+  right:8px;top:3px;
+}
+.menu-2-arrow {
+  right:5px;top:0px;
+}
+
+.menu-1-arrow.open,
+.menu-2-arrow.open {
+  background: url(https://delta.world-of-dungeons.org/wod/css/skins/skin-4/images/page/navigate_down.png) no-repeat;
+}
+
+.menu-1-arrow.closed,
+.menu-2-arrow.closed {
+  background: url(https://delta.world-of-dungeons.org/wod/css/skins/skin-4/images/page/navigate_right.png) no-repeat;
+}
+
+.menu-1-separator {
+  position:relative;zoom: 1;z-index:80;top:0px;left:17px;width:123px;height:3px;
+  margin-left:5px;
+  margin-top:5px;
+  margin-bottom:12px;
+  background: url(https://delta.world-of-dungeons.org/wod/css/skins/skin-4/images/page/menu_seperator.gif) 0 0 no-repeat;top:0px;left:0px;right:0px;bottom:0px;
+}
+
+.menu-2-separator {
+  margin-bottom:9px;
+}
+
+/* ----------------------------------------------------------------------------
+ * Menu Vertical
+ */
+
+.menu-vertical .menu-1-open,
+.menu-vertical .menu-1-closed,
+.menu-vertical .menu-2-open,
+.menu-vertical .menu-2-closed {
+  width:16px;height:16px;
+  position:absolute;
+}
+
+.menu-vertical .menu-1-open,
+.menu-vertical .menu-1-closed {
+  right:8px;top:3px;
+}
+.menu-vertical .menu-2-open,
+.menu-vertical .menu-2-closed {
+  right:5px;top:0px;
+}
+
+.menu-vertical .menu-1-open,
+.menu-vertical .menu-2-open {
+  background: url(https://delta.world-of-dungeons.org/wod/css/skins/skin-4/images/page/navigate_down.png) no-repeat;
+}
+
+.menu-vertical .menu-1-closed,
+.menu-vertical .menu-2-closed {
+  background: url(https://delta.world-of-dungeons.org/wod/css/skins/skin-4/images/page/navigate_right.png) no-repeat;
+}
+
+.menu-vertical .menu-1-body,
+.menu-vertical .menu-2-body {
+  margin-left: 5px;
+  padding: 5px;
+  position: relative;zoom: 1;
+}
+
+
+.menu-vertical .menu-1-body > .border-left,
+.menu-vertical .menu-1-body > .border-right,
+.menu-vertical .menu-1-body > .background,
+.menu-vertical .menu-1-caption > .border-left,
+.menu-vertical .menu-1-caption > .border-right,
+.menu-vertical .menu-1-caption > .background {top:5px;bottom:5px;}
+
+.menu-vertical .menu-1-body > .border-top,
+.menu-vertical .menu-1-body > .border-bottom,
+.menu-vertical .menu-1-body > .background,
+.menu-vertical .menu-1-caption > .border-top,
+.menu-vertical .menu-1-caption > .border-bottom,
+.menu-vertical .menu-1-caption > .background {left:5px;right:5px;}
+
+/*
+####################################################################
+####################################################################
+*/
+
+
+
+
+/* ----------------------------------------------------------------------------
+ * Toolbar
+ */
+
+.buttonbar > img {padding-left:8px;}
+
+.horizontal-separator {height:50px;}
+
+/* ----------------------------------------------------------------------------
+ * Seiten-Bereiche
+ */
+
+.main_content .gadget_body {padding-left:5px;padding-top:5px;padding-right:5px;padding-bottom:0px;}
+
+
+/* ----------------------------------------------------------------------------
+ * Languages
+ */
+
+.languages {
+    text-align: center;
+    padding-top: 5px;
+    padding-bottom: 5px;
+}
+
+/**********************************************************************
+ * Ticker / Ausrufer
+ **********************************************************************/
+.ticker_label {
+    font-style: italic;
+}
+
+.ticker_msg {
+    margin-right: 5px;
+    margin-left: 5px;
+}
+
+.ticker_msg.new {
+    font-weight: bold;
+}
+
+/*-----------------------------------------------------------------------------
+ * Gadget Block
+ */
+
+.block > .block_body
+{
+    clear:both;
+    position:relative;
+    top:0px;
+    width:180px;
+    z-index:2;
+}
+
+.gadget_body,
+.gadget_body > .block,
+.gadget_body > .block > .block_body {
+    height: 100%;
+}
+
+.block_inner {
+    padding: 20px 5px 15px 10px;
+}
+
+.block > .block_body > .background     {
+    background: url(https://delta.world-of-dungeons.org/wod/css/skins/skin-4/images/page/block_bg_body.png) 0 0 repeat-y;top:55px;left:0px;right:0px;bottom:55px;
+}
+
+.block > .block_body > .border-top     {
+    background: url(https://delta.world-of-dungeons.org/wod/css/skins/skin-4/images/page/block_bg_head.png) 0 0 no-repeat;top:0px;left:0px; right: 0px; height: 55px;
+}
+
+.block > .block_body > .border-bottom     {
+    background: url(https://delta.world-of-dungeons.org/wod/css/skins/skin-4/images/page/block_bg_foot.png) 0 0 no-repeat;bottom:0px;left:0px;right:0px;height:55px;
+}
+
+.gadget.chat > .gadget_inner > .gadget_scroll > .gadget_body > .block > .block_body > .block_inner,
+.gadget.chat > .gadget_inner > .gadget_body > .block > .block_body > .block_inner
+{
+    padding: 0;
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    right: 0px;
+    bottom: 0px;
+
+}
+
+
+#gadgettable-right-gadgets > .gadget {
+    margin-bottom: 5px;
+}
+
+/* ----------------------------------------------------------------------------
+ * Hero-Anzeige
+ */
+
+.hero_full                                {position:relative;zoom: 1;}
+
+.hero_full .image                         {position:relative;float:right;min-height:10px;}
+
+.hero_avatar > .border-left          {background: url(https://delta.world-of-dungeons.org/wod/css/skins/skin-4/images/page/hero_full-image-border-left.png) 0 0 repeat-y;}
+.image       > .border-left          {position:absolute;width:23px;left:-15px;z-index:10;top:0px;bottom:0px;}
+
+.hero_full > .hero_body                   {clear:both;position:relative;width:180px;height:170px;z-index:-1;}
+
+.hero_full > .hero_body > .background     {background: url(https://delta.world-of-dungeons.org/wod/css/skins/skin-4/images/page/hero-background.png) 0 0 no-repeat;top:-10px;left:0px;right:0px;bottom:0px;}
+
+.hero_full .nextHeroLinkImageDown             {position:absolute;left:5px;bottom:143px;z-index:50;overflow:hidden;z-index:5;}
+.hero_full .prevHeroLinkImageUp             {position:absolute;left:5px;bottom:157px;z-index:50;overflow:hidden;z-index:5;}
+
+.hero_full .nextHeroLinkImageRight             {position:absolute;left:19px;bottom:110px;z-index:50;overflow:hidden;z-index:5;}
+.hero_full .prevHeroLinkImageLeft             {position:absolute;left:5px;bottom:110px;z-index:50;overflow:hidden;z-index:5;}
+
+.hero_full .name                          {position:absolute;left:15px;bottom:140px;overflow:hidden;z-index:2;}
+
+
+.heroTitle {position:absolute;right:5px;bottom:127px;overflow:hidden;z-index:2;}
+.heroRace  {position:absolute;left:40px;bottom:100px;overflow:hidden;z-index:2;}
+.heroClass {position:absolute;left:40px;bottom:82px;overflow:hidden;z-index:2;}
+.heroLevel {position:absolute;right:5px;bottom:72px;overflow:hidden;z-index:2;}
+
+/* replaces heroClass+heroRace for Tutorial heros */
+.hero_full div.heroTutorial {position:absolute;left:40px;bottom:82px;overflow:hidden;z-index:2;}
+.heroTutorial { font-weight: bold; }
+
+.hero_full .description                   {position:absolute;left:10px;bottom:980px;overflow:hidden;z-index:2;}
+
+.hero_full .diamonds,
+.hero_full .gold,
+.hero_full .ep,
+.hero_full .fame                          {position:absolute;z-index:3;overflow:hidden;height:20px;}
+
+.hero_full .diamonds                      {left:12px;bottom:-1px;right:5px;}
+.hero_full .gold                          {left:12px;bottom:10px;right:5px;}
+.hero_full .fame                          {left:12px;bottom:30px;right:5px;}
+.hero_full .ep                            {left:12px;bottom:50px;right:5px;}
+
+.hero_full .ep .image {position:absolute; left:18px;top:0px; background: url(https://delta.world-of-dungeons.org/wod/css/skins/skin-4/images/icons/lang/cn/ep.png) no-repeat;}
+.hero_full .fame .image {position:absolute; left:0px;top:0px; background: url(https://delta.world-of-dungeons.org/wod/css/skins/skin-4/images/icons/lang/cn/fame.png) no-repeat;}
+.hero_full .gold .image {position:absolute; left:20px;top:0px; background: url(https://delta.world-of-dungeons.org/wod/css/skins/skin-4/images/icons/gold.png) no-repeat;}
+.hero_full .diamonds .image {position:absolute; left:20px;top:0px;  }
+
+.hero_full .bar {position:absolute;left:45px;top:1px;width:89px;height:20px;background: url(https://delta.world-of-dungeons.org/wod/css/skins/skin-4/images/icons/hero_bar.png) no-repeat;}
+.hero_full .bar-inner {position:absolute;left:5px;top:4px;right:5px;bottom:4px; }
+
+.hero_full .bar1,
+.hero_full .bar2,
+.hero_full .bar_text {position:absolute;left:0px;top:0px;bottom:0px;}
+
+.hero_full .bar_text { z-index:3; top: -1px; width: 100%; display:block; font-size: 11px; color: white; vertical-align: middle; padding-left: 2px; }
+.hero_full .bar1 {z-index:2;}
+.hero_full .bar2 {z-index:1;}
+
+.hero_full .ep .bar1 {background: url(https://delta.world-of-dungeons.org/wod/css/skins/skin-4/images/icons/hero_bar_ep_1.png) repeat-x;}
+.hero_full .ep .bar2 {background: url(https://delta.world-of-dungeons.org/wod/css/skins/skin-4/images/icons/hero_bar_ep_2.png) repeat-x;}
+
+.hero_full .fame .bar1 {background: url(https://delta.world-of-dungeons.org/wod/css/skins/skin-4/images/icons/hero_bar_fame_1.png) repeat-x;}
+.hero_full .fame .bar2 {background: url(https://delta.world-of-dungeons.org/wod/css/skins/skin-4/images/icons/hero_bar_fame_2.png) repeat-x;}
+
+.hero_full .upSign {position:absolute;right:2px;top:2px;width:12px;height:20px;}
+
+.hero_full .ep .text,
+.hero_full .fame .text,
+.hero_full .gold .text,
+.hero_full .diamonds .text {position:absolute;top:0px;left:50px;color:#FFFFFF;font-size:12px;font-style:italic;
+                            text-align:left;text-wrap:none;}
+
+.nextHeroLinkImageDown {width:15px;height:11px;background: url(https://delta.world-of-dungeons.org/wod/css/skins/skin-4/images/icons/next_hero_adown.gif) no-repeat; cursor: pointer;}
+.nextHeroLinkImageRight {width:11px;height:15px;background: url(https://delta.world-of-dungeons.org/wod/css/skins/skin-4/images/icons/next_hero_a.gif) no-repeat; cursor: pointer;}
+.prevHeroLinkImageUp {width:15px;height:11px;background: url(https://delta.world-of-dungeons.org/wod/css/skins/skin-4/images/icons/prev_hero_aup.gif) no-repeat; cursor: pointer;}
+.prevHeroLinkImageLeft {width:11px;height:15px;background: url(https://delta.world-of-dungeons.org/wod/css/skins/skin-4/images/icons/prev_hero_a.gif) no-repeat; cursor: pointer;}
+
+.nextHeroLink img,
+.hero_short .changeHeroLink,
+.hero_full a,
+.hero_full a:link,
+.hero_full a:visited,
+.hero_full a:focus,
+.hero_full a:hover,
+.hero_full a:active,
+.hero_full a img {
+    outline: none;
+    text-decoration: none;
+    border: 0 none;
+    cursor: pointer;
+}
+
+.hero_full .upSign.no{
+  background: url(https://delta.world-of-dungeons.org/wod/css/skins/skin-4/images/icons/hero_bar_no.png) no-repeat;
+}
+.hero_full .upSign.yes {
+  background: url(https://delta.world-of-dungeons.org/wod/css/skins/skin-4/images/icons/hero_bar_yes.png) no-repeat;
+}
+
+.group_cash_box .gold {position:absolute;z-index:3;overflow:hidden;height:20px;top:55px;left:20px; right: 10px; background: url(https://delta.world-of-dungeons.org/wod/css/skins/skin-4/images/icons/gold.png) no-repeat;}
+.group_cash_box .text { position:absolute;top:0px;left:30px;color:#FFFFFF;font-size:14px;font-style:italic; text-align:left;text-wrap:none;}
+.group_cash_box .paysource { padding-top: 35px; }
+
+
+/******************************************************************************
+ * This is the part of the css design that may not be changed for most of the
+ * skins.
+ */
+
+/* ----------------------------------------------------------------------------
+ * Gadget Border Positions
+ */
+
+
+.clock {
+  margin-left:5px auto;
+  padding-right: 5px;
+}
+
+
+.gold > .image {
+  background: url(https://delta.world-of-dungeons.org/wod/css/skins/skin-4/images/icons/gold.png) 0 0 no-repeat;
+  width:51px;
+  height:51px;
+}
+.fame > .image {
+  background: url(https://delta.world-of-dungeons.org/wod/css/skins/skin-4/images/icons/lang/cn/fame.png) 0 0 no-repeat;
+  width:51px;
+  height:51px;
+}
+.ep > .image {
+  background: url(https://delta.world-of-dungeons.org/wod/css/skins/skin-4/images/icons/lang/cn/ep.png) 0 0 no-repeat;
+  width:51px;
+  height:51px;
+}
+
+
+
+/*
+ Page, Page-Inner sollten keine Borders oder dergleichen haben, kein Padding etc.
+ sowas wird Ã¼ber Border-Bilder und Ã¼ber die Angaben
+     <div id="page" class="page">
+      <div class='prop_padding_left'>20</div>
+      <div class='prop_padding_right'>2</div>
+      <div class='prop_padding_top'>50</div>
+      <div class='prop_padding_bottom'>12</div>
+ im HTML erledigt
+ */
+
+/*
+#page,
+#page-inner     {position:absolute;}
+*/
+
+/*
+#page           {width:100%;height:100%;}
+#page-inner     {left: 0px; top: 0px; right:0px; bottom:0px;}
+*/
+
+
+.gadget_scroll {
+  position: relative;zoom:1;
+  overflow-y: auto;
+}
+
+#gadgettable-left-gadgets  > .gadget> .gadget_inner > .gadget_scroll,
+#gadgettable-right-gadgets > .gadget> .gadget_inner > .gadget_scroll,
+.menu > .gadget_inner > .gadget_scroll {
+    overflow-x: hidden;
+}
+
+div.hints h1,
+div.hints h2,
+div.hints h3,
+div.hints ol {
+    color: black;
+}
+
+
+.hints .content {
+    color: #000000;
+    padding-left: 80px;
+}
+
+.hints {
+  margin-top: 50px;
+  padding-bottom:20px;
+  padding-right:20px;
+}
+
+a.showlink {
+  position: relative;
+  top: -7px;
+  font-weight: normal;
+}
+
+.hints.on {
+  position: relative; zoom:1;
+}
+
+.hints.on input.button_minor,
+.hints.on ul a,
+.hints.on ul a:hover,
+.hints.on ul a:active,
+.hints.on ul a:link {
+  color: #A00000;
+  font-weight: bold;
+}
+.hints.on .hilite {
+  font-weight: bold;
+  color: #000000;
+}
+.hints.on ul {
+  color: #000000;
+}
+.hints.on > .background            {background: url(https://delta.world-of-dungeons.org/wod/css/skins/skin-4/images/page/hints-background.png) 0 0 repeat;top:20px;left:10px;right:10px;bottom:0px;}
+.hints.on > .border-top            {background: url(https://delta.world-of-dungeons.org/wod/css/skins/skin-4/images/page/hints-border-top.png) 0 0 repeat-x;top:0px;left:64px;right:75px;bottom:0px;}
+.hints.on > .border-top-left       {background: url(https://delta.world-of-dungeons.org/wod/css/skins/skin-4/images/page/hints-border-top-left.png) 0 0 no-repeat;top:0px;left:0px;right:0px;bottom:0px;}
+.hints.on > .border-top-right      {background: url(https://delta.world-of-dungeons.org/wod/css/skins/skin-4/images/page/hints-border-top-right.png) 100% 0 no-repeat;top:0px;left:0px;right:0px;bottom:0px;}
+.hints.on > .border-left           {background: url(https://delta.world-of-dungeons.org/wod/css/skins/skin-4/images/page/hints-border-left.png) 0 0 repeat-y;top:20px;left:0px;right:0px;bottom:0px;}
+.hints.on > .border-right          {background: url(https://delta.world-of-dungeons.org/wod/css/skins/skin-4/images/page/hints-border-right.png) 100% 0 repeat-y;top:20px;left:0px;right:0px;bottom:0px;}
+.hints.on > .border-bottom-left    {background: url(https://delta.world-of-dungeons.org/wod/css/skins/skin-4/images/page/hints-kerze.png) 0 0 no-repeat;top:50px;left:20px;right:0px;bottom:0px;}
+
+
+.hints.showlink {
+    font-size:       0.85em;
+    font-weight:     normal;
+    color:           #FFCF00;
+    text-decoration: none;
+}
+
+.hints.hidelink {
+    font-size:       0.85em;
+    font-weight:     normal;
+    margin:          0 0 0 10px;
+    padding:         0 0 0 0;
+    color:           #FFCF00;
+    text-decoration: none;
+}
+
+a.showlink,
+a.hidelink,
+a.showlink:link,
+a.hidelink:link {
+    color:           #FFCF00 !important;
+}
+
+a.showlink:hover {
+    color:           #FFF !important;
+}
+
+a.showlink:link,
+a.showlink:active,
+a.showlink:visited,
+a.showlink:hover {
+    font-size: 80%;
+}
+
+
+.hints.off {
+    font-size: 0.85em;
+    color:     #FFFFFF;
+}
+
+/* ----------------------------------------------------------------------------
+ * Images
+ */
+
+
+.table.caption > .background            {
+  background-color: rgb(189,175,150);
+  top:0px;left:0px;right:0px;bottom:0px;
+}
+
+.table.caption > .border-left           {background: url(https://delta.world-of-dungeons.org/wod/css/skins/skin-4/images/table/barre_vertical.png) 0 0 repeat-y;top:0px;left:0px;right:0px;bottom:0px;}
+.table.caption > .border-top            {background: url(https://delta.world-of-dungeons.org/wod/css/skins/skin-4/images/table/barre_horizontale.png) 0 0 repeat-x;top:0px;left:0px;right:0px;bottom:0px;}
+.table.caption > .border-right          {background: url(https://delta.world-of-dungeons.org/wod/css/skins/skin-4/images/table/barre_vertical.png) 100% 0 repeat-y;top:0px;left:0px;right:0px;bottom:0px;}
+.table.caption > .border-bottom         {background: url(https://delta.world-of-dungeons.org/wod/css/skins/skin-4/images/table/barre_horizontale.png) 0 100% repeat-x;top:0px;left:0px;right:0px;bottom:0px;}
+.table.caption > .border-top-left       {background: url(https://delta.world-of-dungeons.org/wod/css/skins/skin-4/images/table/angle_hg.png) 0 0 no-repeat;top:0px;left:0px;right:0px;bottom:0px;}
+.table.caption > .border-top-right      {background: url(https://delta.world-of-dungeons.org/wod/css/skins/skin-4/images/table/angle_hd.png) 100% 0 no-repeat;top:0px;left:0px;right:0px;bottom:0px;}
+.table.caption > .border-bottom-left    {background: url(https://delta.world-of-dungeons.org/wod/css/skins/skin-4/images/table/angle_mg.png) 0 100% no-repeat;top:0px;left:0px;right:0px;bottom:0px;}
+.table.caption > .border-bottom-right   {background: url(https://delta.world-of-dungeons.org/wod/css/skins/skin-4/images/table/angle_md.png) 100% 100% no-repeat;top:0px;left:0px;right:0px;bottom:0px;}
+
+.table.head > .border-bottom         {background: url(https://delta.world-of-dungeons.org/wod/css/skins/skin-4/images/page/gadget-th-border-bottom.png) 0 100% repeat-x;top:0px;left:0px;right:0px;bottom:0px;}
+
+.table > .body > .background { /* fue browser */
+  background: url(https://delta.world-of-dungeons.org/wod/css/skins/skin-4/images/table/bg_table2.png) no-repeat top right;
+    background-color: rgb(136,121,95);
+  top:0px;left:0px;right:0px;bottom:0px;
+}
+
+*+html .table > .body > .background { /* nur fuer den IE7 */
+  background-color: rgb(50,50,50);
+}
+
+.table > .body > .border-left           {background: url(https://delta.world-of-dungeons.org/wod/css/skins/skin-4/images/table/barre_vertical.png) 0 0 repeat-y;top:0px;left:0px;right:0px;bottom:0px;}
+.table > .body > .border-right          {background: url(https://delta.world-of-dungeons.org/wod/css/skins/skin-4/images/table/barre_vertical.png) 100% 0 repeat-y;top:0px;left:0px;right:0px;bottom:0px;}
+.table > .body > .border-bottom         {background: url(https://delta.world-of-dungeons.org/wod/css/skins/skin-4/images/table/barre_horizontale.png) 0 100% repeat-x;top:0px;left:0px;right:0px;bottom:0px;}
+.table > .body > .border-bottom-left    {background: url(https://delta.world-of-dungeons.org/wod/css/skins/skin-4/images/table/angle_bg.png) 0 100% no-repeat;top:0px;left:0px;right:0px;bottom:0px;}
+.table > .body > .border-bottom-right   {background: url(https://delta.world-of-dungeons.org/wod/css/skins/skin-4/images/table/angle_bd.png) 100% 100% no-repeat;top:0px;left:0px;right:0px;bottom:0px;}
+
+/* ----------------------------------------------------------------------------
+ * Borders allgemein
+ */
+
+.background,
+.border-left,
+.border-top,
+.border-right,
+.border-bottom,
+.border-top-left,
+.border-top-left-01,
+.border-top-left-02,
+.border-top-left-03,
+.border-bottom-left,
+.border-bottom-left-01,
+.border-bottom-left-02,
+.border-bottom-left-03,
+.border-top-right,
+.border-top-right-01,
+.border-top-right-02,
+.border-top-right-03,
+.border-bottom-right,
+.border-bottom-right-01,
+.border-bottom-right-02,
+.border-bottom-right-03              {position:absolute;}
+
+.background                          {z-index:-3;}
+.border-left,
+.border-top,
+.border-bottom,
+.border-top-left,
+.border-bottom-left                  {z-index:-2;}
+.border-right,
+.border-top-right,
+.border-bottom-right                 {z-index:-1;}
+
+.VerticalMenu {
+}
+.VerticalMenuRoot {
+  border-top: 1px solid #DEB887;
+}
+.VerticalMenuCaption {
+  font-weight: bold;
+  color: #FFD700;
+  background-color: #800000;
+  padding-left: 5px;
+  padding-right: 5px;
+  padding-top: 2px;
+  padding-bottom: 2px;
+  border-bottom: 1px solid #DEB887;
+}
+.VerticalMenuCaption {
+  font-weight: bold;
+  color: #FFD700;
+  background-color: #800000;
+  padding-left: 5px;
+  cursor: pointer;
+}
+.VerticalMenuCaption-hover {
+  background-color: #890000;
+}
+.VerticalMenuCaption-selected {
+  background-color: #FFD700;
+  color: #800000;
+}
+.VerticalMenuBody {
+}
+.VerticalMenuItem {
+}
+.VerticalMenuContainer {
+}
+.VerticalMenu_1 .VerticalMenuCaption {
+  font-size:110%;
+}
+.VerticalMenu_2 .VerticalMenuCaption {
+  font-size:90%;
+  padding-left: 15px;
+}
+.VerticalMenu_3 .VerticalMenuCaption {
+  font-size:70%;
+  padding-left: 25px;
+}
+
+.HorizontalMenuMainBar {
+  margin: 2px;
+}
+
+.HorizontalMenuMainEntry {
+  font-weight: bold;
+  color: #FFD700;
+  padding-left: 5px;
+  padding-right: 5px;
+  padding-top: 2px;
+  padding-bottom: 2px;
+  cursor: pointer;
+}
+.HorizontalMenuSubBar {
+  border: 1px solid #DEB887;
+  background-color: #800000;
+}
+.HorizontalMenuSubEntry {
+  font-weight: bold;
+  color: #FFD700;
+  background-color: #800000;
+  padding-left: 5px;
+  padding-right: 5px;
+  padding-top: 2px;
+  padding-bottom: 2px;
+  cursor: pointer;
+}
+.HorizontalMenu-hover {
+  background-color: #890000;
+}
+.HorizontalMenu-selected {
+  background-color: #FFD700;
+  color: #800000;
+}
+
+/**********************************************************************
+ * Defaults for all Pages
+ **********************************************************************/
+
+a                   {
+     color:                    #FFFFFF;
+     text-decoration:          none;
+}
+a:link              {
+     color:                    #FFCF00;
+     text-decoration:          none;
+}
+.alink              {
+     color:                    #FFCF00;
+     text-decoration:          none;
+}
+
+a:visited           {
+     color:                    #FFCF00;
+     text-decoration:           none;
+}
+a:active            {
+     color:                    #FFFFFF;
+     text-decoration:          none;
+}
+a:hover             {
+     color:                    #FFFFFF;
+     text-decoration:          none;
+}
+
+
+.headline_1,
+h1                  {
+     font-size:                20px;
+     font-weight:              bold;
+     color:                    #FFFFFF;
+}
+
+.headline_2,
+h2                  {
+     font-size:                17px;
+     font-weight:              bold;
+     color:                    #FFFFFF;
+}
+
+.headline_3,
+h3                  {
+     font-size:                14px;
+     font-weight:              bold;
+     color:                    #FFFFFF;
+}
+
+.headline_4,
+h4                  {
+     font-size:                14px;
+     font-weight:              bold;
+     color:                    #FFFFFF;
+}
+
+
+ul                  {
+     list-style-type:          circle;
+     color:                    #FFFFFF;
+}
+ol                  {
+     color:                    #FFFFFF;
+}
+
+
+.tooltip            {
+     background:url(https://delta.world-of-dungeons.org/wod/css/skins/skin-4/images/page/hints-background.png);
+     background-color:         #FFFFE1;
+     color:                    #000000;
+     font-size:                12px;
+     font-family:              Arial, Helvetica, sans-serif;
+     padding:                  2px;
+     border-width:             2px;
+     border-style:             solid;
+     border-color:             #4b4334;
+}
+table.tooltip       {
+     background-color:         #FFFFE1;
+     color:                    #000000;
+     font-size:                12px;
+     font-family:              Arial, Helvetica, sans-serif;
+     padding:                  5px;
+}
+
+.tooltip > * {
+    color: black;
+}
+
+.bonus_positive,
+.tooltip .bonus_positive
+{
+    color: #007700;
+}
+.bonus_negative,
+.tooltip .bonus_negative
+{
+    color: #770000;
+}
+.bonus_neutral,
+.tooltip .bonus_neutral
+{
+}
+
+.tooltip > a,
+.tooltip > a:link,
+.tooltip > a:visited,
+.tooltip > a:focus,
+.tooltip > a:active,
+.tooltip > * > a,
+.tooltip > * > a:link,
+.tooltip > * > a:visited,
+.tooltip > * > a:focus,
+.tooltip > * > a:active,
+.tooltip > *> * > a,
+.tooltip > *> * > a:link,
+.tooltip > *> * > a:visited,
+.tooltip > *> * > a:focus,
+.tooltip > *> * > a:active {
+    color:                    #AA0000;
+}
+
+.tooltip > a:hover,
+.tooltip > * > a:hover,
+.tooltip > * > * > a:hover {
+
+    color:                    #330000;
+}
+
+.tooltip_title      {
+     font-size:                14px;
+     font-weight:              bold;
+     color:                    #FFFFFF;
+     background-color:         #090909;
+}
+.tooltip_shadow {
+     background-color:         #090909;
+}
+
+.tooltip_footenote_font {
+    font-style: italic;
+    font-size: 0.9em;
+}
+
+
+.button_image_info {
+    background: url(https://delta.world-of-dungeons.org/wod/css/skins/skin-4/images/icons/info.gif);
+    border-style:none;
+}
+
+.footnote {
+    font-size: 80%;
+}
+
+/**********************************************************************
+ * CSS Settings for the scrollbars (IE-only, breaks validity!)
+ **********************************************************************/
+
+*         {
+     scrollbar-3d-light-color:     #000000;
+     scrollbar-arrow-color:        #666666;
+     scrollbar-base-color:         #000000;
+     scrollbar-dark-shadow-color:  #291E1E;
+     scrollbar-face-color:         #291E1E;
+     scrollbar-highlight-color:    #444444;
+     scrollbar-shadow-color:       #000000;
+     scrollbar-track-color:        #343434;
+}
+
+
+input, select       {
+     font-family:             Arial, Helvetia, sans-serif;
+     font-size:               10pt;
+     background-color:        #665B47;
+     border-color:            #816E36;
+     border-style:            ridge;
+     color:                   #FFFFFF;
+     font-weight:             normal;
+}
+option {
+     background-color: #665B47;
+}
+radio, checkbox     {
+     font-family:             Arial, Helvetia, sans-serif;
+     font-size:               10pt;
+     background-color:        #665B47;
+     border-color:            #FFCF00;
+     border-style:            ridge;
+     color:                   #FFFFFF;
+     font-weight:             normal;
+}
+textarea            {
+     font-family:             Arial, Helvetia, sans-serif;
+     font-size:               10pt;
+     background-color:        #665B47;
+     border-color:            #816E36;
+     border-style:            ridge;
+     color:                   #FFFFFF;
+     font-weight:             normal;
+     cursor:                  auto;
+}
+textarea:focus            {
+     background-color:        #564B37;
+}
+input:focus            {
+     background-color:        #564B37;
+}
+
+.fileinput {
+    color: black;
+}
+
+a.clickanchor,
+a.clickanchor:visited,
+a.clickanchor:active,
+a.clickanchor:link,
+a.clickanchor:hover,
+a.clickanchor_disabled,
+a.clickanchor_disabled:visited,
+a.clickanchor_disabled:active,
+a.clickanchor_disabled:link,
+a.clickanchor_disabled:hover,
+a.clickanchor,
+a.button:visited,
+a.button:active,
+a.button:link,
+a.button:hover,
+a.button_disabled,
+a.button_disabled:visited,
+a.button_disabled:active,
+a.button_disabled:link,
+a.button_disabled:hover {
+  padding: 0.25em 0.8em;
+}
+
+a.clickanchor:visited,
+a.clickanchor:active,
+a.clickanchor:link,
+a.clickanchor:hover,
+.clickanchor,
+a.button:visited,
+a.button:active,
+a.button:link,
+a.button:hover,
+.button             {
+
+     font-family:             Verdana, Helvetica, sans-serif;
+     font-size:               8pt;
+     font-weight:             bold;
+     background-image:        url(https://delta.world-of-dungeons.org/wod/css/skins/skin-4/images/btn/button2.png);
+     border-width:            0px;
+     height:22px;
+     color:                   #000000;
+     text-align:              center;
+     border-style:solid;
+     border-right-color:      #450000;
+     border-left-color:       #450000;
+     border-right-width:      4px;
+     border-left-width:       4px;
+     background-color: transparent;
+}
+
+a.clickanchor:hover,
+.clickanchor:hover,
+a.button:hover,
+.button:hover             {
+     background-image:        url(https://delta.world-of-dungeons.org/wod/css/skins/skin-4/images/btn/button2_roll.png);
+}
+
+a.clickanchor_disabled:visited,
+a.clickanchor_disabled:active,
+a.clickanchor_disabled:link,
+a.clickanchor_disabled:hover,
+.clickanchor_disabled,
+a.button_disabled:visited,
+a.button_disabled:active,
+a.button_disabled:link,
+a.button_disabled:hover,
+.button_disabled    {
+     font-family:             Verdana, Helvetica, sans-serif;
+     font-size:               8pt;
+     font-weight:             bold;
+     background-image:        url(https://delta.world-of-dungeons.org/wod/css/skins/skin-4/images/btn/button_disabled.png);
+     background-color: transparent;
+     border-width:            0px;
+     height:                  22px;
+     color:                   #000000;
+     text-align:              center;
+     border-style:solid;
+     border-right-color:      #450000;
+     border-left-color:       #450000;
+     border-right-width:      4px;
+     border-left-width:       4px;
+}
+
+.button_simple      {
+     font-family:             Verdana, Helvetica, sans-serif;
+     font-size:               9pt;
+     background-image:        url(https://delta.world-of-dungeons.org/wod/css/skins/skin-4/images/btn/button_simple.png);
+     background-color:        #FFFFFF;
+     border-right-color:      #787264;
+     border-left-color:       #787264;
+     border-style:            ridge;
+     border-right-width:      2px;
+     border-left-width:       2px;
+     color:                   #000000;
+     font-weight:             bold;
+}
+
+a.button_minor:visited,
+a.button_minor:active,
+a.button_minor:link,
+a.button_minor:hover,
+.button_minor {
+    padding-left: 0.5em;
+    padding-right: 0.5em;
+    background-color: transparent;
+    border: none;
+    color: #FFCF00;
+}
+
+a.button_minor:hover,
+.button_minor:hover {
+    color: white;
+}
+
+
+.button_image       {
+     border-style:            none;               /* for <input type="image"> */
+}
+
+img.button_image_selector {
+     border: 2px solid #F0A015;
+}
+img.button_image_selector:hover {
+     border: 2px solid white;
+}
+
+ .editor_img {
+    margin: 10px;
+ }
+
+.editor_img:hover {
+    border: 2px solid #16d20c;
+    margin: 8px;
+}
+
+.cq_map_fav_element_selected,
+.editor_img_selected {
+    border: ridge #16d20c 5px;
+ }
+
+.editor_img_selected {
+    margin: 5px;
+}
+
+
+form                {
+     margin:                  0px;
+}
+
+pre                 {
+     font-size:               11px;
+     margin:                  0px;
+}
+
+/*html hr {
+height: 4px;
+background-image:        url(https://delta.world-of-dungeons.org/wod/css/skins/skin-4/images/page/menu_seperator.gif);
+border: 0;
+}
+
+*+html hr {
+height: 4px;
+background-image:        url(https://delta.world-of-dungeons.org/wod/css/skins/skin-4/images/page/menu_seperator.gif);
+border: transparent;
+} */
+
+/* Buttons and text right of page number links on top and below tables */
+.pagi_def {
+}
+input.pagi_def {
+     color: #DDDDDD;
+     font-size:               9pt;
+     background:              url(https://delta.world-of-dungeons.org/wod/css/skins/skin-4/images/btn/button_simple.png) repeat-x;
+     border-style:            ridge;
+     height:                  18px;
+     border:                  0px;
+     color:                   #000000;
+}
+.pagi_but {
+     font-size: 0.75em;
+     color: #DDDDDD;
+     background-image:        url(https://delta.world-of-dungeons.org/wod/css/skins/skin-4/images/btn/button_simple.png);
+     border-style:            ridge;
+     height:                  18px;
+     border:                  0px;
+     color:                   #000000;
+}
+.pagi_but:hover {
+     font-size: 0.75em;
+     color: green;
+     background-image:        url(https://delta.world-of-dungeons.org/wod/css/skins/skin-4/images/btn/button_simple_rollover.png);
+     border-style:            ridge;
+     height:                  18px;
+     border:                  0px;
+     color:                   #000000;
+}
+
+
+.table,
+.table.caption,
+.table.head,
+.table > .body                        {position:relative;zoom: 1;overflow:hidden;}
+
+.table > .body > .inner > .error {
+    color: #990033;
+    font-weight: bold;
+    font-size: 11pt;
+    padding:    10px 0px 30px 0px;
+}
+
+.table > .body > .inner > .success {
+    color: #FFFFFF;
+    font-weight: bold;
+    font-size: 11pt;
+    padding:    10px 0px 30px 0px;
+}
+
+.table > .body > .inner > .top {
+    margin: 10px 0px 30px;
+}
+
+.table > .body > .inner > .bottom {
+    margin: 30px 0px 10px;
+}
+
+/*.table > .body  {overflow:auto;}*/
+
+.table.head > .title-image {position:relative;zoom: 1;z-index:20;}
+
+.table > .body > .inner > .inner_table {
+  padding: 3px;
+  padding-top:10px;
+  padding-bottom:20px;
+}
+
+.table.caption {
+    width: 100%;
+}
+
+.table > .body {
+    clear: left;
+    padding-left: 15px;
+    padding-right: 15px;
+}
+
+.caption_right {
+    text-align:right;
+    padding: 10px 30px 25px 0;
+}
+
+iframe.content_block,
+div.content_block,
+p.content_block {
+     border-collapse:         collapse;
+     border:                  thin solid #000000;
+    padding: 0.5em;
+}
+
+table.content_table            {
+     border-collapse:         collapse;
+     border-left-width:       thin;
+     border-top-width:        thin;
+     border-left-style:       solid;
+     border-top-style:        solid;
+     border-color:            #000000;
+}
+table.content_table > * > tr > td,
+table.content_table > * > tr > th {
+     border-bottom-width:     thin;
+     border-right-width:      thin;
+     border-right-style:      solid;
+     border-bottom-style:     solid;
+     border-color:            #000000;
+     border-left-style:       none;
+     border-top-style:        none;
+     padding:                 1mm;
+     color:                    #FFFFFF;
+}
+
+/* Background for tables with alternating colors, e.g. mailbox, reports et al */
+table.content_table > * > tr.header    {
+     background-color:        #000000;
+
+}
+
+.content_block,
+table.content_table > * > tr.row0     {
+    /* background: url(https://delta.world-of-dungeons.org/wod/css/skins/skin-4/images/table/table_bg.png) repeat; */
+         background-color:        #3d362a;
+
+}
+
+table.content_table > * > tr.row1     {
+    /* background: url(https://delta.world-of-dungeons.org/wod/css/skins/skin-4/images/table/table_bg.png) repeat; */
+     background-color:        #665B47;
+}
+
+.content_table_mainline {
+    font-weight: bold;
+}
+
+.content_table_subline,
+.content_table_subline > * {
+    font-size: 80%;
+}
+
+/* Background for single cells (in case a complete row does _not_ have the same background */
+
+table.content_table > * > tr.row0   {
+     border-bottom-width:     thin;
+     border-right-width:      thin;
+     border-right-style:      solid;
+     border-bottom-style:     solid;
+     border-color:            #3d362a;
+     border-left-style:       none;
+     border-top-style:        none;
+     padding:                 1mm;
+}
+
+table.content_table > * > tr.row1   {
+     border-bottom-width:     thin;
+     border-right-width:      thin;
+     border-right-style:      solid;
+     border-bottom-style:     solid;
+     border-color:            #3d362a;
+     border-left-style:       none;
+     border-top-style:        none;
+     padding:                 1mm;
+}
+
+.message_success     {
+     color:                   #FFCF00;
+     font-weight:             bold;
+     font-size:               11pt;
+}
+.message_error      {
+     color:                   #FF5555;
+     font-size:               11pt;
+}
+
+div.message_info,  p.message_info,
+div.message_error, p.message_error      {
+    background-color: #333333;
+    padding: 3px;
+    border: 3px ridge #666666;
+}
+
+.tutorial
+.tutorial_hint {
+     font-weight:             bold;
+     text-decoration:         underline;
+}
+
+.tutorial_close {
+    width: 100%;
+    font-size: 0.8em;
+    text-align: right;
+    top-margin: 2em;
+    bottom-margin: 0px;
+    font-style: normal;
+}
+
+.tutorial {
+    padding-top: 0.0em;
+    padding-bottom: 0em;
+    padding-left: 0.3em;
+    padding-right: 0.3em;
+  color: #FFFFFF;
+  background-color: #45433e;
+  font-style: italic;
+  margin-top: 0.3em;
+  margin-bottom: 0.3em;
+}
+
+img.tutorial {
+  margin-left: 0.3em;
+  margin-top: 0.0em;
+  margin-right: 0.0em;
+  margin-bottom: 0.0em;
+}
+
+div.tutorial {
+    padding: 0.3em;
+  border-width: 3;
+  border-color: #45433e;
+  border-style: ridge;
+  max-width: 35em;
+  min-height: 125px;
+}
+
+
+
+
+
+
+
+.bold               {
+     color:                   #FFFFFF;
+     font-weight:             bold;
+}
+.hilite             {
+     color:                   #FFFFFF;
+     font-weight:             bold;
+}
+a.gray,.gray    {
+     color:                   #999999;
+}
+
+
+/* display time of last activity of figure */
+.hero_activity_ok            {
+     color:                   #97FF35;
+     font-weight:             bold;
+}
+.hero_activity_warn          {
+     color:                   #FF7F35;
+     font-weight:             bold;
+}
+.hero_activity_crit          {
+     color:                    #DD1111;
+     font-weight:              bold;
+}
+
+.hero_active,A.hero_active,A:visited.hero_active,A:active.hero_active {
+}
+
+.hero_inactive,A.hero_inactive,A:visited.hero_inactive,A:active.hero_inactive
+{
+    color: #890000;
+}
+
+/* colors for objectives */
+
+.medal {
+    cursor: pointer;
+}
+
+.medal > .headline {
+    margin-top: 0.3em;
+}
+
+.medal > .headline > .text {
+    font-weight: bold;
+    font-size: 110%;
+}
+
+ol.tutorial_goallist > li.completed,
+.medal > .details.earned {
+    background-color: #404b00;
+    border: 5px ridge #404b00;
+}
+
+ol.tutorial_goallist > li.uncompleted,
+.medal > .details.not_earned {
+    background-color: #563e28;
+    border: 5px ridge #563e28;
+}
+
+.medal > .details {
+    position: relative;
+    width: 100%;
+    padding: 0px;
+    color: white;
+    text-align: center;
+}
+
+.medal > .details > .label {
+    padding-top: 5px 48px 3px 48px;
+    font-size: 135%;
+    font-weight: bold;
+}
+
+.medal > .details > .icon_new {
+    position: absolute;
+    left: 3px;
+    top: 0px;
+}
+
+.medal > .details > .icon_medal {
+    position: absolute;
+    right: 3px;
+    top: 0px;
+}
+
+.medal > .details > .description {
+    padding-left: 48px;
+    padding-right: 48px;
+}
+
+.medal > .details > .date {
+    font-weight: bold;
+    padding: 3px;
+}
+
+.medal > .details > .expire {
+    font-size: 90%;
+    padding: 3px;
+}
+
+
+.medal > .details.earned > .hidable > .reward,
+.medal > .details.earned > .hidable > .reward_hint {
+    background-color: #687135;
+}
+
+.medal > .details.not_earned > .hidable > .reward,
+.medal > .details.not_earned > .hidable > .reward_hint {
+    background-color: #7d5a3b;
+ }
+
+.medal > .details > .hidable > .reward {
+    margin-top: 4px;
+    padding-top: 2px;
+}
+
+.reward_hint {
+    font-style: italic;
+    font-size: 80%;
+}
+
+.medal > .details > .hidable> .submedals {
+    padding: 0;
+    margin: 0;
+}
+
+.medal > .details > .hidable > .submedals > table > * > tr > td > ul {
+    margin: 0;
+    list-style-type: none;
+}
+
+.medal > .details > .hidable > .submedals > table > * > tr > td > ul > li.earned {
+    font-weight: bold;
+}
+
+.medal > .details > .hidable > .submedals > table > * > tr > td > ul > li.not_earned {
+    font-style: italic;
+}
+
+
+
+.obj_golden_icon {
+    display: none;
+}
+.obj_golden {
+    color: #FFcc00;
+}
+
+
+.obj_silver_icon {
+    display: block;
+}
+.obj_silver {
+    color: #BBBBBB;
+}
+
+.obj_bronze_icon {
+    display: block;
+}
+.obj_bronze {
+    color: #AA7711;
+}
+
+
+.obj_green_icon {
+    display: none;
+}
+.obj_green {
+    color: #00DD00;
+}
+.obj_blue_icon {
+    display: none;
+}
+.obj_blue{
+    color: #00DDFF;
+}
+
+
+.generic_yes,A.generic_yes,A:visited.generic_yes,A:active.generic_yes
+{
+    color: #00FF00;
+}
+
+.generic_no,A.generic_no,A:visited.generic_no,A:active.generic_no
+{
+    color: #890000;
+}
+
+.generic_maybe,A.generic_maybe,A:visited.generic_maybe,A:active.generic_maybe
+{
+    color: #FF9603;
+}
+
+
+.item_default,A.item_default,A:visited.item_default,A:active.item_default {
+  color: #FFD700;
+}
+.item_generated,A.item_generated,A:visited.item_generated,A:active.item_generated {
+  color: #FFFFFF;
+}
+.item_unique_hero,A.item_unique_hero,A:visited.item_unique_hero,A:active.item_unique_hero {
+  color: #5585F3;
+}
+.item_unique_group,A.item_unique_group,A:visited.item_unique_group,A:active.item_unique_group {
+  color: #AAFFFF;
+}
+.item_set,A.item_set,A:visited.item_set,A:active.item_set {
+  color: #32CD32;
+}
+.item_extra,A.item_extra,A:visited.item_extra,A:active.item_extra {
+  color: #B8860B;
+}
+
+.item_default,A.item_default,A:visited.item_default,A:active.item_default {
+  color: #bbb;
+}
+.item_generated,A.item_generated,A:visited.item_generated,A:active.item_generated {
+  color: #FFFFFF;
+}
+.item_unique_hero,A.item_unique_hero,A:visited.item_unique_hero,A:active.item_unique_hero {
+  color: #5a7ce0;
+}
+.item_unique_group,A.item_unique_group,A:visited.item_unique_group,A:active.item_unique_group {
+  color: #e26eff;
+}
+.item_set,A.item_set,A:visited.item_set,A:active.item_set {
+  color: #32CD32;
+}
+.item_extra,A.item_extra,A:visited.item_extra,A:active.item_extra {
+  color: #fcff00;
+}
+
+
+/* indicate if a figure may wear an item */
+.item_usable,A.item_usable,A:visited.item_usable,A:active.item_usable {
+     color:                   #FFFFFF;            /*#55FF55*/
+}
+.item_later_usable,A.item_later_usable,A:visited.item_later_usable,A:active.item_later_usable {
+     color:                   #FF9603;
+}
+.item_unusable,A.item_unusable,A:visited.item_unusable,A:active.item_unusable {
+     color:                   #CC3333;
+}
+a:hover.item_usable,a:hover.item_later_usable,a:hover.item_unusable {
+     color:                   #FFFFFF;
+}
+
+/*
+  Indicate value of item
+*/
+/*
+.item_value_0,A.item_value_0,A:visited.item_value_0,A:active.item_value_0 {
+    color: #c0c0c0;
+}
+.item_value_1,A.item_value_1,A:visited.item_value_1,A:active.item_value_1 {
+    color: #ffffff;
+}
+.item_value_2,A.item_value_2,A:visited.item_value_2,A:active.item_value_2 {
+    color: #00ff00;
+}
+.item_value_3,A.item_value_3,A:visited.item_value_3,A:active.item_value_3 {
+    color: #0000ff;
+}
+.item_value_4,A.item_value_4,A:visited.item_value_4,A:active.item_value_4 {
+    color: #9933ff;
+}
+.item_value_5,A.item_value_5,A:visited.item_value_5,A:active.item_value_5 {
+    color: #ff8000;
+}
+*/
+
+a.item_unique
+,a:visited.item_unique
+,a:active.item_unique
+{    /* unique Item*/
+     font-style: italic;
+}
+
+.rep_uni,
+a.rep_uni,
+a:visited.rep_uni,
+a:active.rep_uni,
+a:link.rep_uni
+{    /* unique item in combat report */
+     color:                   #97FF35;
+}
+
+.item_groupitem
+{    /* group Item*/
+}
+
+a.item_destroyed
+,a:visited.item_destroyed
+,a:active.item_destroyed
+ {    /* destroyed Item */
+     text-decoration: line-through;
+}
+
+/* Anzeige Gegenstand-Details */
+.gem_bonus_only_by_gem {
+     color:                   #FFC519;            /* Bonus ausschlie?lich durch Edelstein */
+}
+.gem_bonus_also_by_gem {
+     color:                   #FF9603;            /* Bonus durch Edelstein erh?ht */
+}
+.gem_bonus,A.gem_bonus,A:visited.gem_bonus,A:active.gem_bonus {
+     color:                   #55FF55; /* Guter Bonus */
+}
+.gem_malus,A.gem_malus,A:visited.gem_malus,A:active.gem_malus {
+     color:                   #FF2000; /* Schlechter Bonus (Malus) */
+}
+/* sorted tables - head line */
+.table_hl           {
+     font-family:             Verdana, Helvetica, sans-serif;
+     font-size:               11pt;
+     background-color:        #000000;
+     border-style:            none;
+     border-left-style:       none;
+     border-top-style:        none;
+     border-right-style:      none;
+     border-bottom-style:     none;
+     color:                   #FFCC00;
+}
+.table_hl_sorted    {
+     font-family:             Verdana, Helvetica, sans-serif;
+     font-size:               11pt;
+     background-color:        #000000;
+     border-style:            none;
+     border-left-style:       none;
+     border-top-style:        none;
+     border-right-style:      none;
+     border-bottom-style:     none;
+     color:                   #FFFFFF;
+}
+
+table.content_table > * > tr > .small,
+table.content_table > * > tr > .small > input {
+    font-weight: normal !important;
+    margin-left: 0;
+    margin-right: 0;
+    padding-left: 0;
+    padding-right: 0;
+    font-size: 95% !important;
+}
+
+/**********************************************************************
+ * paginator (when displaying multiple pages of data)
+ **********************************************************************/
+a.paginator,
+.paginator          {
+     font-family:             Verdana, Helvetica, sans-serif;
+     font-size:               13pt;
+     color:                   #FFCC00;
+     background-image:        url(https://delta.world-of-dungeons.org/wod/css/skins/skin-4/images/btn/paginator.png);
+     background-color: transparent;
+     height: 22px;
+     width: 69px;
+     cursor: clic;
+     border-style:            none;
+     border-left-style:       none;
+     border-top-style:        none;
+     border-right-style:      none;
+     border-bottom-style:     none;
+}
+a.paginator:hover,
+.paginator:hover          {
+     font-family:             Verdana, Helvetica, sans-serif;
+     font-size:               13pt;
+     color:                   #FFCC00;
+     background-image:        url(https://delta.world-of-dungeons.org/wod/css/skins/skin-4/images/btn/paginator_roll.png);
+     background-color: transparent;
+     height: 22px;
+     width: 69px;
+     border-style:            none;
+     border-left-style:       none;
+     border-top-style:        none;
+     border-right-style:      none;
+     border-bottom-style:     none;
+}
+
+a.paginator_selected,
+.paginator_selected {
+     font-family:             Verdana, Helvetica, sans-serif;
+     font-size:               13pt;
+     color:                   #FFFFFF;
+     background-image:        url(https://delta.world-of-dungeons.org/wod/css/skins/skin-4/images/btn/paginator.png);
+     background-color: transparent;
+     height: 22px;
+     width: 69px;
+     border-style:            none;
+     border-left-style:       none;
+     border-top-style:        none;
+     border-right-style:      none;
+     border-bottom-style:     none;
+}
+
+
+/**********************************************************************
+ * Attributes and skills
+ **********************************************************************/
+.effective_value
+      {                             /* effective value/rank of an attribute/skill */
+     color:                   #FFCF00;
+}
+.bonus
+              {                             /* Bonus for skills and item classes */
+     color:                   #BBBBBB;
+     font-size:               0.8em;
+}
+
+/* display skills (hero => skill) */
+table.content_table > * > tr > * > a.skill_primary,
+.skill_primary
+ {
+     color:                   #FFCF00 !important;
+}
+table.content_table > * > tr > * > a.skill_secondary,
+.skill_secondary
+ {
+     color:                   #CED3E6 !important;
+}
+
+table.content_table > * > tr > * > a.skill_foreign,
+.skill_foreign
+   {
+     color:                   #A4A4A4 !important;
+}
+
+div.hints > ul > li > a.skill_primary,
+div.hints > ul > li > a.skill_secondary,
+div.hints > ul > li > a.skill_foreign,
+div.hints > ul > li > .skill_primary,
+div.hints > ul > li > .skill_secondary,
+div.hints > ul > li > .skill_foreign  {
+    background-color: black;
+}
+
+
+/**********************************************************************
+ * Combat reports
+ **********************************************************************/
+.rep_room_end
+      {
+     color:                   #FFCF00;
+     font-size:               11pt;
+}
+.rep_status_headline
+ {
+     color:                   #FFCF00;
+     font-size:               13pt;
+}
+.rep_status_table
+ {
+     color:                   #FFFFFF;
+     font-size:               10pt;
+     border-style:            none;
+}
+
+.rep_round_headline
+  {
+     color:                   #FFCF00;
+     font-weight:             bold;
+     font-size:               12pt;
+}
+.rep_emphasized
+            {
+     color:                   #FFCF00;
+     font-weight:             bold;
+}
+.rep_initiative
+            {                             /* Initiative */
+     color:                   #FFFFFF;
+     font-weight:             bold;
+     white-space:             nowrap;
+}
+.rep_action
+            {                             /* Aktion */
+     color:                   #FFFFFF;
+     font-size:               10px;
+}
+
+.rep_level_description
+ {
+     color:                   #A0C0E0;            /* "lightblue? */
+}
+.rep_level_monster_exitus
+ {
+     color:                   #97FF35;
+}
+.rep_level_success
+    {
+     color:                   #22CC22;            /* lime? */
+}
+.rep_level_failure
+    {
+     color:                   #ff4c4c;            /* red? */
+}
+
+.rep_gain  /*hero gains hp or mp*/
+{
+    color: #00FF00;
+}
+
+.rep_loss /*hero looses hp or mp*/
+{
+    color: #890000;
+}
+
+
+span.rep_monster
+,a.rep_monster
+,a:visited.rep_monster
+,a:active.rep_monster
+ {    /* Monster */
+     color:                   #DD8603;
+}
+span.rep_hero
+,a.rep_hero
+,a:visited.rep_hero
+,a:active.rep_hero
+ {    /* Helden */
+     color:                   #22CC22;
+}
+span.rep_myhero
+,a.rep_myhero
+,a:visited.rep_myhero
+,a:active.rep_myhero
+ {    /* eigener Held */
+     color:                   #97FF35;
+}
+span.rep_myotherheros
+,a.rep_myotherheros
+,a:visited.rep_myotherheros
+,a:active.rep_myotherheros
+ {    /* andere Helden des Spielers */
+     color:                   #7DD27D;
+}
+
+span.rep_myhero_defender
+,a.rep_myhero_defender
+,a:visited.rep_myhero_defender
+,a:active.rep_myhero_defender
+ {    /* eigener Held als Verteidiger */
+     color:                   #FFCC55;
+}
+span.rep_myotherheros_defender
+,a.rep_myotherheros_defender
+,a:visited.rep_myotherheros_defender
+,a:active.rep_myotherheros_defender
+ {    /* eigener Held als Verteidiger */
+     color:                   #DBAA33;
+}
+
+span.rep_enemy
+,a.rep_enemy
+,a:visited.rep_enemy
+,a:active.rep_enemy
+ {    /* eigener Held - Verteidiger */
+     color:                   #FFB300;
+}
+
+.rep_wounds_none
+             {                             /* nicht  verwundet */
+     color:                   #22CC22;
+}
+.rep_wounds_lightly
+             {                             /* leicht verwundet */
+     color:                   #F2D600;
+}
+.rep_wounds_medium
+             {                             /* mittel verwundet */
+     color:                   #FF7B00;
+}
+.rep_wounded_heavy
+             {                             /* schwer verwundet */
+     color:                   #890000;
+}
+
+
+.rep_resource {
+  font-size: 80%;
+  color: #777777;
+}
+
+
+.rep_mana_cost
+             {                             /* Manakosten */
+     color:                   #22CC22;
+}
+
+.rep_morale_loss
+             {                             /* Moral */
+     color: #5A4FE8;
+     font-weight: bold;
+}
+
+/* Erfolgsgrade (Fehlschlag/Treffer/Guter Erfolg/Kritischer Erfolg*/
+.rep_miss
+           {
+     color:                   #890000;
+}
+.rep_hit
+            {
+}
+.rep_hit_good
+       {
+     font-style:              italic;
+}
+.rep_hit_crit
+       {
+     font-weight:             bold;
+}
+
+/*********************************************************
+ * Board                                                 *
+ *********************************************************/
+
+.boardcon2.boardoption {
+    vertical-align: middle;
+    padding: 9px;
+}
+
+td.boardtext {
+    max-width: 600px;
+}
+div.boardtext {
+    width: 100%;
+    overflow: auto;
+}
+
+
+TABLE.boardmain     {
+     border-style:            none;
+     width:                   100%;
+     background-color:        #9f998D;
+}
+TABLE.boardplain    {
+     border-style:            none;
+     width:                   100%;
+}
+TABLE.boardspacer   {
+     border-style:            none;
+     width:                   100%;
+}
+
+TR.boardhead        {
+     background-color:        #9f998D;
+     border-style:            none;
+}
+
+TR.boardforum,
+TR.boardcon1        {
+     background-color:        #4b4334;
+     border-style:            none;
+}
+
+TR.boardcon2        {
+     background-color:        #665B47;
+     border-style:            none;
+}
+TR.boardcategory        {
+     background-color:        #4b4334;
+     border-style:            none;
+}
+TR.boardtopic       {
+     background-color:        #890000;
+     height:                  1.5em;
+}
+
+TD.boardhead        {
+     background:url(https://delta.world-of-dungeons.org/wod/css/skins/skin-4/images/table/bg_boardT.png) left top repeat-x;
+     color:                   #000000;
+     border:none;
+     border-style:            none;
+}
+TD.boardcon1        {
+     background-color:        #101010;
+     border-style:            none;
+}
+TD.boardcon2        {
+     background-color:        #665B47;
+     border-style:            none;
+}
+TR.boardcategory > TD   {
+     background-color:        #101010;
+     border-style:            none;
+}
+
+/*  tr.standalone_category > td,
+    tr.parent_category > td,  */
+tr.boardforum.child_category > td {
+    background-color: #5b5344;
+}
+
+tr.boardcategory.child_category > td {
+    background-color: #3b3324;
+}
+
+
+TD.boardcent        {
+     text-align:              center;
+     border-style:            none;
+}
+TD.boardleft        {
+     text-align:              left;
+     border-style:            none;
+}
+TD.boardright       {
+     text-align:              right;
+     border-style:            none;
+}
+TD.boardtop         {
+     vertical-align:          top;
+     border-style:            none;
+}
+TD.boardtopright    {
+     text-align:              right;
+     vertical-align:          top;
+     border-style:            none;
+}
+
+
+A:link.boardhot, A:visited.boardhot {
+     color:                   #F43E00;
+}
+A:link.boardclosed, A:visited.boardclosed {
+     color:                   #FFFFFF;
+}
+A:hover.boardhot    {
+     color:                   #F43E00;
+}
+A:hover.boardclosed {
+     color:                   #FFFFFF;
+}
+
+IMG.boardavatar     {
+     margin-top:              3px;
+     margin-bottom:           3px;
+}
+
+.boardtext          {                             /* Regular posting text */
+     font-size:               12px;
+}
+.boardedited        {                             /* Text for "last edited by x on y" */
+     font-size:               10px;
+     font-style:              italic;
+}
+.boardsignature     {
+     font-size:               12px;
+}
+.boardheadline      {
+     font-size:               13px;
+     font-weight:             bold;
+}
+.boardtitle         {
+     font-size:               15px;
+     font-weight:             bold;
+}
+.boardhot           {
+     color:                   #C03000;
+}
+
+.user_name          {
+     font-weight:             bold;
+     font-size:               14px;
+     font-family:             Arial, Helvetica, sans-serif;
+     text-decoration:         none;
+     color:                   #FFCF00;
+}
+.user_title         {
+     font-weight:             bold;
+     font-size:               14px;
+     font-family:             Arial, Helvetica, sans-serif;
+     text-decoration:         none;
+     color:                   #FFFFFF;
+}
+.admin_title        {
+     font-size:               14px;
+     font-family:             Arial, Helvetica, sans-serif;
+     text-decoration:         none;
+     color:                   #22CC22;
+}
+
+.board_goal {
+    height: 24px;
+}
+
+.board_goal_text {
+  font-size: 12pt;
+  font-weight: bold;
+}
+
+.board_goal_icon {
+  position: relative;
+  top: 5px;
+}
+
+.legegendenstatus {
+     color:                   #FF9603;
+}
+
+.boardworld         {
+     color:                   #97FF35;
+     font-weight:             bold;
+}
+
+
+/*********************************************************
+ * BBCode
+ *********************************************************/
+
+.table_bbcode {
+    padding: 3px;
+    border-style: solid;
+    border-color: gray;
+    border-width: 0px;
+    border-collapse: collapse;
+}
+
+
+.font_bbcode_h1         {
+     font-size:               1.5em;
+     color:                   #FFFFFF;
+     font-weight:             bold;
+}
+.font_bbcode_h2         {
+     font-size:               1.25em;
+     color:                   #FFFFFF;
+     font-weight:             bold;
+}
+.font_bbcode_h3         {
+     color:                   #FFFFFF;
+     font-weight:             bold;
+}
+
+.code               {
+        background-color:     #555555;
+        font-family:          "Courier New", courier, mono;
+        font-size:            12px;
+        border:               #606060;
+        border-style:         dashed;
+        border-width:         1px;
+}
+
+.quoteheader        {
+        font-family:          Verdana, Arial, Helvetica, sans-serif;
+        font-size:            12px;
+        font-weight:          bold;
+}
+.quotebody          {
+     background-color:        #555555;
+     border:                  #BBBBBB;
+     border-style:            dashed;
+     border-width:            1px;
+}
+
+.spoilerbutton      {
+        margin:               2px 0;
+        min-width:            30px;
+}
+.spoiler            {
+     overflow:              hidden;
+     border-style:          solid none none none;
+     border-width:          1px;
+     border-color:          #707070;
+}
+.spoilerbutton[value="+"] + .spoilerheader + .spoiler > div {
+        display:            none;
+}
+.spoilerbutton[value="-"] + .spoilerheader + .spoiler {
+        padding:            5px;
+}
+.spoilerbox         {
+    border-style:           dashed;
+    border-width:           1px;
+    border-color:           #A0A0A0;
+    background-color:       #555555;
+}
+.spoilerheader      {
+    font-family:    Verdana, Arial, Helvetica, sans-serif;
+    font-size:      12px;
+}
+
+
+.listitem {
+     padding-left: 0.2em;
+     margin-left: 0.7em;
+}
+
+.listbullet         {
+     list-style-type:         disc;
+}
+.listdecimal        {
+     list-style-type:         decimal;
+}
+.listlowerroman     {
+     list-style-type:         lower-roman;
+}
+.listupperroman     {
+     list-style-type:         upper-roman;
+}
+.listloweralpha     {
+     list-style-type:         lower-alpha;
+}
+.listupperalpha     {
+     list-style-type:         upper-alpha;
+}
+
+
+.postlink           {
+    font-family:              "Courier New", courier, mono;
+    font-size:                8px;
+    color:                    #AAAAAA;
+}
+
+/*********************************************************
+ * Mail
+ *********************************************************/
+
+.content_table.mail td.paginator_row,
+.content_table.mail tr.header {
+     background-color:        #3D362A;
+}
+
+.content_table.mail tr.row0,
+.content_table.mail tr.row1 {
+     background-color:        #101010;
+}
+
+.content_table.mail tr.selected {
+     background-color:        #303030;
+}
+
+
+.buttons_below_table {
+    margin-top: 0.3em;
+}
+
+.folder_standard    {
+        font-family:          Helvetica, sans-serif;
+        font-size:            11pt;
+        background-color:     transparent;
+        border-style:         none;
+        color:                #FFCF00;
+}
+.folder_selected    {
+        font-family:          Helvetica, sans-serif;
+        font-size:            11pt;
+        background-color:     #101010;
+        border-style:         ridge;
+        border-color:         #FFCF00;
+        color:                #FFFFFF;
+}
+.folder_standard_unread {
+        font-family:          Helvetica, sans-serif;
+        font-size:            11pt;
+        background-color:     transparent;
+        border-style:         none;
+        color:                #FFCF00;
+        font-weight:          bold;
+        font-style:           normal;
+}
+.folder_selected_unread {
+        font-family:          Helvetica, sans-serif;
+        font-size:            11pt;
+        background-color:     #101010;
+        border-style:         ridge;
+        border-color:         #CC9900;
+        color:                #FFFFFF;
+        font-weight:          bold;
+        font-style:           normal;
+}
+.subject_standard   {
+        font-family:          Helvetica, sans-serif;
+        font-size:            11pt;
+        background-color:     #101010;
+        border-style:         none;
+        color:                #FFCF00;
+        left:                 0px;
+        font-weight:          normal;
+        font-style:           normal;
+}
+.subject_selected   {
+        font-family:          Helvetica, sans-serif;
+        font-size:            11pt;
+        background-color:     #303030;
+        border-style:         none;
+        border-color:         #CC9900;
+        color:                #FFFFFF;
+        font-weight:          normal;
+        font-style:           normal;
+}
+.subject_standard_unread {
+        font-family:          Helvetica, sans-serif;
+        font-size:            11pt;
+        background-color:     #101010;
+        border-style:         none;
+        color:                #FFCF00;
+        font-weight:          bold;
+}
+.subject_selected_unread {
+        font-family:          Helvetica, sans-serif;
+        font-size:            11pt;
+        background-color:     #303030;
+        border-style:         none;
+        border-color:         #CC9900;
+        font-weight:          bold;
+        color:                #FFFFFF;
+}
+
+
+/*********************************************************
+ * Battles - Clanquest
+ *********************************************************/
+ .cq_map_matrix {
+        border-style:       outset;
+        background-color:   #000000;
+}
+.cq_map_matrix_element {
+        color:              #ffffff;
+}
+.cq_map_fav_list {
+        border-style:       outset;
+        background-color:   #444444;
+
+}
+.cq_map_fav_element {
+        color:              #ffffff;
+        background-color:   #444444;
+}
+
+.cq_map_fav_element_selected {
+        color:              #ffffff;
+        border:             5px solid green;
+}
+
+.cq_map_field_info_title {
+    font-size:              11px;
+    font-weight:            bold;
+    color:                  #FFCF00;
+}
+
+.cq_map_field_info_subtitle {
+    font-size:              11px;
+    color:                  #FFFFFF;
+}
+
+.cq_map_field_info_text {
+    font-size:              11px;
+}
+
+/**********************************************************************
+ * ORDERS
+ **********************************************************************/
+
+ #orders h1, #orders h2, #orders h3, #orders h4, #orders h5, #orders h6 {
+  clear:                  both;
+ }
+
+ #orders h3                  {
+  border-width:           1px;
+  border-style:           solid;
+  border-color:           #666666;
+  background-color:       #333333;
+  padding:                0.2em 0.5em;
+ }
+
+ #orders h4                  {
+  margin:                 0.5em 0 0 0px;
+ }
+
+ #orders input               {
+  margin:                 4px;
+  background-color:       #505050;
+  border-width:           1px;
+  border-style:           solid;
+  border-color:           #999999;
+  color:                  #FFFFFF;
+  font-weight:            bold;
+ }
+
+ #orders input.numeric       {
+  width:                  3em;
+ }
+
+ #orders select              {
+  background-color:       #333333;
+  border-width:           1px;
+  border-style:           solid;
+  border-color:           #999999;
+  color:                  #FFFFFF;
+  font-weight:            bold;
+ }
+
+ #orders td                  {
+  vertical-align:         top;
+  text-align:             left;
+ }
+
+ #orders span.disabled, #orders div.disabled {
+  text-decoration:        line-through;
+ }
+
+ #orders span.inactive, #orders div.inactive {
+  font-style:             italic;
+  color:                  #CCCCCC;
+ }
+
+
+ #orders .warn {
+  color:                  #FF4444;
+ }
+
+
+ .wod-tabs           {
+  margin:                 10px 0px;
+  list-style:             none;
+  border-width:           1px;
+  border-style:           none none solid none;
+  border-color:           #999999;
+  padding:                5px;
+ }
+
+ .wod-tabs li        {
+  display:                inline;
+  background-color:       #333333;
+  color:                  white;
+  font-weight:            bold;
+  padding:                5px 20px;
+  margin:                 5px;
+  border-width:           1px;
+  border-style:           solid;
+  border-color:           #999999;
+  cursor:                 default;
+ }
+
+ .wod-tabs li.selected {
+  background-color:       #666666;
+ }
+
+ .wod-list           {
+ }
+
+ .wod-list-table     {
+  border-collapse:        collapse;
+ }
+
+ .wod-list-items     {
+  border-width:           1px;
+  border-style:           solid;
+  border-color:           #999999;
+  padding:                4px;
+ }
+
+ .wod-list-item      {
+  padding:                4px;
+  cursor:                 default;
+ }
+
+ .wod-list-item-selected {
+  padding:                4px;
+  background-color:       #666666;
+  cursor:                 default;
+ }
+
+ .wod-list-buttons   {
+  border-width:           1px;
+  border-style:           solid;
+  border-color:           #999999;
+  width:                  24px;
+  padding:                4px;
+ }
+
+ .wod-list-item-label-skill {
+  font-weight:            bold;
+ }
+
+ .wod-list-item-label-item {
+  font-size:              small;
+ }
+
+ .wod-list-item-label-ammo {
+  font-size:              small;
+ }
+
+ .wod-list-item-label-positions {
+  font-size:              small;
+ }
+
+ #orders img {
+     vertical-align: middle;
+ }
+
+
+/**********************************************************************
+ * AdvDropDown
+ **********************************************************************/
+
+#AdvDropDown
+{
+  height: 29px;
+  font-size: 12px;
+  text-align :left;
+  vertical-align:middle;
+  padding-left:0.0em;
+  padding-top:4px;
+  margin:0;
+}
+
+#AdvDropDown ul
+{
+  position: absolute;
+  padding: 0px;
+  margin: 0px;
+  list-style: none;
+  list-style-type: none;
+  vertical-align: middle;
+  /*background-color: #ffffff;
+
+  border-color: #999999;
+  border-width:1px;
+  border-style:solid;*/
+}
+
+#AdvDropDown ul li
+{
+  height: 24px;
+  width: 115px;
+  /*border-color: #999999;
+  border-width:1px;
+  border-style:solid;*/
+  position: relative;zoom: 1;
+  margin: 0px;
+
+  /* IE :hover silly javascript workaround */
+  behavior: url(https://delta.world-of-dungeons.org/wod/css/base/listItemHover.htc);
+}
+
+.warn {
+  color:                  #FF4444;
+}
+
+#AdvDropDown ul li a
+{
+  display: block;
+  position: relative;zoom: 1;
+  padding: 4px 0.3em 4px 0.3em;
+  color: #000000;
+  background-color:#ffffff;
+  border-color: #CC9900;
+  border-width:1px;
+  border-style:solid;
+}
+
+#AdvDropDown img
+{
+  color: #ffffff;
+  text-decoration: none;
+  border:none;
+}
+
+#AdvDropDown ul li a:hover {
+    color: #ffffff;
+/*    background-color: #666666;*/
+}
+
+/* This one doesn't affect IE */
+#AdvDropDown ul li:hover > ul
+{
+    display: block;
+}
+
+#AdvDropDown ul ul
+{
+  border-color: #000000;
+  border-width:1px;
+  border-style:solid;
+}
+
+#AdvDropDown ul ul li
+{
+  float: none;
+  margin: 0px;
+  padding: 0em;
+}
+
+#AdvDropDown ul ul li a
+{
+    border: none;
+    padding-top: 0.2em;
+    margin: 0px;
+    font-size: 1.1em;
+    color:#000000;
+    background-color: #ffffff;
+    height: 1.3em;
+}
+
+#AdvDropDown ul ul li a:hover
+{
+    color: #ffffff;
+    text-decoration: none;
+    background-color: #000066;
+}
+
+
+/*hide all sublevels*/
+#AdvDropDown ul ul {
+    display: none;
+
+    /*border-color: #999999;
+    border-width:1px;
+    border-style:solid;*/
+}
+
+/**********************************************************************
+ * Items
+ **********************************************************************/
+
+
+div#headline {
+  padding: 0 1em;
+  min-width: 16em;
+}
+
+
+div#details {
+  float: left;
+  padding: 0 1em;
+  min-width: 16em;
+}
+
+div#image {
+  float: left;
+  padding: 0 1em;
+  margin: 0 0 1em 1em;
+  min-width: 16em;
+}
+
+div#link {
+  clear: both;
+  padding: 1em;
+  min-width: 16em;
+}
+
+
+.tab {
+  position:relative;
+  width: 100%;
+  background: url(https://delta.world-of-dungeons.org/wod/css/skins/skin-4/images/tabs/bg.png) repeat-x;
+  line-height: normal;
+  z-index:1;
+}
+
+.tab > .bar {
+    /*border-bottom: 2pt solid black;*/
+    height: 0;
+    clear: both;
+    margin-top: 0;
+    /*margin-bottom: 5px;*/
+    padding: 0;
+}
+
+.tab > .content {
+  padding-top: 10px;
+}
+
+.tab > ul {
+    list-style:none;
+    padding:10px 10px 0;
+    margin: 0;
+    list-style:none;
+}
+
+.tab > ul > li {
+  display:list-item;
+  margin: 0;
+  float: left;
+  background: url(https://delta.world-of-dungeons.org/wod/css/skins/skin-4/images/tabs/left.png) no-repeat left top;
+  padding: 0 0 0 9px;
+}
+
+.tab > ul > li.label {
+  margin: 0px;
+  margin-right:1em;
+  position:relative;
+  font-weight: bold;
+  vertical-align: top;
+  background: none;
+  font-size: 16px;
+}
+
+
+.tab > ul > li.selected {
+  background: url(https://delta.world-of-dungeons.org/wod/css/skins/skin-4/images/tabs/left_on.png) no-repeat scroll;
+  margin: 0;
+  color: white;
+  font-weight: bold;
+  z-index:2000;
+}
+
+.tab > ul > li.not_selected > a {
+    display:block;
+    background:url(https://delta.world-of-dungeons.org/wod/css/skins/skin-4/images/tabs/right.png) no-repeat right top;
+    padding:5px 15px 4px 6px;
+    text-decoration:none;
+    font-weight:bold;
+}
+
+.tab > ul > li.selected > a {
+    display:block;
+    background:url(https://delta.world-of-dungeons.org/wod/css/skins/skin-4/images/tabs/right_on.png) no-repeat right top;
+    padding:5px 15px 4px 6px;
+    text-decoration:none;
+    font-weight:bold;
+    z-index:2000;
+}
+
+
+
+
+.tab > content {
+    padding-top: 10px;
+    margin-top: 0;
+}
+
+
+
+.sub-tabs {
+    background: transparent url(https://delta.world-of-dungeons.org/wod/css/skins/skin-4/images/subtabs/bg.png) repeat scroll right bottom;
+    padding-bottom: 2px;
+    margin-top: 0px;
+}
+
+.sub-tabs >  .label {
+    margin-top: 0px;
+    padding-top: 0px;
+    margin-right:  0px;
+    padding-right: 5px;
+    margin-left:  0px;
+    padding-left: 0px;
+    background: transparent url(https://delta.world-of-dungeons.org/wod/css/skins/skin-4/images/subtabs/right.png) no-repeat scroll right top;
+ }
+
+ .sub-tabs >  .label.selected {
+    background: transparent url(https://delta.world-of-dungeons.org/wod/css/skins/skin-4/images/subtabs/right_on.png) no-repeat scroll right top;
+ }
+
+.sub-tabs >  .label > a {
+    padding-left: 4px;
+    background: transparent url(https://delta.world-of-dungeons.org/wod/css/skins/skin-4/images/subtabs/left.png) no-repeat scroll left top;
+}
+
+
+ .sub-tabs >  .label.selected > a {
+    color: black;
+    background: transparent url(https://delta.world-of-dungeons.org/wod/css/skins/skin-4/images/subtabs/left_on.png) no-repeat scroll left top;
+}
+
+
+
+.item_unique
+{    /* unique Item*/
+     font-style:              italic;
+}
+.item_groupitem
+{    /* group Item*/
+
+}
+
+
+.footer > .background      {background: url(https://delta.world-of-dungeons.org/wod/css/skins/skin-4/images/page/footer-background.jpg) 0 0 repeat;top:0px;left:0px;right:0px;bottom:0px;}
+.footer > .border-top      {background: url(https://delta.world-of-dungeons.org/wod/css/skins/skin-4/images/page/footer-border-top.jpg) 0 0 repeat-x;top:0px;left:0px;right:0px;bottom:0px;}
+
+.footer a,
+.footer a:link,
+.footer a:visited,
+.footer a:focus,
+.footer a:hover,
+.footer a:active,
+.footer img {
+    outline: none;
+    display: block;
+    text-decoration: none;
+    border: 0 none;
+}
+
+.footer center {
+  font-style: italic;
+  font-size: 12px;
+}
+
+
+.gadget_fixed_container {
+    height: 100%;
+    overflow-x: hidden;
+}
+
+div.gadget_icon {
+   display: inline;
+}
+
+.gadget_icon.icon_help {
+  padding-right: 2px;
+}
+
+
+.gadget_icon.icon_hero_title {
+    display: none;
+}
+
+
+div.icon_forums_all {
+border:2px;
+paddin: 10px 10px 10px 10px;
+}
+
+
+/**********************************************************************
+ * Info line for popup windows
+ **********************************************************************/
+.popup_statusline {
+    border-bottom: thin solid #CCCCCC;
+    text-align: center;
+    vertical-align: top;
+}
+
+.popup_statusline_world {
+    padding: 10px;
+    float: left;
+}
+.popup_statusline_hero {
+    padding: 10px;
+    float: right;
+    text-align: right;
+
+}
+
+.popup_statusline_mail {
+    padding: 10px;
+    display: inline;
+}
+
+.popup_statusline_clear {
+    clear: both;
+}
+
+.font_World_Name {
+    display: inline;
+}
+
+.hero_short {
+background-color:#000000;
+}
+
+
+/**********************************************************************
+ * Progress bar
+ **********************************************************************/
+
+.progressBar_container {
+    position: relative;
+    text-align: center;
+    width: 500px;
+    height: 32px;
+    display: inline-block;
+}
+.progressBar_black-on-white {
+    height: 32px;
+    color: white;
+    background-color: #999999;
+    background: url(https://delta.world-of-dungeons.org/wod/css/skins/skin-4/images/progressbar_2.jpg) right;
+}
+.progressBar_white-on-black {
+    height: 32px;
+    color: white;
+    background-color: #b17320;
+    background: url(https://delta.world-of-dungeons.org/wod/css/skins/skin-4/images/progressbar_1.jpg);
+}
+.progressBar_wrapper {
+    width: 0%; /* matches percent completed - e.g. width: 5% = 5% completed */
+    overflow: hidden;
+    position: absolute;
+    top: 0; left: 0;
+}
+.progressBar_black-on-white {
+    width: 100%;
+    padding-top: 5px;
+    height: 27px;
+}
+.progressBar_white-on-black {
+    width: 500px;
+    padding-top: 5px;
+    height: 27px;
+}
+
+
+
+
+
+
+/**********************************************************************
+ * List selector
+ **********************************************************************/
+
+
+div.list_selector_container{
+    border: 5px ridge #816E36;
+    position: relative;
+    overflow: auto;
+    height: 6em;
+    width: 20em;
+    overflow: hidden;
+}
+
+
+div.list_selector_container > div.box {
+    position: absolute;
+    overflow: auto;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    padding: 5px;
+    background-color: #665B47;
+}
+
+div.list_selector_container > div.box > div.even {
+  width: 100%;
+  background-color: #333333;
+}
+
+div.list_selector_container > div.edit_button {
+    position: absolute;
+    right: 15px;
+    bottom: 0;
+}
+
+
+
+/**********************************************************************
+ * Arena
+ **********************************************************************/
+
+/* League is active */
+.arena_status_ok,
+.arena_status_ok a,
+.arena_status_ok a:link,
+.arena_status_ok a:visited,
+.arena_status_ok a:focus,
+.arena_status_ok a:hover,
+.arena_status_ok a:active {
+    color:                   lime;
+    font-weight:             bold;
+}
+
+/* League's last round ended within the last 3 days */
+.arena_status_warn_1,
+.arena_status_warn_1 a,
+.arena_status_warn_1 a:link,
+.arena_status_warn_1 a:visited,
+.arena_status_warn_1 a:focus,
+.arena_status_warn_1 a:hover,
+.arena_status_warn_1 a:active {
+    color:                   #FFCF00;
+    font-weight:             bold;
+}
+
+/* League's last round ended within the last 5 days */
+.arena_status_warn_2,
+.arena_status_warn_2 a,
+.arena_status_warn_2 a:link,
+.arena_status_warn_2 a:visited,
+.arena_status_warn_2 a:focus,
+.arena_status_warn_2 a:hover,
+.arena_status_warn_2 a:active {
+    color:                   #FF7F35;
+    font-weight:             bold;
+}
+
+/* League's last round ended within the last 14 days */
+.arena_status_warn_3,
+.arena_status_warn_3 a,
+.arena_status_warn_3 a:link,
+.arena_status_warn_3 a:visited,
+.arena_status_warn_3 a:focus,
+.arena_status_warn_3 a:hover,
+.arena_status_warn_3 a:active {
+    color:                   #FF0000;
+    font-weight:             bold;
+}
+
+/* League's last round ended more than 14 days ago */
+.arena_status_warn_4,
+.arena_status_warn_4 a,
+.arena_status_warn_4 a:link,
+.arena_status_warn_4 a:visited,
+.arena_status_warn_4 a:focus,
+.arena_status_warn_4 a:hover,
+.arena_status_warn_4 a:active {
+    color:                   #66DDFF;
+    font-weight:             bold;
+}
+
+
+/**********************************************************************
+ * Search input fields above tables
+ **********************************************************************/
+.search_container {
+    background-color: black;
+    border: thin solid #909090;
+    border-collapse: collapse;
+    float: left;
+    margin-top: 0.5em;
+}
+.search_details {
+    border-top: thin solid #909090;
+    padding: 0.5em;
+}
+
+/**********************************************************************
+ * Dungeon rating table
+ **********************************************************************/
+table.ratetable            {
+    border-collapse:         collapse;
+    border-left-width:       thin;
+    border-top-width:        thin;
+    border-left-style:       solid;
+    border-top-style:        solid;
+    border-color:            #909090;
+    background-color:         #555555;
+}
+table.ratetable > * > tr > td,
+table.ratetable > * > tr > th {
+    text-align: left;
+    border-bottom-width:     thin;
+    border-right-width:      thin;
+    border-right-style:      solid;
+    border-bottom-style:     solid;
+    border-color:            #909090;
+    background-color:         #555555;
+    border-left-style:       none;
+    border-top-style:        none;
+    padding:                 1mm;
+    color:                   #FFFFFF;
+}
+
+
+
+

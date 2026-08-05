@@ -157,6 +157,52 @@ def test_view_category(authenticated_client, db):
     assert "cat1" in res.data.decode('utf-8')
 
 
+def test_google_analytics_is_lazy_loaded(client):
+    # GAP-006: the GA tag must not hard-load in <head> anymore; it is injected
+    # after the load event via requestIdleCallback so it never blocks first paint.
+    res = client.get('/')
+    assert res.status_code == 200
+    page = res.data.decode('utf-8')
+    # Configured id is present, but not as an eager blocking <script src=...>.
+    assert 'G-TYGCT601XW' in page
+    assert '<script async src="https://www.googletagmanager.com/gtag/js' not in page
+    # The deferred loader wiring is present.
+    assert 'requestIdleCallback' in page
+    assert "addEventListener('load'" in page
+
+
+def test_base_pages_drop_standalone_popper(client):
+    # GAP-007: Popper is bundled in bootstrap.bundle.min.js; the standalone build
+    # must no longer be loaded on base-extending pages.
+    res = client.get('/')
+    assert res.status_code == 200
+    assert 'popper-v2.11.6.js' not in res.data.decode('utf-8')
+
+
+def test_category_owner_loads_filepond(authenticated_client, db):
+    # GAP-007: the owner still gets the upload widget assets.
+    rc = ReportController()
+    cat = rc.create_category("owncat", "Cat Desc", "testuser")
+    res = authenticated_client.get(f'/r/category/{cat.id}')
+    assert res.status_code == 200
+    page = res.data.decode('utf-8')
+    assert 'js/filepond.js' in page
+    assert 'css/filepond.css' in page
+
+
+def test_category_non_owner_skips_filepond(client, db):
+    # GAP-007: a public/non-owner viewer must not download the 437KB FilePond JS
+    # (or its CSS) since they never see the upload widget.
+    rc = ReportController()
+    cat = rc.create_category("pubcat", "Cat Desc", "someoneelse")
+    res = client.get(f'/r/category/{cat.id}')
+    assert res.status_code == 200
+    page = res.data.decode('utf-8')
+    assert 'js/filepond.js' not in page
+    assert 'js/filepond.jquery.js' not in page
+    assert 'css/filepond.css' not in page
+
+
 def test_reorder_category_switches_to_manual_order(authenticated_client, db):
     rc = ReportController()
     cat = rc.create_category("cat1", "Cat Desc", "testuser")
@@ -276,6 +322,9 @@ def test_report_raw_revalidates_without_reading_body(authenticated_client, app, 
     etag = first.headers['ETag']
     assert etag.startswith('W/"report-')
     assert first.headers['Cache-Control'] == 'private, no-cache'
+    # GAP-004: browsers stay on private revalidation, but Cloudflare may hold a
+    # shared edge copy for a day via the CDN-only directive.
+    assert first.headers['Cloudflare-CDN-Cache-Control'] == 'public, max-age=86400'
 
     cached = authenticated_client.get(
         '/r/raw/testuser/cat1/myreport/',
@@ -285,6 +334,7 @@ def test_report_raw_revalidates_without_reading_body(authenticated_client, app, 
     assert cached.data == b''
     assert cached.headers['ETag'] == etag
     assert cached.headers['Cache-Control'] == 'private, no-cache'
+    assert cached.headers['Cloudflare-CDN-Cache-Control'] == 'public, max-age=86400'
     assert 'sandbox' in cached.headers['Content-Security-Policy']
     assert 'allow-same-origin' not in cached.headers['Content-Security-Policy']
 
@@ -297,7 +347,72 @@ def test_report_raw_revalidates_without_reading_body(authenticated_client, app, 
     )
     assert updated.status_code == 200
     assert updated.headers['ETag'] != etag
+    assert updated.headers['Cloudflare-CDN-Cache-Control'] == 'public, max-age=86400'
     assert b'Version Two' in updated.data
+
+
+def test_reader_uses_local_wod_mirror_not_delta(authenticated_client, app, db):
+    # GAP-005: the reader must load the WoD standard JS and layout/skin CSS from
+    # our own static mirror, not from delta.world-of-dungeons.org, so the render
+    # path no longer waits on a slow cross-border DNS/TLS chain.
+    rc = ReportController()
+    cat = rc.create_category("cat1", "Cat Desc", "testuser")
+    rc.create_report(cat.id, "myreport", "testuser")
+    report = Report.query.filter_by(name="myreport").first()
+
+    report_dir = os.path.join(app.config['DATA_DIR'], 'testuser', 'cat1', 'myreport')
+    os.makedirs(report_dir, exist_ok=True)
+    with open(os.path.join(report_dir, 'index.html'), 'w', encoding='utf-8') as f:
+        f.write("<html><body><p>Reader Body</p></body></html>")
+
+    res = authenticated_client.get(f'/r/report/{report.id}/reader/')
+    assert res.status_code == 200
+    page = res.data.decode('utf-8')
+
+    # Local mirror is referenced for the render-critical assets.
+    assert '/static/wod/js/wod_standard.js' in page
+    assert '/static/wod/css/layout.css' in page
+    assert '/static/wod/css/skins/skin-4/skin-cn.css' in page
+
+    # No delta.world-of-dungeons.org CSS/JS *resource requests* remain.
+    assert 'src="https://delta.world-of-dungeons.org' not in page
+    assert 'href="https://delta.world-of-dungeons.org' not in page
+
+    # Runtime host config and external jump links are intentionally preserved:
+    # tooltips/ajax still resolve against the live game server.
+    assert "wodInitialize('delta.world-of-dungeons.org'" in page
+
+
+def test_wod_mirror_static_files_are_served(client):
+    # The mirrored assets must actually exist and be served by the app so the
+    # reader references above resolve to real 200s at the edge/origin.
+    for path in (
+        '/static/wod/js/wod_standard.js',
+        '/static/wod/css/layout.css',
+        '/static/wod/css/ajax.css',
+        '/static/wod/css/news.css',
+        '/static/wod/css/skins/skin-4/skin-cn.css',
+    ):
+        res = client.get(path)
+        assert res.status_code == 200, path
+
+
+def test_dynamic_report_page_has_no_cdn_cache_header(authenticated_client, db):
+    # GAP-004 guardrail: only public raw HTML opts into shared edge caching.
+    # Dynamic pages carry session/CSRF state and must stay DYNAMIC/BYPASS, so
+    # they must never emit the Cloudflare-only cache directive.
+    rc = ReportController()
+    cat = rc.create_category("cat1", "Cat Desc", "testuser")
+    rc.create_report(cat.id, "myreport", "testuser")
+    report = Report.query.filter_by(name="myreport").first()
+
+    details = authenticated_client.get(f'/r/report/{report.id}')
+    assert details.status_code == 200
+    assert 'Cloudflare-CDN-Cache-Control' not in details.headers
+
+    listing = authenticated_client.get(f'/r/category/{cat.id}')
+    assert listing.status_code == 200
+    assert 'Cloudflare-CDN-Cache-Control' not in listing.headers
 
 
 def test_report_details_listens_for_reader_state(authenticated_client, db):

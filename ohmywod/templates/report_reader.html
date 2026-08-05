@@ -8,13 +8,13 @@
     <script src="{{ url_for('static', filename='js/vendor/jquery-3.3.1.js') }}"></script>
     <script src="{{ url_for('static', filename='js/vendor/js.cookie.min-3.0.1.js') }}"></script>
     <script src="{{ url_for('static', filename='js/vendor/popper-v2.11.6.js') }}"></script>
-    <script type="text/javascript" src="https://delta.world-of-dungeons.org/wod/javascript/wod_standard.js?1662631467"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='wod/js/wod_standard.js') }}"></script>
     <script type="text/javascript" src="{{ url_for('static', filename='js/wodtooltip.js') }}"></script>
     <!-- Font Awesome JS -->
     <title>战报网 - {{ report.title }} (阅读模式)</title>
     <meta name="description" content="{{ report.owner }} 分享的 World of Dungeons 战报：{{ report.title }}，阅读模式。">
-    <link rel="stylesheet" type="text/css" href="https://delta.world-of-dungeons.org/wod/css/layout.css?1662631467">
-    <link rel="stylesheet" type="text/css" href="https://delta.world-of-dungeons.org/wod/css//skins/skin-4/skin-cn.css?1662631467">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='wod/css/layout.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='wod/css/skins/skin-4/skin-cn.css') }}">
     <style type="text/css">
       /*<![CDATA[*/
       .tableMinWidthRespectingContent {
