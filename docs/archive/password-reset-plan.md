@@ -59,7 +59,7 @@ next_item_id: "PWR-005"
 
 ## 2. 这份计划怎么维护
 
-沿用 [afdian-integration-plan.md](afdian-integration-plan.md) 与 [maintenance-support-plan.md](../maintenance-support-plan.md) 的同一套约定：个人兴趣项目，不需要 owner / RACI。事项通常由一个 AI 工具推进，另一个 AI 工具独立检查；涉及站外账号（域名 DNS、邮件服务商）时由用户最后决定并执行。
+沿用 [afdian-integration-plan.md](afdian-integration-plan.md) 与 [maintenance-support-plan.md](maintenance-support-plan.md) 的同一套约定：个人兴趣项目，不需要 owner / RACI。事项通常由一个 AI 工具推进，另一个 AI 工具独立检查；涉及站外账号（域名 DNS、邮件服务商）时由用户最后决定并执行。
 
 每个事项两个可选角色：
 

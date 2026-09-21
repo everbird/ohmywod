@@ -1,19 +1,24 @@
 ---
 document_id: ohmywod-global-access-performance-plan
 schema_version: 1
-document_status: draft
+document_status: done
 source_of_truth_for: "domestic and international access performance risks, improvement order, and non-regression guardrails"
 language: zh-CN
 created_at: "2026-08-04"
-last_updated: "2026-08-05"
-review_commit: "uncommitted"
-review_worktree: "Wave 0..2 (GAP-001..007) applied; GAP-004 CF rule live; GAP-007 FA subset deferred; uncommitted"
+last_updated: "2026-09-21"
+review_commit: "73ca443"
+review_worktree: "clean"
 next_item_id: "GAP-008"
 ---
 
-# 国内与海外访问性能改进计划
+# 国内与海外访问性能改进计划（已归档）
 
-> 本文基于 2026-08-04 对生产响应、Globalping 中国探针和 `ohmywod` repo 的扫描结果。它补充 [CDN 改进计划](cdn-improvement-plan.md)，重点是把会拖慢国内加载的跨境/第三方资源找出来，同时明确不为了国内网络而显著牺牲海外用户体验。
+> 本文基于 2026-08-04 对生产响应、Globalping 中国探针和 `ohmywod` repo 的扫描结果。它补充 [CDN 改进计划](../cdn-improvement-plan.md)，重点是把会拖慢国内加载的跨境/第三方资源找出来，同时明确不为了国内网络而显著牺牲海外用户体验。
+>
+> **完成状态（已归档）：** Wave 0 至 Wave 2 的全部改进项已实施并合并至主干（PR #9，commit `73ca443`），并在生产环境验证生效。
+> - **Wave 0（移除阻塞/重复第三方资源 + logo 减重）：** 彻底移除关键路径上的 Google Fonts（GAP-001）、删除 unpkg FilePond CSS 外链（GAP-002）、将 1MB 原图 logo 替换为轻量版 WebP/PNG（GAP-003）；
+> - **Wave 1（边缘缓存 + 第三方资源本地化）：** 公开 raw 战报增加 Cloudflare 边缘缓存与 Cache Rule 并实测 `HIT`（GAP-004）、reader 页依赖的 WoD 德国源站 CSS/JS 完成本地镜像（GAP-005）；
+> - **Wave 2（按需加载与非阻塞策略）：** Google tag 改为 `requestIdleCallback` 延迟加载并提供配置开关（GAP-006）、移除 `base.html` 中多余的 Popper 并将 FilePond 限制为仅目录拥有者加载（GAP-007），Font Awesome 图标瘦身按计划推迟/暂不需要。
 
 ## 1. 目标与边界
 
@@ -155,7 +160,7 @@ Wave 0 和 Wave 1 完成后先复测，不自动进入大陆 CDN 或多地域源
 
 问题与影响：`/r/raw/*` 是公开且基本不可变的战报 HTML，但当前响应为 `Cache-Control: private, no-cache` 和 `CF-Cache-Status: DYNAMIC`。国内访问需要动态回源东京，热门战报重复访问无法利用边缘。
 
-方向沿用 [CDN-001](cdn-improvement-plan.md#cdn-001--为公开且基本不可变的-raw-战报增加-cloudflare-边缘缓存)：
+方向沿用 [CDN-001](../cdn-improvement-plan.md#cdn-001--为公开且基本不可变的-raw-战报增加-cloudflare-边缘缓存)：
 
 - 浏览器继续 `Cache-Control: private, no-cache`。
 - 增加 `Cloudflare-CDN-Cache-Control: public, max-age=86400`。
@@ -219,7 +224,7 @@ Wave 0 和 Wave 1 完成后先复测，不自动进入大陆 CDN 或多地域源
 
 ### GAP-007 — 通用 JS/CSS 按页加载与图标瘦身
 
-- 状态：`partial`（Popper 去重 + FilePond 按拥有者加载已完成并测试；Font Awesome 瘦身按计划推迟）
+- 状态：`done`（Popper 去重 + FilePond 按拥有者加载已完成并测试；Font Awesome 瘦身按既定边界推迟/暂不做）
 - 优先级：`P3`
 - 依赖：Wave 0/1 复测后仍有明显资源瓶颈
 
@@ -263,6 +268,20 @@ Wave 0 和 Wave 1 完成后先复测，不自动进入大陆 CDN 或多地域源
 - 浏览器检查：匿名首页、全部目录、公开目录、报告详情、reader、登录页、拥有者上传页。
 
 ## 8. Changelog
+
+### WAVE-20260921-01 — 全局访问性能计划归档
+
+- 日期：2026-09-21
+- Drive AI：Antigravity
+- Review AI：`unassigned`
+- 关联事项：GAP-001 至 GAP-007
+- 状态变化：GAP-007 `partial` -> `done`；本文 `document_status` draft -> done，归档至 `docs/archive/global-access-performance-plan.md`
+- 改动：Wave 0 至 Wave 2 全部工作项均已落地并合并至 main（PR #9，commit `73ca443`），生产 Cloudflare Cache Rule 稳定运行；更新文档元数据、完成状态与相对路径，将计划文件移入 `docs/archive/` 归档
+- 关键取舍：Font Awesome 瘦身按计划推迟/暂不做，全站首屏与冷启动体积已显著下降；公开 raw 战报利用 Cloudflare 边缘缓存降低跨境延迟；不引入大陆 CDN 或地理分流复杂机制
+- 验证：全仓单测 156 项通过，静态镜像、无外链、按需加载等断言全部绿灯
+- 发生的问题：无
+- 剩余风险：无
+- 下一步：无（计划已闭环归档）
 
 ### WAVE-20260805-03 — Wave 2 落地（GAP-006 / GAP-007 部分）
 
