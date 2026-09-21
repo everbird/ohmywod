@@ -23,6 +23,13 @@
   {% endif %}
   {% endwith %}
 
+  {% if request.args.get('next') == url_for('frontend.feedback_page') %}
+  {# FBK-002: /feedback now requires login; point users who can't log in to the forum fallback. #}
+  <div class="alert alert-info" role="alert">
+    提交反馈需要先登录。登录不了？可以通过 WoD 论坛 [post:16014199] 联系我们。
+  </div>
+  {% endif %}
+
   {% if current_user and not current_user.is_anonymous %}
   <section class="content-section account-status">
     <div class="empty-state mb-0">

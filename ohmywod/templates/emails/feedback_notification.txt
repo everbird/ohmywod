@@ -1,0 +1,14 @@
+战报网收到一条新反馈。
+
+提交者：{{ feedback.username }}
+时间（UTC）：{{ feedback.created_at.strftime('%Y-%m-%d %H:%M:%S') if feedback.created_at else '-' }}
+
+内容：
+----------------------------------------
+{{ feedback.content }}
+----------------------------------------
+
+后台查看：{{ admin_url }}
+
+— OhMyWoD
+https://wod.everbird.me

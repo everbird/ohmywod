@@ -52,6 +52,13 @@ class DefaultConfig(object):
     # Reset-token lifetime in seconds (30 min).
     PASSWORD_RESET_TOKEN_MAX_AGE = 1800
 
+    # --- Feedback notification (FBK-001) ---
+    # Where new-feedback emails go (the site owner's mailbox). Kept out of the
+    # repo on purpose: empty here means "not configured" and mailer.py just logs
+    # a warning and skips sending, so feedback still lands in the DB / admin.
+    # Production renders the real address into local_config.py via ohmywod-ops.
+    FEEDBACK_NOTIFY_TO = ""
+
     # --- Afdian (爱发电) read-only sponsor wall (AFD-002) ---
     # Credentials for the read-only query-sponsor API. Both default empty so the
     # sponsor wall stays inert until provisioned; ohmywod/afdian.py treats an

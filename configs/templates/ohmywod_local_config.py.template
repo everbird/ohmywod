@@ -52,6 +52,8 @@ class DefaultConfig(object):
     MAIL_DEFAULT_SENDER = ("Ohmywod", "noreply@wod.everbird.me")
     PREFERRED_URL_SCHEME = "https"
     PASSWORD_RESET_TOKEN_MAX_AGE = 1800
+    # New-feedback notification recipient (FBK-001); empty = skip sending.
+    FEEDBACK_NOTIFY_TO = ""
 
     # --- Redis Store ---
     REDIS_HOST = '$REDIS_STORE_HOST'

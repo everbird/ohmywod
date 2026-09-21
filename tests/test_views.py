@@ -129,16 +129,16 @@ def test_usage_page_has_no_legacy_extra_mount(client):
     assert '不代表 Linode Object Storage' in page
 
 
-def test_feedback_page(client):
+def test_feedback_page_requires_login(client):
+    # FBK-002: both viewing and submitting are gated behind login.
     res = client.get('/feedback')
-    assert res.status_code == 200
+    assert res.status_code == 302
+    assert '/login' in res.headers['Location']
+    assert 'next=/feedback' in res.headers['Location']
 
-    res = client.post('/feedback', data={
-        'username': 'Guest User',
-        'feedback': 'Excellent application interface!'
-    }, follow_redirects=True)
-    assert res.status_code == 200
-    assert "feedback_submitted" in res.data.decode('utf-8') or "feedback" in res.request.path.lower()
+    res = client.post('/feedback', data={'feedback': 'hello'})
+    assert res.status_code == 302
+    assert '/login' in res.headers['Location']
 
 
 

@@ -63,12 +63,14 @@ def test_register_normal_still_works_with_honeypot_field(client, db):
     assert UserController().get_db_user("realuser") is not None
 
 
-def test_feedback_is_rate_limited(client, db):
+def test_feedback_is_rate_limited(authenticated_client):
+    # FBK-002 put /feedback behind login; the per-IP cap stays as a backstop
+    # for a logged-in user hammering the form.
     headers = {"CF-Connecting-IP": "198.51.100.33"}
     statuses = []
     for _ in range(7):
-        res = client.post("/feedback", data={"username": "rl", "feedback": "hi"},
-                          headers=headers)
+        res = authenticated_client.post("/feedback", data={"feedback": "hi"},
+                                        headers=headers)
         statuses.append(res.status_code)
     assert 429 in statuses  # feedback limit is 5/min
 

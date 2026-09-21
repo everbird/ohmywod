@@ -19,11 +19,11 @@ from flask import (
 from flask_login import login_user, current_user, login_required, logout_user
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField, BooleanField, SelectField
-from wtforms.validators import DataRequired, Email, EqualTo, ValidationError
+from wtforms.validators import DataRequired, Email, EqualTo, Length, ValidationError
 from wtforms.widgets import TextArea
 
 from ohmywod import security
-from ohmywod.mailer import send_reset_email
+from ohmywod.mailer import send_reset_email, send_feedback_notification
 from ohmywod.tokens import generate_reset_token, verify_reset_token
 from ohmywod.controllers.feedback import FeedbackController
 from ohmywod.controllers.report import ReportController, SITEMAP_CACHE_KEY
@@ -253,24 +253,36 @@ def usage_page():
     return rt("usage.html", stats=stats, latest_reports=latest_reports)
 
 
+FEEDBACK_MAX_LENGTH = 5000
+
+
 class FeedbackForm(FlaskForm):
-    username = StringField('你的名称')
-    feedback = StringField("反馈内容", widget=TextArea())
+    # FBK-002: the submitter is the logged-in user, so there is no free-text
+    # "your name" field any more; only the content is collected.
+    feedback = StringField(
+        "反馈内容", widget=TextArea(),
+        validators=[DataRequired(message="反馈内容不能为空。"),
+                    Length(max=FEEDBACK_MAX_LENGTH,
+                           message=f"反馈内容请控制在 {FEEDBACK_MAX_LENGTH} 字以内。")])
     submit = SubmitField("提交")
 
 
 @frontend.route("/feedback", methods=["POST", "GET"])
-# IMP-006: feedback is an open (unauthenticated) text POST -> spam vector.
-# Conservative per-IP cap; GET (viewing the form) is unaffected.
+# IMP-006 per-IP cap kept as a backstop; since FBK-002 the main defence is the
+# login gate below (~96% of historical feedback was drip-fed bot spam that the
+# rate limit never caught). GET (viewing the form) is unaffected.
 @limiter.limit("5 per minute; 20 per hour", methods=["POST"])
+@login_required
 def feedback_page():
     form = FeedbackForm()
     if form.validate_on_submit():
         fc = FeedbackController()
-        fc.create_feedback(
-            form.username.data,
-            form.feedback.data
+        feedback = fc.create_feedback(
+            current_user.username,
+            form.feedback.data.strip(),
         )
+        # FBK-001: best-effort owner notification; never blocks the submit.
+        send_feedback_notification(feedback)
         return rt("feedback_submitted.html")
 
     return rt("feedback.html", form=form)
