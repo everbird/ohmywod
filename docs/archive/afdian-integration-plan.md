@@ -1,23 +1,27 @@
 ---
 document_id: ohmywod-afdian-integration-plan
 schema_version: 1
-document_status: draft
+document_status: done
 source_of_truth_for: "爱发电站内技术集成（入口按钮接线、开放 API 接入、赞助者墙展示）的实现边界、工作项状态与 wave changelog"
 language: zh-CN
 created_at: "2026-07-25"
-last_updated: "2026-08-04"
-review_commit: "b1728f5"
-review_worktree: "dirty (AFD-001 review nit: custom.css text-bright fallback)"
+last_updated: "2026-09-21"
+review_commit: "d8ea429"
+review_worktree: "clean"
 next_item_id: "AFD-005"
 ---
 
-# 爱发电集成计划（未来）
+# 爱发电集成计划（已归档）
 
 > 本文是战报网“把爱发电用起来”的最省事落地计划，覆盖两个低成本组合：**① 支持面板加入爱发电入口按钮（纯前端）**；**② 只读赞助者墙（以爱发电为唯一真值源，Redis 缓存，不写 SQLite、不进 DR 链）**。
 >
-> 支持渠道的**定位、自愿性与文案**以 [站点维护成本支持计划](maintenance-support-plan.md)（SUP-003 / SUP-004）为准，本文不重复拥有；本文只负责爱发电**特有的技术实现**。
+> 支持渠道的**定位、自愿性与文案**以 [站点维护成本支持计划](../maintenance-support-plan.md)（SUP-003 / SUP-004）为准，本文不重复拥有；本文只负责爱发电**特有的技术实现**。
 >
-> **当前结论：先做组合 ①（把 `https://ifdian.net/a/everbird` 作为单一配置入口并入支持面板，与微信码并列，零后端）；组合 ② 作为可选增强，用现成的 `RedisCache` + `cache` 扩展缓存 `query-sponsor` 结果，渲染一个致谢用的赞助者墙。核心功能保持免费，不设付费墙，不做身份关联与自动权益发放，不引入 webhook。**
+> **完成状态（已归档）：** 组合 ① 与组合 ② 已全部落地并上线。
+> - 支持面板已加入爱发电入口按钮（AFD-001），与微信码并列，URL 单点配置并经 context processor 注入模板；
+> - 爱发电开放 API 只读客户端（AFD-002）已完成并在生产联调成功，Cloudflare UA 与签名校验通过；
+> - Redis 只读缓存层（AFD-003）已实现 1h TTL 与平滑降级，绝不写入 SQLite、不进 DR 链；
+> - 独立赞助者致谢页 `/thanks`（AFD-004）已上线，支持爱发电赞助方案自定义字段“致谢页显示名（可选）”覆盖、留空回落昵称、填“匿名”显示为“匿名支持者”，全流程保护隐私、不显金额。
 
 ## 1. 背景、现状与原则
 
@@ -25,7 +29,7 @@ next_item_id: "AFD-005"
 
 - 记录爱发电站内**技术集成**的实现边界、未来事项和完成证据：入口按钮接线、开放 API 接入与凭据管理、只读赞助者墙。
 - 目标是用最小实现与运维成本把已存在的爱发电主页“用起来”，并可选地给支持者一点非排他的公开致谢。
-- **不负责**支持渠道的定位、自愿性表达与首页文案收敛——这些属 [maintenance-support-plan.md](maintenance-support-plan.md) 的 SUP-003 / SUP-004。
+- **不负责**支持渠道的定位、自愿性表达与首页文案收敛——这些属 [maintenance-support-plan.md](../maintenance-support-plan.md) 的 SUP-003 / SUP-004。
 - **不负责**任何功能分层、付费墙、身份关联（爱发电用户 ↔ 站点账号）或会员权益发放；这些是更重的独立方向，本文明确不含（见第 6 节）。
 
 ### 1.2 2026-07-25 当前基线
@@ -64,7 +68,7 @@ next_item_id: "AFD-005"
 
 ## 2. 这份计划怎么维护
 
-沿用 [maintenance-support-plan.md](maintenance-support-plan.md) 的同一套约定：个人兴趣项目，不需要 owner / RACI / 增长实验。事项通常由一个 AI 工具推进，另一个 AI 工具独立检查；涉及站外账号、收款或密钥时由用户最后决定并执行。
+沿用 [maintenance-support-plan.md](../maintenance-support-plan.md) 的同一套约定：个人兴趣项目，不需要 owner / RACI / 增长实验。事项通常由一个 AI 工具推进，另一个 AI 工具独立检查；涉及站外账号、收款或密钥时由用户最后决定并执行。
 
 每个事项两个可选角色：
 
@@ -422,3 +426,18 @@ Review 关注：是否泄露 PII；匿名默认是否稳妥；小屏展示与空
 - 发生的问题：无
 - 剩余风险：`query-order.remark` 被用作自定义显示名来源；若未来爱发电把 `remark` 改作其他含义，可能误把普通订单备注显示到致谢页。当前赞助方案只有“致谢页显示名（可选）”这类自定义留名用途，风险可接受。
 - 下一步：上线后清理生产 Redis 对应缓存或等待 TTL，使 `/thanks` 读取新的订单显示名映射。
+
+### WAVE-20260921-01 — 爱发电集成计划归档
+
+- 日期：2026-09-21
+- Drive AI：Antigravity
+- Review AI：`unassigned`
+- 关联事项：AFD-001、AFD-002、AFD-003、AFD-004
+- 状态变化：`document_status` draft -> done；计划归档至 `docs/archive/afdian-integration-plan.md`
+- 改动：AFD-001 至 AFD-004 全部工作项均已完成并上线，更新文档元数据与完成说明，将计划文件移入 `docs/archive/`，更新相关文档与代码中的引用链接
+- 关键取舍：无
+- 验证：全量测试 156 项通过，文档相对路径与 cross-reference 校验通过
+- 发生的问题：无
+- 剩余风险：无
+- 下一步：无（计划已闭环归档）
+

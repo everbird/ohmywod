@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Merged thank-you wall: Afdian (auto) + manually maintained WeChat sponsors.
 
-Scope is intentionally tiny (docs/wechat-manual-sponsors-plan.md). WeChat reward
+Scope is intentionally tiny (docs/archive/wechat-manual-sponsors-plan.md). WeChat reward
 codes are just QR images — the site gets no reliable server callback, payer
 nickname, or order state — so integrating the WeChat merchant API is far more
 maintenance than an interest project warrants. Instead, the (currently few)

@@ -3,7 +3,7 @@
 
 Scope is deliberately tiny: sign requests per Afdian's MD5 scheme and call the
 read-only ``query-sponsor`` endpoint. No SQLite writes, no webhooks, no order
-verification (docs/afdian-integration-plan.md §6). Uses only the stdlib so the
+verification (docs/archive/afdian-integration-plan.md §6). Uses only the stdlib so the
 optional P2 sponsor wall adds no new dependency.
 
 Credentials come from Flask config: ``AFDIAN_USER_ID`` (non-secret,

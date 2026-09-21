@@ -1,17 +1,24 @@
 ---
 document_id: ohmywod-wechat-manual-sponsors-plan
 schema_version: 1
-document_status: implemented
+document_status: done
 source_of_truth_for: "微信打赏码来源赞助者以配置方式进入致谢页的实现边界、工作项与决策记录"
 language: zh-CN
 created_at: "2026-08-05"
-last_updated: "2026-08-05"
+last_updated: "2026-09-21"
+review_commit: "d8ea429"
+review_worktree: "clean"
 next_item_id: "WMS-004"
 ---
 
-# 微信打赏手工致谢计划
+# 微信打赏手工致谢计划（已归档）
 
 > 本文记录战报网把“微信打赏码过来的赞助者”加入致谢页的低成本方案。当前结论：**先不做微信支付商户 API，不做后台 CRUD，不写 SQLite；用配置维护少量手工赞助者，并在致谢页与爱发电赞助者合并展示，用来源 icon 区分渠道。**
+>
+> **完成状态（已归档）：** 功能已全部落地并上线。
+> - **配置与规范化（WMS-001）：** `MANUAL_SPONSORS` 配置已就绪，`manual_sponsor_entries()` 支持自动匿名化映射、隐藏项过滤与畸形容错，内部金额与时间不进入展示路径；
+> - **致谢页合并展示（WMS-002）：** `/thanks` 页面将爱发电与手工名单合并展示，按来源呈现 icon（并已扩展支持支付宝 `alipay`）；
+> - **测试与信息架构（WMS-003）：** 单测全覆盖，且已进一步重整落地页与致谢页信息架构（突出致谢墙，三渠道卡片下沉）。
 
 ## 1. 背景与结论
 
@@ -192,3 +199,5 @@ MANUAL_SPONSORS = [
 - 2026-08-05：实现 WMS-001/002/003。新增 `ohmywod/sponsors.py`（`manual_sponsor_entries()` + `thanks_entries()`），`config.py` 增加 `MANUAL_SPONSORS`，`/thanks` 与模板改为合并展示并按来源显示 icon，新增 `tests/test_sponsors.py`。全量测试 155 通过。
 - 2026-08-05：扩展手工来源支持支付宝（`source: "alipay"`，蓝色 `fa-qrcode` icon），新增 `static/img/alipay-reward-code.jpg`；来源配色统一为爱发电紫 / 微信绿 / 支付宝蓝，赞助者名字金色。`conftest.py` 显式清空 `AFDIAN_*`/`MANUAL_SPONSORS`，隔离测试与本地 `local_config`。
 - 2026-08-05：信息架构调整。落地页 `donate-panel` 精简为单个「支持作者 / 查看致谢」入口按钮（移除二维码与外链）；致谢页升级为完整支持页——赞助者墙置于主位、突出致谢，「支持方式」（爱发电 + 微信 + 支付宝，三栏等高卡片）下沉到页面末尾。清理失效 CSS（`donate-afdian-btn`/`donate-thanks-link`/`donate-qr*`）。
+- 2026-09-21：WMS-001 至 WMS-003 全部工作项均已完成并上线，更新文档元数据与完成说明，将计划文件移入 `docs/archive/` 归档。
+
