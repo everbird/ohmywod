@@ -1,12 +1,12 @@
 ---
 document_id: ohmywod-feedback-improvement-plan
 schema_version: 1
-document_status: in_progress
+document_status: active
 source_of_truth_for: "用户反馈（提交入口、通知、可回访性、后台处理）的优化边界、工作项状态与 wave changelog"
 language: zh-CN
 created_at: "2026-07-27"
 last_updated: "2026-09-21"
-review_commit: "app b43e5a4"
+review_commit: "app 57a1e86"
 review_worktree: "clean"
 next_item_id: "FBK-005"
 ---
@@ -17,7 +17,7 @@ next_item_id: "FBK-005"
 >
 > 落地思路（Wave 1，均零数据库改动、零新依赖）：**① 反馈改为登录后才能提交（FBK-002）**——针对本站 spam 近乎清零，且登录后天然拿到提交者身份（**2026-09-21 拍板：不做链接拦截**，登录用户发的反馈就足够，避免误伤“某某页面打不开”这类带链接的真反馈）；**② 复用 password-reset 刚建好的 Resend 邮件基建（`ohmywod/mailer.py`）做新反馈邮件通知（FBK-001）**，让站长第一时间看到剩下的真反馈。后台“已处理”状态（FBK-003）作为可选增强。
 >
-> 个人兴趣项目，以能用、简单、清晰为准，不追求工业级严密性。**防滥用方向（仅登录门槛，不拦链接）已拍板；Wave 1 已于 2026-09-21 在 `feature/feedback-improvement` 分支实施（见第 7 节 changelog）。**
+> 个人兴趣项目，以能用、简单、清晰为准，不追求工业级严密性。**防滥用方向（仅登录门槛，不拦链接）已拍板；Wave 1 已于 2026-09-21 实施、上线并验证（app `57a1e86`，见第 7 节 changelog）；FBK-003（Wave 2）为可选，待观察反馈量后再定。**
 
 ## 1. 背景、现状与原则
 
@@ -116,7 +116,7 @@ next_item_id: "FBK-005"
 
 ### FBK-001 — 新反馈邮件通知（复用 Resend，best-effort，零数据库改动）
 
-- 状态：`in_progress`（代码完成、单测通过；待配置收件人并上线联调）
+- 状态：`done`（2026-09-21 上线，真实提交一条反馈后站长邮箱收到通知）
 - 优先级：`P1`
 - 波次：Wave 1
 - Drive AI：`Claude Code (Opus 5)`
@@ -147,11 +147,11 @@ Review 关注：收件人是否来自配置而非硬编码；发信是否真的 
 - `views/frontend.py` `feedback_page` 在 `create_feedback` 之后调用一次通知。
 - 超长内容：表单 `Length(max=5000)` 兜住，邮件无需截断；轰炸：保留 `5/min; 20/hour` 的 IP 限流。
 - 单测 `tests/test_feedback.py`：发信内容 / 收件人（`mail.record_messages`）、未配置收件人时不发信且提交成功、`mail.send` 抛异常时提交仍 200 且已入库、`send_feedback_notification` 不外抛。全套 164 用例通过。
-- **未完成**：生产 `FEEDBACK_NOTIFY_TO` 尚未在 ohmywod-ops 配置（需站长给地址）；尚未真实发信联调。
+- 上线（2026-09-21）：ohmywod-ops `feature/feedback-notify`（`fb18eb1`、`66d5e1a`、`e480601`）在 `group_vars/all/vars.yml` 加 `feedback_notify_to`（站长邮箱，仅在私有 ops 仓库）、`ohmywod_local_config.py.j2` 渲染 `FEEDBACK_NOTIFY_TO`、`app_ref` `d8ea429 → 57a1e86`；`ansible-playbook site.yml --tags app` 已 apply。站长在生产真实提交一条反馈，邮箱收到通知，验证通过。
 
 ### FBK-002 — 防滥用主防线：登录才能反馈（零数据库改动；不做链接拦截）
 
-- 状态：`in_progress`（代码完成、单测通过；待合并上线并对照验证 spam 降幅）
+- 状态：`done`（2026-09-21 上线；未登录已无法提交、真实用户名落库。spam 降幅待后续对照，见剩余风险）
 - 优先级：`P1`
 - 波次：Wave 1
 - Drive AI：`Claude Code (Opus 5)`
@@ -182,7 +182,7 @@ Review 关注：`@login_required` 是否覆盖 POST 且未登录不泄露内部�
 - `templates/feedback.html`：去掉名称输入，显示“将以 `<username>` 的身份提交”，渲染字段错误，页脚加论坛 `[post:16014199]` 兜底文案；`feedback_submitted.html` 文案略丰富并附论坛入口；`login.html` 在 `?next=/feedback` 时提示“提交反馈需要先登录，登录不了可走论坛”。
 - 单测：`tests/test_views.py` 改为断言未登录 GET/POST 均 302 到登录；`tests/test_ratelimit.py` 改用 `authenticated_client`；新 `tests/test_feedback.py` 覆盖登录后页面含用户名 / 无 `username` 输入 / 论坛入口、提交伪造 `username` 被忽略并落 `testuser`、空白 / 超长被拒、**含链接内容被正常接收**、登录页兜底提示仅在 `next=/feedback` 时出现。全套 164 用例通过。
 - 无 alembic 迁移、无新依赖、无库结构改动。
-- **未完成**：合并上线后对照新增反馈验证 spam 降幅。
+- 上线（2026-09-21）：随 app `57a1e86` 部署，生产验证登录门槛与提交流程正常。spam 降幅需一段时间后对照（见 changelog 剩余风险）。
 
 ### FBK-003 — 后台反馈处理体验（已处理状态 + 倒序 + 可读列）
 
@@ -237,7 +237,7 @@ Review 关注：admin 是否仍受 HTTP Basic 保护；排序 / 列配置是否�
 
 仍需你拍板：
 
-1. **通知收件人**：新反馈邮件发到哪个邮箱？代码已读 `FEEDBACK_NOTIFY_TO`（未配置则跳过发信、只记 warning）；需在 ohmywod-ops 渲染进 `local_config.py`（非密钥可放 `group_vars/all/vars.yml`，想避免明文进 ops 仓库则放 sops）。阻塞 FBK-001 真实联调。
+1. ~~**通知收件人**~~ → 已配置（2026-09-21，ohmywod-ops `vars.yml` `feedback_notify_to`），生产验证通过。
 2. **是否顺带存 `user_id`（外键）**：Wave 1 用 `username` 文本已够定位到人；若你希望后台能直接跳到用户、或未来按用户聚合反馈，可以后补一列 `user_id`（一次迁移）。非必需，默认先不做。
 3. **是否要“回复用户”能力**：登录用户已带 `email`，理论上站长可主动回信。本计划暂**不**做站内回复流程，只让身份可查——确认你认可这个边界。
 4. **是否推进 Wave 2（FBK-003）**：需一次 alembic 迁移（可空状态列）；Wave 1 上线后视反馈量再定。
@@ -269,3 +269,17 @@ Review 关注：admin 是否仍受 HTTP Basic 保护；排序 / 列配置是否�
 - 发生的问题：无。
 - 剩余风险：生产 `FEEDBACK_NOTIFY_TO` 未配置前通知静默跳过（有 warning 日志）；未做真实发信联调；spam 降幅需上线后对照。
 - 下一步：站长提供收件邮箱 → ohmywod-ops 渲染 `FEEDBACK_NOTIFY_TO` → 合并分支、部署 → 真实提交一条反馈验证邮件 → 一段时间后核对新增反馈中的 spam 比例，满足后把 FBK-001/002 转 `done`；再决定是否做 Wave 2（FBK-003）。
+
+### 2026-09-21 — Wave 1 上线并验证（FBK-001、FBK-002 → done）
+
+- Drive AI：Claude Code (Opus 5)；部署与验证：站长本人。
+- 关联事项：FBK-001 `in_progress → done`，FBK-002 `in_progress → done`；`document_status` `in_progress → active`。待决策 #1（通知收件人）关闭。
+- 改动：
+  - app：`feature/feedback-improvement` fast-forward 合入 `main`（`57a1e86`）并推送。
+  - ohmywod-ops `feature/feedback-notify`：`vars.yml` 新增 `feedback_notify_to`（站长邮箱，仅私有仓库）、`ohmywod_local_config.py.j2` 渲染 `FEEDBACK_NOTIFY_TO = "{{ feedback_notify_to | default('') }}"`、`app_ref` `d8ea429 → 57a1e86`；`ansible-playbook site.yml --tags app` 已 apply。
+  - 本地开发环境顺带修复（不进仓库）：仓库搬家后 `.venv/bin/*` shebang 与旧 supervisord/gunicorn 残留进程清理；`instance/ohmywod_d.sqlite` 补 alembic stamp 并 `upgrade head`（此前缺 HA-008 的 `user.password` 列）。
+- 关键取舍：收件邮箱放 ops `vars.yml` 而非 sops——非密钥、且 ops 为私有仓库；app 仓库与本文不含该地址。
+- 验证：本地以 `fbtester` 注册 → 登录 → 提交，DB 落 `username='fbtester'`（伪造的 `username` 字段被忽略）、含链接内容照收、未配 `FEEDBACK_NOTIFY_TO` 时日志 warning 且提交成功；生产由站长真实提交一条反馈，邮箱收到 `[战报网] 新反馈来自 <username>` 通知。
+- 发生的问题：本地库未 stamp 导致注册 500（已修，见上）；本机无 `ansible-playbook`，部署在站长常用环境执行。
+- 剩余风险：登录门槛对 spam 的实际降幅尚需一段时间后对照线上新增反馈核实；登录不了的用户只能走论坛 `[post:16014199]` 兜底。
+- 下一步：约 1–2 个月后抽查 `feedback` 表新增行，确认 spam 近乎清零（1.4 成功判断第一条）；届时若真反馈量上来，再评估 Wave 2（FBK-003 后台“已处理”状态 + 倒序，需一次可空列迁移）。
