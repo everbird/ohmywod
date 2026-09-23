@@ -13,7 +13,7 @@ next_item_id: "GAP-008"
 
 # 国内与海外访问性能改进计划（已归档）
 
-> 本文基于 2026-08-04 对生产响应、Globalping 中国探针和 `ohmywod` repo 的扫描结果。它补充 [CDN 改进计划](../cdn-improvement-plan.md)，重点是把会拖慢国内加载的跨境/第三方资源找出来，同时明确不为了国内网络而显著牺牲海外用户体验。
+> 本文基于 2026-08-04 对生产响应、Globalping 中国探针和 `ohmywod` repo 的扫描结果。它补充 [CDN 改进计划](cdn-improvement-plan.md)（已归档，CDN-001/002 由本文 GAP-004/GAP-003 取代完成），重点是把会拖慢国内加载的跨境/第三方资源找出来，同时明确不为了国内网络而显著牺牲海外用户体验。
 >
 > **完成状态（已归档）：** Wave 0 至 Wave 2 的全部改进项已实施并合并至主干（PR #9，commit `73ca443`），并在生产环境验证生效。
 > - **Wave 0（移除阻塞/重复第三方资源 + logo 减重）：** 彻底移除关键路径上的 Google Fonts（GAP-001）、删除 unpkg FilePond CSS 外链（GAP-002）、将 1MB 原图 logo 替换为轻量版 WebP/PNG（GAP-003）；
@@ -160,7 +160,7 @@ Wave 0 和 Wave 1 完成后先复测，不自动进入大陆 CDN 或多地域源
 
 问题与影响：`/r/raw/*` 是公开且基本不可变的战报 HTML，但当前响应为 `Cache-Control: private, no-cache` 和 `CF-Cache-Status: DYNAMIC`。国内访问需要动态回源东京，热门战报重复访问无法利用边缘。
 
-方向沿用 [CDN-001](../cdn-improvement-plan.md#cdn-001--为公开且基本不可变的-raw-战报增加-cloudflare-边缘缓存)：
+方向沿用 [CDN-001](cdn-improvement-plan.md#cdn-001--为公开且基本不可变的-raw-战报增加-cloudflare-边缘缓存)（该文档现已归档，本项 GAP-004 为其实际落地记录）：
 
 - 浏览器继续 `Cache-Control: private, no-cache`。
 - 增加 `Cloudflare-CDN-Cache-Control: public, max-age=86400`。

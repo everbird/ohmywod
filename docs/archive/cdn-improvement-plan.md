@@ -1,11 +1,13 @@
 ---
 document_id: ohmywod-cdn-improvement-plan
 schema_version: 1
-document_status: draft
-source_of_truth_for: "future CDN cache scope, domestic access improvement direction, work item status, and wave changelog"
+document_status: archived
+archived_at: "2026-09-23"
+superseded_by: "global-access-performance-plan.md (GAP-003, GAP-004)"
+source_of_truth_for: "historical record only; see global-access-performance-plan.md for current CDN/logo status"
 language: zh-CN
 created_at: "2026-07-24"
-last_updated: "2026-07-24"
+last_updated: "2026-09-23"
 review_commit: "907babd"
 review_worktree: "dirty: existing docs/archive/ha-plan.md changes preserved"
 next_item_id: "CDN-003"
@@ -13,7 +15,9 @@ next_item_id: "CDN-003"
 
 # 国内访问与 CDN 改进计划（未来）
 
-> 本文是战报网未来 CDN 与国内访问体验优化的工作计划，不是多地域部署方案。节点替换与恢复以 [单机 DR 与节点替换计划](archive/ha-plan.md) 为准，已经完成的应用缓存与安全基线以 [站点改进计划](archive/improvement-plan-2026-07.md) 为准。
+> **归档说明**：本文已于 2026-09-23 被 [国内外访问性能改进计划](global-access-performance-plan.md) 取代，不再作为实施依据。文中 CDN-001（raw 战报边缘缓存）与 CDN-002（logo 减重）两项已分别在该计划的 GAP-004、GAP-003 中落地并标记 `done`：应用代码已发 `Cloudflare-CDN-Cache-Control: public, max-age=86400`（`ohmywod/views/report.py::_report_raw_response`），生产 Cloudflare Cache Rule 已改为 Edge TTL 强制 1 天并实测 `HIT`；logo 已拆分为 `logo-512.webp`（49KB）/`logo-256.png`（75KB）供页面加载，原图仅保留给 `report_details.html` 的 OG 预览。下文"尚未实施"和 `todo` 状态只代表撰写时的判断，不代表归档时的代码状态。
+>
+> 本文原是战报网未来 CDN 与国内访问体验优化的工作计划，不是多地域部署方案。节点替换与恢复以 [单机 DR 与节点替换计划](ha-plan.md) 为准，已经完成的应用缓存与安全基线以 [站点改进计划](improvement-plan-2026-07.md) 为准。
 >
 > **当前结论：继续使用 Cloudflare 橙云和东京源站，不增加国内节点或更换 CDN。下一步最有价值的两项小改进是：让公开且基本不可变的 `/r/raw/*` 战报 HTML 在 Cloudflare 边缘缓存 1 天；缩小每页都会加载的 1024×1024、约 956 KB logo。两项可以并行。metadata 页面、登录态页面和互动接口继续不缓存。**
 
@@ -101,7 +105,7 @@ CDN-001 与 CDN-002 没有顺序依赖，可以并行。完成后先停下来观
 
 ### CDN-001 — 为公开且基本不可变的 raw 战报增加 Cloudflare 边缘缓存
 
-- 状态：`todo`
+- 状态：`done`（归档：实际以 [GAP-004](global-access-performance-plan.md#gap-004--为公开-raw-战报增加-cloudflare-边缘缓存) 完成，见该项证据与坑点记录）
 - 优先级：`P1`
 - 波次：Wave 0
 - Drive AI：`unassigned`
@@ -152,11 +156,11 @@ CDN-001 与 CDN-002 没有顺序依赖，可以并行。完成后先停下来观
 
 Review 关注：规则路径误写成 `/raw/*` 而漏掉真实 `/r/raw/*`；缓存整个 `/r/*`；Cloudflare 缓存头覆盖浏览器语义；304 丢 CSP；缓存响应意外包含 `Set-Cookie`；削弱 sandbox。
 
-执行证据：尚无。
+执行证据：尚无（归档时点，见 CDN-001 状态行的取代说明）。
 
 ### CDN-002 — 缩小每页加载的 logo
 
-- 状态：`todo`
+- 状态：`done`（归档：实际以 [GAP-003](global-access-performance-plan.md#gap-003--缩小普通页面-logo-下载字节) 完成，见该项证据）
 - 优先级：`P2`
 - 波次：Wave 0
 - Drive AI：`unassigned`
@@ -189,7 +193,7 @@ Review 关注：规则路径误写成 `/raw/*` 而漏掉真实 `/r/raw/*`；缓�
 
 Review 关注：只改 CSS 尺寸但没有减少下载字节；误伤透明背景；社交预览不支持所选格式；同名替换后 Cloudflare 或浏览器仍显示旧图。
 
-执行证据：尚无。
+执行证据：尚无（归档时点，见 CDN-001 状态行的取代说明）。
 
 ## 5. 未来重新评估条件
 
@@ -216,3 +220,17 @@ Review 关注：只改 CSS 尺寸但没有减少下载字节；误伤透明背�
 - 发生的问题：无
 - 剩余风险：Cloudflare 标准全球网络对不同国内运营商的实际路径仍可能波动；只有上线 raw 缓存并从国内网络复测后才能确认体感收益
 - 下一步：CDN-001 与 CDN-002 可并行；实施需单独确认 Cloudflare 规则与生产发布
+
+### WAVE-20260923-01 — 归档：CDN-001/002 已在 GAP-003/004 中落地
+
+- 日期：2026-09-23
+- Drive AI：Claude
+- Review AI：`unassigned`
+- 关联事项：CDN-001、CDN-002
+- 状态变化：CDN-001、CDN-002 由 `todo` 改为 `done`（归档标注，非本文波次新增实现）；文档整体 `document_status` 由 `draft` 改为 `archived`
+- 改动：核对生产代码 `ohmywod/views/report.py::_report_raw_response` 已发 `Cloudflare-CDN-Cache-Control: public, max-age=86400`；核对 `static/img/` 下已有 `logo-512.webp`（49KB）与 `logo-256.png`（75KB），`templates/base.html` 已用 `<picture>` 加载轻量版，`report_details.html` 的 OG 图仍用原图 `logo.png`；确认 `global-access-performance-plan.md` 的 GAP-003、GAP-004 已标记 `done` 且带生产 `HIT` 实测证据，与本文 CDN-001/002 是同一工作的重复记录；将本文标记为被该计划取代并移入 `archive/`
+- 关键取舍：不重写本文历史判断与证据表述，只补状态与归档说明，保留 CDN-001/002 原始方向记录供追溯
+- 验证：只读核对生产源码与 `global-access-performance-plan.md` 对应工作项，未修改 Cloudflare 或生产
+- 发生的问题：无
+- 剩余风险：无（两项均已有生产验证证据，见 GAP-003/GAP-004）
+- 下一步：无。未来若再出现 CDN 相关新需求，在 `global-access-performance-plan.md` 或新文档中开新事项，不复用本文
