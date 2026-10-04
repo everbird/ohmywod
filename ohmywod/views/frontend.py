@@ -42,6 +42,12 @@ def landing_page():
     return rt("landing.html")
 
 
+@frontend.route("/changelog")
+def changelog_page():
+    # Both version and rendered notes are from this app's startup snapshot.
+    return rt("changelog.html")
+
+
 @frontend.route("/thanks")
 def thanks_page():
     # Standalone, read-only thank-you wall (AFD-004 / WMS-002). Merges the

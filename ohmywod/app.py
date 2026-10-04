@@ -11,6 +11,7 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 from ohmywod import views
 from ohmywod.config import DefaultConfig, AFDIAN_URL, GOOGLE_ANALYTICS_ID
 from ohmywod.controllers.user import UserController
+from ohmywod.release import load_release_snapshot
 
 try:
     from ohmywod.local_config import DefaultConfig
@@ -58,6 +59,7 @@ def create_app(config=None, app_name=None, modules=None):
     app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_for=0, x_host=0)
 
     configure_app(app, config)
+    app.extensions["site_release"] = load_release_snapshot(logger=app.logger)
 
     configure_extensions(app)
     configure_modules(app, modules)
@@ -82,6 +84,10 @@ def configure_app(app, config):
     def inject_google_analytics_id():
         # GA4 id (GAP-006); empty string disables the tag. See ohmywod/config.py.
         return {"google_analytics_id": GOOGLE_ANALYTICS_ID}
+
+    @app.context_processor
+    def inject_site_release():
+        return {"site_release": app.extensions["site_release"]}
 
     @app.context_processor
     def inject_disk_usage():

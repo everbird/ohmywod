@@ -1,0 +1,14 @@
+{# Main-content version line, separate from the standalone-hidden copyright. #}
+<nav class="release-info d-flex flex-wrap align-items-center justify-content-center gap-1 small" aria-label="版本与更新日志">
+    <a class="release-version" href="{{ url_for('frontend.changelog_page', _anchor=site_release.current_anchor) }}">{{ site_release.version.label }}</a>
+    {% if site_release.version.commit %}
+    <span aria-hidden="true">·</span>
+    {% if site_release.version.commit_url %}
+    <a class="release-commit" href="{{ site_release.version.commit_url }}" target="_blank" rel="noopener noreferrer" title="完整 Git commit：{{ site_release.version.commit }}（GitHub，新窗口）"><code>{{ site_release.version.short_commit }}</code></a>
+    {% else %}
+    <code class="release-commit" title="完整 Git commit：{{ site_release.version.commit }}（尚未确认发布）">{{ site_release.version.short_commit }}</code>
+    {% endif %}
+    {% endif %}
+    <span aria-hidden="true">·</span>
+    <a class="release-changelog" href="{{ url_for('frontend.changelog_page') }}" {% if request.endpoint == 'frontend.changelog_page' %}aria-current="page"{% endif %}>更新日志</a>
+</nav>
