@@ -241,8 +241,7 @@ def server_session(key):
 
 @frontend.route("/help")
 def help_page():
-    return redirect(url_for("frontend.landing_page"))
-    # return rt("help.html")
+    return rt("help.html")
 
 
 @frontend.route("/usage")

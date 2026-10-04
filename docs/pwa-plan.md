@@ -1,9 +1,9 @@
 ---
 document_id: ohmywod-pwa-plan
-document_status: planned
+document_status: in_progress
 language: zh-CN
 created_at: "2026-09-30"
-last_updated: "2026-09-30"
+last_updated: "2026-10-04"
 ---
 
 # PWA 桌面安装与独立窗口计划
@@ -18,7 +18,7 @@ last_updated: "2026-09-30"
 
 本期不做离线战报、离线操作、后台同步、推送、应用商店上架，也不引入前端框架或新的构建系统。离线阅读仅为 nice to have，不排期、不作为本期前置条件。
 
-当前状态：已完成代码与官方资料调研；尚未实施，也未进行真机安装验证。本文件记录计划，不代表实现或部署已获验证。
+当前状态：已在 `feature/pwa-standalone` 实现并部署到现有本地开发服务（8013 端口），另有临时 HTTPS 入口 `https://agy.everbird.me` 供手机试用。页面与登录回归测试、Chromium 移动视口及安装条件检查已通过；手机真实安装尚待试用。
 
 ## 2. 显示方式与浏览器边界
 
@@ -48,13 +48,13 @@ iOS 的添加入口与 Android 不同，不能依赖 `beforeinstallprompt` 实�
 | [`landing.html`](../ohmywod/templates/landing.html) 的部分站内示例链接使用 `target="_blank"` | 调整为当前窗口导航，减少从应用跳到新窗口的情况 |
 | 现有 Logo 位于 `ohmywod/static/img/` | 复用图形，导出适合安装的尺寸与留白 |
 | 部署模板已配置 HTTPS，静态资源由现有应用提供 | 初步不需要新增服务、修改数据库或调整运维架构；实施时检查实际响应 |
-| 当前没有 manifest 或 Service Worker | 首版从 manifest 与图标开始，不增加离线缓存层 |
+| 已增加 manifest 与安装图标，没有 Service Worker | 首版保持联网使用，不增加离线缓存层 |
 
 ## 4. 实施步骤
 
 ### PWA-001：接入 manifest 与安装图标
 
-状态：`todo`
+状态：`in_progress`（代码、本地资源响应及 Chromium 安装条件检查完成，真机安装待验证）
 
 - 新增 `ohmywod/static/manifest.webmanifest`，由现有静态资源路径提供，无须为此增加动态接口。
 - 固定应用身份与入口：`id: "/"`、`name: "OhMyWoD 战报网"`、`short_name: "战报网"`、`lang: "zh-CN"`、`start_url: "/r/all"`、`scope: "/"`、`display: "standalone"`。启动页使用无需登录的全部战报页；所有页面共用同一份 manifest。
@@ -70,7 +70,7 @@ iOS 的添加入口与 Android 不同，不能依赖 `beforeinstallprompt` 实�
 
 ### PWA-002：补齐独立窗口内的导航与布局
 
-状态：`todo`，依赖：PWA-001
+状态：`in_progress`（站内链接、动态视口高度和窄屏侧栏交互已处理，真机操作待验证），依赖：PWA-001
 
 - 主站内部链接优先使用当前窗口，调整 `landing.html` 中打开战报和阅读器的 `_blank` 链接；不全局拦截所有链接。
 - 验证“全部战报 → 战报详情 → 阅读模式 → 子页 → 返回详情”的完整路径，以及“登录 → 我的目录 / 收藏”的路径，都停留在应用窗口中。
@@ -79,24 +79,25 @@ iOS 的添加入口与 Android 不同，不能依赖 `beforeinstallprompt` 实�
 - 根据真机结果调整屏幕顶部、底部安全区和可视高度。需要时使用 `env(safe-area-inset-*)`、动态视口单位；若增加 `viewport-fit=cover`，配套处理控件留白，避免直接套上后被刘海或手势区遮挡。
 - 检查软键盘、横竖屏切换、长战报滚动、浮窗与链接复制。只修影响日常使用的问题，不进行整站视觉重设计。
 - 登录继续使用现有会话机制，验证安装窗口中的登录、登出和重开表现；不要求跨浏览器共享登录态，也不顺带改造成永久登录。
+- 窄屏网页与 PWA 共用遮罩式侧栏：默认收起、不挤压内容，点击内容区遮罩、关闭按钮或按 Esc 即可关闭；桌面宽屏仍保持原有可记忆的侧栏布局。
 
 完成判断：关键路径无需地址栏或浏览器返回按钮即可完成，页面控件可见、可操作，阅读与登录功能正常。
 
 ### PWA-003：提供简短的安装说明
 
-状态：`todo`，依赖：PWA-001
+状态：`done`（`/help` 保留网站使用帮助，只加入一小段桌面安装说明），依赖：PWA-001
 
 - 在现有帮助页 `ohmywod/templates/help.html` 增加“添加到手机桌面”说明，侧边栏已有帮助入口，可以直接复用。
-- 分别说明 Android Firefox、Android Chrome 和 iPhone 的操作路径；文案以真机菜单为准，说明“完成后从桌面图标打开”。
+- 将 `ohmywod/views/frontend.py` 的 `/help` 从跳转首页改为渲染该说明页，保留通往首页使用介绍的链接。
+- 用一小段文字概括 Android Firefox / Chrome 与 iPhone 的安装入口，并说明从桌面图标打开；不把 PWA 作为帮助页的主角。
 - 首版使用浏览器自带安装入口即可，不依赖自动安装横幅、弹窗或站内安装按钮。
-- 已经添加过旧版普通快捷方式的用户，提示移除旧图标后按新流程重新安装。
 - 说明需要联网使用；不宣传离线能力。
 
 完成判断：用户能按简短说明安装，并理解普通网页访问与桌面应用启动的区别。
 
 ### PWA-004：验证并记录结果
 
-状态：`todo`，依赖：PWA-001～003
+状态：`in_progress`（自动检查与本地部署完成，目标手机试用待完成），依赖：PWA-001～003
 
 本地先检查 manifest JSON、资源响应与两个模板的实际输出；按改动范围运行现有相关测试。核心验收使用手机实际安装，不以桌面模拟移动视口或 Lighthouse 分数代替。
 
@@ -121,6 +122,17 @@ iOS 的添加入口与 Android 不同，不能依赖 `beforeinstallprompt` 实�
 | Android，待填写 | Chrome，待填写 | 待验证 | 待验证 | 未开始 |
 | iPhone，待填写 | Firefox / Chrome 分别记录 | 待验证 | 待验证 | 未开始 |
 
+### 本地试用记录（2026-10-03～04）
+
+- 分支：`feature/pwa-standalone`。复用当前 checkout 和原有 Supervisor，仅重启 `web`，未重建数据库或改动 Redis 服务、开发凭据。
+- 手机安装试用请访问 `https://agy.everbird.me/r/all`，安装说明在 `https://agy.everbird.me/help`。原有 `http://agy.everbird.me:8013` 仍可预览页面，但不要从这个非安全来源测试 PWA 安装；本机 `http://127.0.0.1:8013` 也可使用。
+- 自动验证：`.venv/bin/python -m pytest tests/test_views.py tests/test_auth.py -q --disable-warnings`，48 项通过。独立阅读器使用隔离测试数据库验证了共享 manifest、图标和返回链接。
+- Chromium 143 的 390×844 移动视口检查：页面无横向溢出或 JavaScript 错误，帮助页导航留在当前窗口；通过 DevTools 协议读取 manifest，解析错误及 `Page.getInstallabilityErrors` 均为空。该结果来自 localhost，不代替 Android Firefox / Chrome 的真实安装测试。
+- manifest、三种安装图标和 Apple Touch Icon 均返回 200；manifest 的响应类型为 `application/manifest+json`。
+- 视觉检查发现原有移动端浮动菜单会盖住页首标题，已给移动端内容留出顶部空间。viewport 保持系统默认安全区处理，不启用 `viewport-fit=cover`。
+- 2026-10-04 按试用反馈把帮助页的安装说明缩成一段；窄屏侧栏改为遮罩式，默认收起、内容宽度保持不变，可点右侧遮罩或按 Esc 关闭，左滑也有较明确的触发阈值。Chromium 在 390px 手机视口与 1200px 桌面视口验证开关、遮罩和切换视口后的状态；48 项回归测试再次通过。
+- 2026-10-04 已在开发机启动临时 Caddy 反向代理，将 80 自动跳转到 443，并将 HTTPS 请求转到原有的 8013 服务。Let's Encrypt 证书签发成功；`curl` 对公开 HTTPS 地址的证书验证通过，列表页、安装说明、manifest 和图标均返回 200，manifest 类型为 `application/manifest+json`。代理以临时 systemd 服务 `ohmywod-dev-https.service` 运行，配置与证书放在被忽略的 `.data/pwa-https/`；**重启机器后需重新启动此临时服务**。这只解决安全来源，是否真正无地址栏仍须在目标手机上安装后验证。
+
 ## 5. 保持实现简单
 
 首版不注册 Service Worker，不引入 Workbox、Cache Storage 或 IndexedDB。安装与独立窗口是本期目标；Chrome 已放宽菜单安装对 Service Worker 的要求，不能沿用旧教程把离线缓存当作安装的必做项。[Chrome：安装条件调整](https://developer.chrome.com/blog/update-install-criteria)
@@ -139,3 +151,6 @@ iOS 的添加入口与 Android 不同，不能依赖 `beforeinstallprompt` 实�
 ## 7. 变更记录
 
 - 2026-09-30：创建计划。明确本期只围绕手机桌面安装和无浏览器地址栏的独立窗口体验；离线战报降为未排期的 nice to have。仅完成文档，尚未实施。
+- 2026-10-03：在 feature 分支实现 manifest、现有 Logo 衍生图标、两个页面入口的共享元信息、同窗口站内示例链接、安装帮助页与移动布局小修；部署到现有本地开发服务并完成上述自动验证。未加入 Service Worker 或离线战报。
+- 2026-10-04：给现有开发服务加临时 HTTPS 入口并验证证书和 PWA 静态资源；目标手机实际安装仍待确认。
+- 2026-10-04：按试用反馈将帮助页的 PWA 说明降为一小段，并优化手机网页 / PWA 共用的侧栏遮罩与关闭交互；宽屏布局保持原样。

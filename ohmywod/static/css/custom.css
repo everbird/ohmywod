@@ -33,6 +33,10 @@ body {
     margin-left: calc(var(--app-sidebar-width) * -1);
 }
 
+#sidebarBackdrop {
+    display: none;
+}
+
 .sidebar-header {
     padding: 0;
     margin-top: -0.25rem;
@@ -142,6 +146,17 @@ body {
     width: 100%;
 }
 
+/* Follow the visible window when launching from the home screen or rotating. */
+@supports (height: 100dvh) {
+    #sidebar {
+        height: 100dvh;
+    }
+
+    #content {
+        min-height: 100dvh;
+    }
+}
+
 #sidebarCollapse {
     position: fixed;
     top: 0.75rem;
@@ -171,6 +186,10 @@ body {
     padding: 1rem;
 }
 
+#sidebarCollapse.active + #right-content {
+    padding-top: 4rem;
+}
+
 #footer {
     padding: 0 1rem 1rem;
 }
@@ -179,46 +198,68 @@ body {
     margin-bottom: 0;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 767.98px) {
     :root {
         --app-sidebar-width: min(335px, 88vw);
     }
 
-    #content {
+    #content,
+    #content.active {
         min-width: 300px;
         width: 100%;
         margin-left: 0;
         left: 0;
     }
 
-    #content.active {
-        width: calc(100% - var(--app-sidebar-width));
-        margin-left: var(--app-sidebar-width);
-    }
-
-    #sidebar {
-        margin-left: calc(var(--app-sidebar-width) * -1);
-        transform: rotateY(100deg);
-    }
-
+    #sidebar,
     #sidebar.active {
-        margin-left: 0;
+        margin-left: calc(var(--app-sidebar-width) * -1);
         transform: none;
     }
 
-    #sidebarCollapse {
+    body.mobile-sidebar-open #sidebar {
+        margin-left: 0;
+    }
+
+    #sidebarCollapse,
+    #sidebarCollapse.active {
         opacity: 1;
         pointer-events: auto;
     }
 
-    #sidebarCollapse.active {
+    body.mobile-sidebar-open #sidebarCollapse {
         opacity: 0;
         pointer-events: none;
     }
 
+    #sidebarBackdrop {
+        display: block;
+        position: fixed;
+        inset: 0;
+        z-index: 998;
+        width: 100%;
+        border: 0;
+        background: rgba(0, 0, 0, 0.55);
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        transition: opacity 0.28s ease, visibility 0.28s ease;
+    }
+
+    body.mobile-sidebar-open #sidebarBackdrop {
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
+    }
+
+    body.mobile-sidebar-open {
+        overflow: hidden;
+    }
+
     #right-content,
     .app-main {
-        padding: 0.75rem;
+        /* Leave room for the floating menu without covering page titles. */
+        padding: 4rem 0.75rem 0.75rem;
     }
 }
 
@@ -1795,4 +1836,3 @@ a.support-method:focus {
         grid-template-columns: 1fr;
     }
 }
-
