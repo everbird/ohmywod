@@ -105,6 +105,8 @@
       <div class="empty-state-desc">暂时还没有可浏览的公开战报目录。</div>
       {% if current_user.is_authenticated %}
       <a class="btn btn-primary" href="{{ url_for('wodreport.new_category') }}">创建新目录</a>
+      {% else %}
+      <a class="btn btn-soft" href="{{ url_for('frontend.landing_page') }}#get_started">了解如何使用</a>
       {% endif %}
     </div>
     {% endif %}

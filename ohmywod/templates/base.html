@@ -2,7 +2,9 @@
 <html lang="zh-CN">
     <head>
         {% block head %}
+        <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        {% include "_pwa_head.html" %}
         <meta name="csrf-token" content="{{ csrf_token() }}">
         <meta name="description" content="{% block meta_description %}战报网 —— World of Dungeons（WoD）中文战报分享站，上传、浏览、搜索和收藏副本战报。{% endblock %}">
         {% block meta_extra %}{% endblock %}
@@ -61,7 +63,7 @@
     <body>
         <div class="wrapper app-shell">
             <!-- Sidebar -->
-            <nav id="sidebar" class="d-flex flex-column flex-shrink-0 p-3 text-white bg-dark app-sidebar {{ 'active' if session['sidebar_is_active'] else ''}}">
+            <nav id="sidebar" class="d-flex flex-column flex-shrink-0 p-3 text-white bg-dark app-sidebar {{ 'active' if session['sidebar_is_active'] else ''}}" aria-label="主导航">
                 <div class="sidebar-header">
                     <h3 class="sidebar-brand"><a class="text-white text-decoration-none" href="{{ url_for('frontend.landing_page') }}"><picture><source srcset="{{ url_for('static', filename='img/logo-512.webp') }}" type="image/webp"><img src="{{ url_for('static', filename='img/logo-256.png') }}" class="brand-logo" alt="Logo" width="256" height="256"></picture></a></h3>
                 </div>
@@ -71,7 +73,7 @@
                 <ul id="nav_menu" class="nav nav-pills flex-column">
                     <li class="nav-item">
                         <div class="dropdown">
-                            <a href="#" role="button" id="dropdown-mine" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" aria-current="page">
+                            <a href="#" role="button" id="dropdown-mine" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
                                 <i class="fa-solid fa-folder-tree"></i>
                                 <span>我的</span>
                             </a>
@@ -89,31 +91,31 @@
                         </div>
                     </li>
                     <li>
-                        <a href="{{ url_for('wodreport.report_page') }}" class="nav-link text-white">
+                        <a href="{{ url_for('wodreport.report_page') }}" class="nav-link text-white {{ 'active' if request.endpoint == 'wodreport.report_page' else '' }}" {% if request.endpoint == 'wodreport.report_page' %}aria-current="page"{% endif %}>
                             <i class="fa-solid fa-list"></i>
                             <span>全部战报</span>
                         </a>
                     </li>
                     <li>
-                        <a href="{{ url_for('wodreport.search') }}" class="nav-link text-white">
+                        <a href="{{ url_for('wodreport.search') }}" class="nav-link text-white {{ 'active' if request.endpoint == 'wodreport.search' else '' }}" {% if request.endpoint == 'wodreport.search' %}aria-current="page"{% endif %}>
                             <i class="fa-solid fa-magnifying-glass"></i>
                             <span>搜索</span>
                         </a>
                     </li>
                     <li>
-                        <a href="{{ url_for('frontend.help_page') }}" class="nav-link text-white">
+                        <a href="{{ url_for('frontend.help_page') }}" class="nav-link text-white {{ 'active' if request.endpoint == 'frontend.help_page' else '' }}" {% if request.endpoint == 'frontend.help_page' %}aria-current="page"{% endif %}>
                             <i class="fa-solid fa-circle-question"></i>
                             <span>帮助</span>
                         </a>
                     </li>
                     <li>
-                        <a href="{{ url_for('frontend.usage_page') }}" class="nav-link text-white">
+                        <a href="{{ url_for('frontend.usage_page') }}" class="nav-link text-white {{ 'active' if request.endpoint == 'frontend.usage_page' else '' }}" {% if request.endpoint == 'frontend.usage_page' %}aria-current="page"{% endif %}>
                             <i class="fa-solid fa-chart-pie"></i>
                             <span>使用情况 {{ disk_info.percent }}%</span>
                         </a>
                     </li>
                     <li>
-                        <a href="{{ url_for('frontend.thanks_page') }}" class="nav-link text-white">
+                        <a href="{{ url_for('frontend.thanks_page') }}" class="nav-link text-white {{ 'active' if request.endpoint == 'frontend.thanks_page' else '' }}" {% if request.endpoint == 'frontend.thanks_page' %}aria-current="page"{% endif %}>
                             <i class="fa-solid fa-heart"></i>
                             <span>赞助者致谢</span>
                         </a>
@@ -158,12 +160,19 @@
                     </div>
                 </div>
             </nav>
+            <button type="button" id="sidebarBackdrop" aria-label="关闭侧边栏"></button>
 
             <div id="content" class="{{ 'active' if session['sidebar_is_active'] else ''}} d-flex flex-column">
 
-                <button type="button" id="sidebarCollapse" class="btn btn-primary sidebar-floating-toggle {{ 'active' if session['sidebar_is_active'] else ''}}" aria-label="展开侧边栏">
+                <button type="button" id="sidebarCollapse" class="btn btn-primary sidebar-floating-toggle {{ 'active' if session['sidebar_is_active'] else ''}}" aria-label="展开侧边栏" aria-controls="sidebar" aria-expanded="false">
                     <i class="fa-solid fa-bars"></i>
                 </button>
+                <header class="mobile-app-bar" aria-label="快捷导航">
+                    <a class="mobile-app-brand" href="{{ url_for('wodreport.report_page') }}">战报网</a>
+                    <a class="mobile-app-search" href="{{ url_for('wodreport.search') }}" aria-label="搜索战报" title="搜索战报">
+                        <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                    </a>
+                </header>
                 <main id="right-content" class="app-main">{% block content %}{% endblock %}</main>
 
 
@@ -205,65 +214,78 @@
                             document.documentElement.style.setProperty('--vh', `${vh}px`);
                         });
 
-                        const mediaQuery = window.matchMedia('(min-width: 768px)')
-                        const is_mobile = ! mediaQuery.matches
-
-                        // Always hide sidebar at first for mobile
-                        var remember_sidebar = ! is_mobile;
-                        
-                        function update_sidebar_active(is_active) {
-                            if (remember_sidebar) {
-                                $.ajax({
-                                    type: "POST",
-                                    data: { 'sidebar_is_active': is_active},
-                                    dataType: 'json',
-                                    url: "{{ url_for('frontend.server_session', key='sidebar_is_active') }}"
-                                });
-                            }
-                        };
-
                         $(document).ready(function () {
-                            $("#dismiss").on('click', function () {
-                                $('#sidebar, #content, #sidebarCollapse').toggleClass('active');
-                                var is_active = $('#sidebar').hasClass("active");
-                                update_sidebar_active(is_active);
-                            });
-                            
-                            $('#sidebarCollapse').on('click', function () {
-                                $('#sidebar, #content, #sidebarCollapse').toggleClass('active');
-                                var is_active = $('#sidebar').hasClass("active");
-                                update_sidebar_active(is_active);
-                            });
+                            var mobileView = window.matchMedia('(max-width: 767.98px)');
+                            var $sidebar = $('#sidebar');
+                            var $toggle = $('#sidebarCollapse');
+                            var touchStart = null;
 
-                            $("#sidebar")
-                                .on("mousedown touchstart", function (ev) {
-                                    if (typeof ev.touches !== 'undefined' && ev.touches.length > 0) {
-                                        var touch = ev.touches[0];
-                                        xDown = touch.pageX;
-                                        yDown = touch.pageY;
-                                    } else {
-                                        xDown = ev.pageX;
-                                        yDown = ev.pageY;
-                                    }
-                                })
-                                .on("mouseup touchend", function (ev) {
-                                    if (typeof ev.changedTouches !== 'undefined' && ev.changedTouches.length > 0) {
-                                        var touch = ev.changedTouches[0];
-                                        xUp = touch.pageX;
-                                        yUp = touch.pageY;
-                                    } else {
-                                        xUp = ev.pageX;
-                                        yUp = ev.pageY;
-                                    }
-                                    if (xDown != xUp || yDown != yUp) {
-                                        if (xDown - xUp > 10) {
-                                            $('#sidebar, #content, #sidebarCollapse').toggleClass('active');
-                                            var is_active = $('#sidebar').hasClass("active");
-                                            update_sidebar_active(is_active);
-                                        }
-                                    }
-                                })
-                            ;    
+                            function updateToggleLabel() {
+                                var isOpen = mobileView.matches
+                                    ? $('body').hasClass('mobile-sidebar-open')
+                                    : !$sidebar.hasClass('active');
+                                $toggle.attr('aria-expanded', String(isOpen));
+                                $sidebar.prop('inert', mobileView.matches && !isOpen);
+                                if (mobileView.matches) {
+                                    $sidebar.attr('aria-hidden', String(!isOpen));
+                                } else {
+                                    $sidebar.removeAttr('aria-hidden');
+                                }
+                            }
+
+                            function closeMobileSidebar() {
+                                if ($sidebar[0].contains(document.activeElement) || document.activeElement.id === 'sidebarBackdrop') {
+                                    $toggle.trigger('focus');
+                                }
+                                $('body').removeClass('mobile-sidebar-open');
+                                updateToggleLabel();
+                            }
+
+                            function toggleSidebar() {
+                                if (mobileView.matches) {
+                                    $('body').toggleClass('mobile-sidebar-open');
+                                } else {
+                                    $('#sidebar, #content, #sidebarCollapse').toggleClass('active');
+                                    $.post("{{ url_for('frontend.server_session', key='sidebar_is_active') }}", {
+                                        sidebar_is_active: $sidebar.hasClass('active')
+                                    });
+                                }
+                                updateToggleLabel();
+                            }
+
+                            updateToggleLabel();
+                            $('#dismiss').on('click', function (ev) {
+                                ev.preventDefault();
+                                if (mobileView.matches) {
+                                    closeMobileSidebar();
+                                } else {
+                                    toggleSidebar();
+                                }
+                            });
+                            $toggle.on('click', toggleSidebar);
+                            $('#sidebarBackdrop').on('click', closeMobileSidebar);
+                            $(document).on('keydown', function (ev) {
+                                if (ev.key === 'Escape' && mobileView.matches && $('body').hasClass('mobile-sidebar-open')) {
+                                    closeMobileSidebar();
+                                    $toggle.trigger('focus');
+                                }
+                            });
+                            $sidebar.on('touchstart', function (ev) {
+                                var touch = ev.originalEvent.touches[0];
+                                touchStart = touch ? { x: touch.pageX, y: touch.pageY } : null;
+                            }).on('touchend', function (ev) {
+                                var touch = ev.originalEvent.changedTouches[0];
+                                if (mobileView.matches && touchStart && touch &&
+                                    touchStart.x - touch.pageX > 60 &&
+                                    Math.abs(touchStart.x - touch.pageX) > Math.abs(touchStart.y - touch.pageY)) {
+                                    closeMobileSidebar();
+                                }
+                                touchStart = null;
+                            });
+                            window.addEventListener('resize', function () {
+                                if (!mobileView.matches) closeMobileSidebar();
+                                updateToggleLabel();
+                            });
                         });
 
                         // Global layout view toggle functionality
