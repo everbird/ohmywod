@@ -11,7 +11,8 @@
         <link rel="shortcut icon" href="{{ url_for('static', filename='img/favicon.ico') }}">
         <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
         <link rel="stylesheet" href="{{ url_for('static', filename='css/font-awesome-6.2.0-all.min.css' )}}">
-        <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css' )}}">
+        {# Bump the revision when custom.css changes so browsers do not reuse old styles. #}
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css', v='20261004-pwa-nav') }}">
         <script>
             // Apply layout preference immediately to avoid flash of unstyled content
             (function() {
@@ -167,7 +168,8 @@
                 <button type="button" id="sidebarCollapse" class="btn btn-primary sidebar-floating-toggle {{ 'active' if session['sidebar_is_active'] else ''}}" aria-label="展开侧边栏" aria-controls="sidebar" aria-expanded="false">
                     <i class="fa-solid fa-bars"></i>
                 </button>
-                <header class="mobile-app-bar" aria-label="快捷导航">
+                {# Keep desktop shortcuts hidden even with a cached pre-PWA custom.css. #}
+                <header class="mobile-app-bar d-md-none" aria-label="快捷导航">
                     <a class="mobile-app-brand" href="{{ url_for('wodreport.report_page') }}">战报网</a>
                     <a class="mobile-app-search" href="{{ url_for('wodreport.search') }}" aria-label="搜索战报" title="搜索战报">
                         <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
