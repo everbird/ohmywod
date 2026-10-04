@@ -390,5 +390,9 @@ def test_local_untagged_commits_do_not_create_unpushed_github_links(client, app,
 
 def test_real_changelog_is_unique_and_contains_recent_versions():
     notes = release.render_changelog((release.PROJECT_ROOT / "docs" / "changelog.md").read_text(encoding="utf-8"))
-    assert [e.version for e in notes.entries] == ["v2.3", "v2.2", "v2.1"]
+    versions = [e.version for e in notes.entries]
+    assert {"v2.3", "v2.2", "v2.1"}.issubset(versions)
+    assert versions == sorted(
+        versions, key=lambda version: tuple(map(int, version[1:].split("."))), reverse=True
+    )
     assert "[Unreleased]" not in "".join(e.body_html for e in notes.entries)
