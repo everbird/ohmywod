@@ -2,7 +2,7 @@
 
 import struct
 from pathlib import Path
-from urllib.parse import urlsplit
+from urllib.parse import parse_qs, urlsplit
 
 import pytest
 from lxml import html
@@ -69,6 +69,23 @@ def test_manifest_has_one_stable_online_app_identity(client):
 ])
 def test_public_pages_share_install_metadata(client, path):
     assert_pwa_head(client.get(path))
+
+
+def test_mobile_navigation_has_desktop_guard_and_versioned_stylesheet(client):
+    page = html.fromstring(client.get("/r/all").get_data(as_text=True))
+    bars = page.xpath('//header[contains(@class, "mobile-app-bar")]')
+    assert len(bars) == 1
+    # Bootstrap is unchanged across the release, so this also protects desktop
+    # users who still have the pre-PWA custom.css cached.
+    assert "d-md-none" in bars[0].get("class").split()
+    assert page.xpath('//link[@rel="stylesheet" and contains(@href, "bootstrap.min.css")]')
+    stylesheets = page.xpath('//link[@rel="stylesheet" and contains(@href, "/static/css/custom.css")]/@href')
+    assert len(stylesheets) == 1
+    assert parse_qs(urlsplit(stylesheets[0]).query).get("v")
+    response = client.get(stylesheets[0])
+    assert response.status_code == 200
+    assert response.mimetype == "text/css"
+    assert ".mobile-app-bar" in response.get_data(as_text=True)
 
 
 @pytest.mark.parametrize("filename,size", [
