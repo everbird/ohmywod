@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block title %}更新日志{% endblock %}
+{% block meta_description %}OhMyWoD 战报网的版本更新记录、当前运行版本与 Git commit。{% endblock %}
+
+{% block content %}
+<div class="info-page page-stack changelog-page">
+    <header class="page-hero">
+        <div>
+            <h1 class="page-title">更新日志</h1>
+            <p class="page-subtitle">按版本记录战报网的新增、改进与修复。</p>
+        </div>
+    </header>
+
+    <section class="content-section release-current" aria-labelledby="current-release-title">
+        <h2 class="section-title" id="current-release-title">当前运行版本</h2>
+        <dl class="release-details">
+            <dt>版本</dt>
+            <dd class="current-release-label">{{ site_release.version.label }}</dd>
+            <dt>Git commit</dt>
+            <dd>
+                {% if site_release.version.commit_url %}
+                <a class="release-full-commit" href="{{ site_release.version.commit_url }}" target="_blank" rel="noopener noreferrer"><code>{{ site_release.version.commit }}</code></a>
+                {% elif site_release.version.commit %}
+                <code class="release-full-commit">{{ site_release.version.commit }}</code>
+                {% else %}
+                <span class="text-secondary">暂不可用</span>
+                {% endif %}
+            </dd>
+        </dl>
+        {% if site_release.version.status == 'ambiguous' %}
+        <p class="release-note mb-0">同一代码对应多个正式版本标签，暂时无法唯一确认运行版本。下面的更新记录不用于猜测部署选择。</p>
+        {% elif site_release.version.preview %}
+        <p class="release-note mb-0">这是未打标签或有本地修改的预览代码，尚不能视为正式发布；Git commit 表示代码基准。下面列出已有版本记录。</p>
+        {% elif site_release.version.status == 'unavailable' %}
+        <p class="release-note mb-0">暂时无法识别运行代码，更新记录不用于推断当前版本。</p>
+        {% endif %}
+        {% if site_release.version.tag and not site_release.current_anchor %}
+        <p class="release-note mb-0">当前版本记录尚未补录。</p>
+        {% endif %}
+    </section>
+
+    <section class="content-section changelog-content" aria-label="已发布版本记录">
+        {% if not site_release.changelog.available %}
+        <p class="mb-0 text-secondary">更新记录暂不可用，请联系站长。</p>
+        {% elif not site_release.changelog.entries %}
+        <p class="mb-0 text-secondary">还没有已发布的更新记录。</p>
+        {% else %}
+        <nav class="changelog-index d-flex flex-wrap gap-3" aria-label="版本目录">
+            {% for entry in site_release.changelog.entries %}
+            <a href="#{{ entry.anchor }}">{{ entry.version }}</a>
+            {% endfor %}
+        </nav>
+        {% for entry in site_release.changelog.entries %}
+        <section class="changelog-entry" aria-labelledby="{{ entry.anchor }}">
+            <h2 id="{{ entry.anchor }}" tabindex="-1">
+                {{ entry.version }}
+                {% if entry.date %}<small class="text-secondary">{{ entry.date }}</small>{% endif %}
+            </h2>
+            {{ entry.body_html | safe }}
+        </section>
+        {% endfor %}
+        {% endif %}
+    </section>
+</div>
+{% endblock %}

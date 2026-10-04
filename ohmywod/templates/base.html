@@ -12,7 +12,7 @@
         <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
         <link rel="stylesheet" href="{{ url_for('static', filename='css/font-awesome-6.2.0-all.min.css' )}}">
         {# Bump the revision when custom.css changes so browsers do not reuse old styles. #}
-        <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css', v='20261004-pwa-nav') }}">
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css', v='20261004-release-main') }}">
         <script>
             // Apply layout preference immediately to avoid flash of unstyled content
             (function() {
@@ -322,6 +322,10 @@
                         });
                     </script>
                     {% endblock %}
+                </div>
+                {# Main-pane version links remain visible when standalone hides #footer. #}
+                <div class="main-release-footer px-3 pb-3">
+                    {% include "_release_info.html" %}
                 </div>
 
             </div>

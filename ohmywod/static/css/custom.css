@@ -400,6 +400,10 @@ body {
     #footer {
         display: none;
     }
+
+    .main-release-footer {
+        margin-top: auto;
+    }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -409,6 +413,97 @@ body {
     #sidebarBackdrop {
         transition: none;
     }
+}
+
+/* Release links belong below the main content, never in the sidebar. */
+.release-info {
+    font-size: 0.75rem;
+    line-height: 1.4;
+    color: var(--app-muted);
+}
+
+.release-info a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2rem;
+    color: inherit;
+    text-decoration: none;
+    overflow-wrap: anywhere;
+}
+
+.release-info a:hover,
+.release-info a:focus-visible {
+    color: var(--app-link);
+    text-decoration: underline;
+}
+
+.release-info code {
+    color: inherit;
+}
+
+.release-details {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    gap: 0.5rem 1rem;
+    margin: 1rem 0;
+}
+
+.release-details dt,
+.release-note {
+    color: var(--app-muted);
+    font-size: 0.9rem;
+}
+
+.release-details dd {
+    min-width: 0;
+    margin: 0;
+    overflow-wrap: anywhere;
+}
+
+.changelog-index a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.5rem;
+}
+
+.changelog-entry {
+    border-top: 1px solid var(--app-border);
+    padding-top: 1.25rem;
+    margin-top: 1.25rem;
+    overflow-wrap: anywhere;
+}
+
+.changelog-entry h2 {
+    font-size: 1.3rem;
+    margin-bottom: 1rem;
+}
+
+.changelog-entry h2 small {
+    display: inline-block;
+    font-size: 0.85rem;
+    font-weight: 400;
+    margin-left: 0.5rem;
+}
+
+.changelog-entry h3 {
+    font-size: 1rem;
+    margin-top: 1rem;
+}
+
+.changelog-entry li {
+    margin-bottom: 0.45rem;
+}
+
+.changelog-entry blockquote {
+    border-left: 3px solid var(--app-border);
+    padding-left: 0.85rem;
+    color: var(--app-muted);
+    font-size: 0.9rem;
+}
+
+.changelog-entry pre {
+    max-width: 100%;
+    overflow-x: auto;
 }
 
 /* Modern premium table list design */
@@ -1605,6 +1700,7 @@ a:focus {
 
 .info-panel {
     min-width: 0;
+    overflow-wrap: anywhere;
     padding: 1rem;
     border: 1px solid var(--app-border);
     border-radius: 8px;
