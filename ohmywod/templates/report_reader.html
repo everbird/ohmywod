@@ -457,9 +457,104 @@
       div#gadgettable > td.tableMinHeightRespectingContent {
           height:25px;
       }
+
+      .reader-mobile-nav {
+          display: none;
+      }
+
+      /* Constrain the outer shell only; preserve the legacy tables' own sizing
+         and vertical document scrolling, including on landscape phones. */
+      #gadgettable,
+      #gadgettable-top-gadgets table {
+          table-layout: fixed;
+      }
+
+      #gadgettable-top-gadgets .gadget_table_cell {
+          text-overflow: ellipsis;
+      }
+
+      .reader-report-content {
+          box-sizing: border-box;
+          width: 100%;
+          min-width: 0;
+          overflow-x: auto;
+      }
+
+      .reader-report-content #auto_extracted {
+          width: 100% !important;
+      }
+
+      @media (max-width: 767.98px), (pointer: coarse) {
+          :root {
+              --reader-nav-height: 3.5rem;
+          }
+
+          html {
+              scroll-padding-top: var(--reader-nav-height);
+          }
+
+          .reader-mobile-nav {
+              box-sizing: border-box;
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+              gap: 0.75rem;
+              position: fixed;
+              top: 0;
+              left: 0;
+              right: 0;
+              z-index: 1000;
+              width: 100%;
+              height: var(--reader-nav-height);
+              padding: 0.375rem 0.75rem;
+              border-bottom: 1px solid #334255;
+              background: rgba(15, 20, 27, 0.96);
+              font-family: system-ui, sans-serif;
+          }
+
+          .reader-mobile-back {
+              display: inline-flex;
+              align-items: center;
+              gap: 0.5rem;
+              min-height: 2.75rem;
+              padding: 0 0.65rem;
+              border-radius: 0.65rem;
+              color: #fff !important;
+              text-decoration: none;
+              white-space: nowrap;
+          }
+
+          .reader-mobile-back:hover,
+          .reader-mobile-back:focus-visible {
+              background: rgba(255, 255, 255, 0.1);
+          }
+
+          .reader-mobile-title {
+              min-width: 0;
+              overflow: hidden;
+              text-overflow: ellipsis;
+              white-space: nowrap;
+              color: #aab7c7;
+          }
+
+          #page-border {
+              top: var(--reader-nav-height);
+              height: calc(100% - var(--reader-nav-height));
+          }
+
+          .reader-legacy-return {
+              display: none;
+          }
+      }
       </style>
   </head>
   <body>
+    <nav class="reader-mobile-nav" aria-label="阅读导航">
+      <a class="reader-mobile-back" href="{{ url_for('wodreport.view_report', report_id=report.id) }}">
+        <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>返回战报
+      </a>
+      <span class="reader-mobile-title">阅读模式</span>
+    </nav>
     <div id="page-border">
       <table id="gadgettable" style="width:100%;" cellspacing="0" cellpadding="0">
           <tr>
@@ -479,7 +574,7 @@
                     <tbody>
                       <tr>
                         <td class="gadget_table_cell tableMinWidthRespectingContent" style="vertical-align:middle; white-space: nowrap; overflow: hidden;">
-                          [<a style="margin-left: 5px;" href="{{ url_for('wodreport.view_report', report_id=report.id) }}">返回</a> ] | {{ report.name }} (阅读模式)
+                          <span class="reader-legacy-return">[<a style="margin-left: 5px;" href="{{ url_for('wodreport.view_report', report_id=report.id) }}">返回</a> ] | </span>{{ report.name }} (阅读模式)
                         </td>
                       </tr>
                     </tbody>
@@ -490,7 +585,7 @@
           </tr>
           <tr>
             <td id="gadgettable-center-td" class="tableMinWidthRespectingContent gadgettable-column" style="vertical-align:top;">
-              <div class="gadget main_content lang-cn">
+              <div class="gadget main_content lang-cn reader-report-content">
                 {{ report_html|safe }}
               </div>
             </td>
@@ -557,7 +652,9 @@
               $(".tooltip").hide();
           });
 
-          $("a, span")
+          // App navigation stays native (including keyboard activation); only
+          // legacy report links need WoD's touch/tooltip compatibility handling.
+          $(".reader-report-content").find("a, span")
               .on("mousedown mouseup touchstart touchend click", function (ev) {
                   ev.preventDefault();
                   if (ev.type == "touchstart" || ev.type == "mousedown") {
@@ -599,12 +696,14 @@
                           // Avoid double tooltip
                           wodToolTipClose();
 
-                          $("#goto_tooltip").unbind("click").bind("click", function () {
-                              onclick_fn = t.getAttribute("onclick");
-                              onclick_fn = onclick_fn.replace("return o(", "original_o(");
-                              onclick_fn = onclick_fn.replace("return ", "");
-                              eval(onclick_fn);
-                          });
+                          const destination = t.getAttribute("onclick");
+                          $("#goto_tooltip").off("click").toggle(!!destination);
+                          if (destination) {
+                              $("#goto_tooltip").on("click", function () {
+                                  const onclick_fn = destination.replace("return o(", "original_o(").replace("return ", "");
+                                  eval(onclick_fn);
+                              });
+                          }
                       } else if (t.tagName == "A") {
                           if (t.parentElement.tagName == 'P') {
                               // navigation
@@ -629,13 +728,15 @@
                           // Avoid double tooltip
                           wodToolTipClose();
 
-                          $("#goto_tooltip").unbind("click").bind("click", function () {
-                              onclick_fn = t.getAttribute("onclick");
-                              onclick_fn = onclick_fn.replace("return o(", "original_o(");
-                              onclick_fn = onclick_fn.replace("return dummy_jump(", "jump(");
-                              onclick_fn = onclick_fn.replace("return ", "");
-                              eval(onclick_fn);
-                          });
+                          const destination = t.getAttribute("onclick");
+                          $("#goto_tooltip").off("click").toggle(!!destination);
+                          if (destination) {
+                              $("#goto_tooltip").on("click", function () {
+                                  const onclick_fn = destination.replace("return o(", "original_o(")
+                                      .replace("return dummy_jump(", "jump(").replace("return ", "");
+                                  eval(onclick_fn);
+                              });
+                          }
                           return;
                       }
                   }

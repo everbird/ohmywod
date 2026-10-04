@@ -19,6 +19,35 @@ def test_landing_page(client):
     assert "OhMyWoD" in res.data.decode('utf-8')
 
 
+def test_mobile_navigation_and_empty_start_page(client):
+    res = client.get('/r/all')
+    assert res.status_code == 200
+    page = html.fromstring(res.data.decode('utf-8'))
+    brand = page.xpath('//header[contains(@class, "mobile-app-bar")]//a[contains(@class, "mobile-app-brand")]')
+    assert brand and brand[0].text_content().strip() == '战报网'
+    assert page.xpath('//header[contains(@class, "mobile-app-bar")]//a[@href="/r/search" and @aria-label="搜索战报"]')
+    assert page.xpath('//nav[@id="sidebar"]//a[@href="/r/all" and @aria-current="page"]')
+    assert page.xpath('//nav[@id="sidebar"]/ul[@id="nav_menu"]/following-sibling::div[@id="sidebar_ad"]/following-sibling::div[contains(@class, "sidebar-footer")]//a[@href="/login"]')
+    assert page.xpath('//a[@href="/#get_started" and normalize-space()="了解如何使用"]')
+
+
+def test_help_page_keeps_original_sections_with_small_install_section(client):
+    res = client.get('/help')
+    assert res.status_code == 200
+    help_page = html.fromstring(res.data.decode('utf-8'))
+    assert help_page.xpath('//nav[@id="sidebar"]//a[@href="/help" and @aria-current="page"]')
+    headings = [heading.text_content().strip() for heading in help_page.xpath('//section[contains(@class, "info-section")]/div[contains(@class, "section-header")]/h2')]
+    assert headings == [
+        '这是什么？', '怎么使用？', '有什么特点？', '如何导出战报？',
+        '添加到手机桌面', '反馈与支持',
+    ]
+    assert help_page.xpath('//section[@id="get_started"]//a[@href="#how_to_export_reports"]')
+    assert help_page.xpath('//section[@id="how_to_export_reports"]//a[contains(@href, "extra_statistics.user.js")]')
+
+    landing_page = html.fromstring(client.get('/').data.decode('utf-8'))
+    assert not landing_page.xpath('//section[@id="add_to_home_screen"]')
+
+
 def test_registration_flow(client):
     # GET register form
     res = client.get('/register')
@@ -373,6 +402,9 @@ def test_reader_uses_local_wod_mirror_not_delta(authenticated_client, app, db):
     assert '/static/wod/js/wod_standard.js' in page
     assert '/static/wod/css/layout.css' in page
     assert '/static/wod/css/skins/skin-4/skin-cn.css' in page
+    assert f'href="/r/report/{report.id}"' in page
+    assert 'class="reader-mobile-nav"' in page
+    assert 'class="reader-mobile-back"' in page
 
     # No delta.world-of-dungeons.org CSS/JS *resource requests* remain.
     assert 'src="https://delta.world-of-dungeons.org' not in page

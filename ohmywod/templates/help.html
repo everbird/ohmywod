@@ -1,31 +1,12 @@
-{% extends "base.html" %}
+{% extends "landing.html" %}
 
 {% block title %}帮助{% endblock %}
 
-{% block content %}
-<div class="page-stack info-page">
-  <div class="page-hero">
-    <div>
-      <h1 class="page-title">帮助</h1>
-      <p class="page-subtitle">浏览、搜索和收藏 World of Dungeons 战报。</p>
-    </div>
-    <div class="page-actions">
-      <a class="btn btn-primary" href="{{ url_for('wodreport.report_page') }}">浏览全部战报</a>
-    </div>
-  </div>
-
-  <section class="content-section info-section">
-    <div class="section-header">
-      <h2 class="section-title">开始使用</h2>
-    </div>
-    <p class="mb-0">想了解如何上传和阅读战报，请看<a href="{{ url_for('frontend.landing_page') }}#get_started">使用介绍</a>；也可以直接从侧边栏进入“全部战报”或“搜索”。</p>
-  </section>
-
-  <section class="content-section info-section">
+{% block additional_help_sections %}
+  <section class="content-section info-section" id="add_to_home_screen">
     <div class="section-header">
       <h2 class="section-title">添加到手机桌面</h2>
     </div>
     <p class="mb-0">用手机打开本站：Android 的 Chrome 或 Firefox 在浏览器菜单中选择“安装应用”或“添加到主屏幕”；iPhone 在分享菜单中选择“添加到主屏幕”（如有“作为 Web App 打开”，请保持开启）。之后从桌面图标打开，就能像 App 一样浏览；战报仍需联网查看。</p>
   </section>
-</div>
 {% endblock %}
