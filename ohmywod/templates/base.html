@@ -12,7 +12,7 @@
         <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
         <link rel="stylesheet" href="{{ url_for('static', filename='css/font-awesome-6.2.0-all.min.css' )}}">
         {# Bump the revision when custom.css changes so browsers do not reuse old styles. #}
-        <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css', v='20261005-pagination-2') }}">
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css', v='20261005-pagination-ends-2') }}">
         {% if pagination is defined and pagination.total_pages > 1 %}
         <script defer src="{{ url_for('static', filename='js/pagination.js', v='20261005-pagination-2') }}"></script>
         {% endif %}

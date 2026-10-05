@@ -15,6 +15,11 @@
     {% endif %}
     {# Bootstrap d-none also guards against duplicate controls with old CSS. #}
     <nav class="pagination-compact d-none" aria-label="{{ '列表顶部' if position == 'top' else '列表底部' }}分页">
+        {% if pagination.page > 1 %}
+        <a class="pager-step pager-edge d-none" href="{{ target }}?{{ (query + [('page', 1)]) | urlencode }}" aria-label="首页" title="首页" rel="first"><span aria-hidden="true">«</span></a>
+        {% else %}
+        <span class="pager-step pager-edge d-none is-disabled" role="link" aria-label="首页" aria-disabled="true"><span aria-hidden="true">«</span></span>
+        {% endif %}
         {% if pagination.has_prev %}
         <a class="pager-step" href="{{ target }}?{{ (query + [('page', pagination.page - 1)]) | urlencode }}" aria-label="上一页" rel="prev"><span aria-hidden="true">‹</span></a>
         {% else %}
@@ -33,6 +38,11 @@
         <a class="pager-step" href="{{ target }}?{{ (query + [('page', pagination.page + 1)]) | urlencode }}" aria-label="下一页" rel="next"><span aria-hidden="true">›</span></a>
         {% else %}
         <span class="pager-step is-disabled" role="link" aria-label="下一页" aria-disabled="true"><span aria-hidden="true">›</span></span>
+        {% endif %}
+        {% if pagination.page != pagination.total_pages %}
+        <a class="pager-step pager-edge d-none" href="{{ target }}?{{ (query + [('page', pagination.total_pages)]) | urlencode }}" aria-label="尾页" title="尾页" rel="last"><span aria-hidden="true">»</span></a>
+        {% else %}
+        <span class="pager-step pager-edge d-none is-disabled" role="link" aria-label="尾页" aria-disabled="true"><span aria-hidden="true">»</span></span>
         {% endif %}
     </nav>
     <p class="pager-feedback" id="{{ pager_id }}-feedback" role="status" aria-live="polite" hidden></p>

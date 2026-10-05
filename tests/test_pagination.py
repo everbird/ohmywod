@@ -66,14 +66,20 @@ def test_shared_pager_on_all_four_pages(authenticated_client, paged_data, route,
         assert page.xpath(f'//label[@for="{field.get("id")}"]')
         assert page.xpath(f'//*[@id="{field.get("aria-describedby")}"]')
         nav = form.getparent()
-        for label, delta in (("上一页", -1), ("下一页", 1)):
+        assert nav.xpath('./*[@aria-label]/@aria-label') == ["首页", "上一页", "下一页", "尾页"]
+        targets = (("首页", 1, "first"), ("上一页", number - 1, "prev"),
+                   ("下一页", number + 1, "next"), ("尾页", 3, "last"))
+        for label, target_number, rel in targets:
             control = nav.xpath(f'./*[@aria-label="{label}"]')[0]
-            if 1 <= number + delta <= 3:
+            if label in ("首页", "尾页"):
+                assert {"pager-edge", "d-none"} <= set(control.get("class").split())
+            if 1 <= target_number <= 3 and target_number != number:
                 assert control.tag == "a"
                 target = urlsplit(control.get("href"))
                 assert target.path == urlsplit(path).path
                 args = parse_qs(target.query)
-                assert args["page"] == [str(number + delta)]
+                assert args["page"] == [str(target_number)]
+                assert control.get("rel") == rel
                 assert args["per_page"] == ["10"]
                 if route == "search":
                     assert args["q"] == ["pagination-report"]
@@ -88,10 +94,11 @@ def test_jump_retains_repeated_and_escaped_query_parameters(client, paged_data):
     for form in compact_forms(page):
         hidden = [(n.get("name"), n.get("value")) for n in form.xpath('.//input[@type="hidden"]')]
         assert hidden == [("per_page", "10"), ("tag", "a"), ("tag", "b"), ("q", '地城&"<'), ("empty", "")]
-        args = parse_qs(form.getparent().xpath('./a[@rel="next"]/@href')[0].split("?", 1)[1], keep_blank_values=True)
-        assert args["tag"] == ["a", "b"]
-        assert args["q"] == ['地城&"<'] and args["empty"] == [""]
-        assert args["page"] == ["3"]
+        for rel, number in (("first", "1"), ("prev", "1"), ("next", "3"), ("last", "3")):
+            args = parse_qs(form.getparent().xpath(f'./a[@rel="{rel}"]/@href')[0].split("?", 1)[1], keep_blank_values=True)
+            assert args["tag"] == ["a", "b"]
+            assert args["q"] == ['地城&"<'] and args["empty"] == [""]
+            assert args["page"] == [number]
         assert len(form.xpath('.//input[@name="page"]')) == 1
         assert not form.xpath('.//script')
         submitted = hidden + [("page", "3")]
@@ -137,6 +144,15 @@ def test_desktop_markup_keeps_original_numeric_links(app, number):
         assert 'pagination-desktop' not in top
 
 
+def test_boundary_links_recover_a_manually_out_of_range_page(app):
+    with app.test_request_context('/r/all?page=59&per_page=10'):
+        pagination = Pagination(page=59, per_page=10, total=580, css_framework='bootstrap5')
+        page = html.fromstring(render_template('_pagination.html', pagination=pagination))
+        for rel, number in (("first", "1"), ("last", "58")):
+            link = page.xpath(f'.//a[@rel="{rel}"]')[0]
+            assert parse_qs(urlsplit(link.get("href")).query)["page"] == [number]
+
+
 def test_pager_resources_are_static_and_versioned(client):
     js = client.get('/static/js/pagination.js?v=test')
     css = client.get('/static/css/custom.css?v=test')
@@ -149,3 +165,4 @@ def test_pager_resources_are_static_and_versioned(client):
     assert '@container pager (max-width: 559.98px)' in styles
     assert '@supports (container-type: inline-size)' in styles
     assert '.pager-step' in styles and 'height: 44px' in styles
+    assert '.pagination-shell .pager-edge' in styles and 'min-width: 28px' in styles
