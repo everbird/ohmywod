@@ -1,0 +1,40 @@
+{# Shared pager: retain the original desktop links; compact controls use GET. #}
+{% if pagination.total_pages > 1 %}
+{% set position = pagination_position | default('bottom') %}
+{% set pager_id = 'pager-' ~ position %}
+{% set target = url_for(request.endpoint, **(request.view_args or {})) %}
+{% set query = [] %}
+{% for key, value in request.args.items(multi=True) if key != 'page' %}
+    {% set _ = query.append((key, value)) %}
+{% endfor %}
+<div class="pagination-shell" data-pagination-position="{{ position }}">
+    {% if position != 'top' %}
+    <div class="pagination-desktop d-flex justify-content-center my-4">
+        {{ pagination.links }}
+    </div>
+    {% endif %}
+    {# Bootstrap d-none also guards against duplicate controls with old CSS. #}
+    <nav class="pagination-compact d-none" aria-label="{{ '列表顶部' if position == 'top' else '列表底部' }}分页">
+        {% if pagination.has_prev %}
+        <a class="pager-step" href="{{ target }}?{{ (query + [('page', pagination.page - 1)]) | urlencode }}" aria-label="上一页" rel="prev"><span aria-hidden="true">‹</span></a>
+        {% else %}
+        <span class="pager-step is-disabled" role="link" aria-label="上一页" aria-disabled="true"><span aria-hidden="true">‹</span></span>
+        {% endif %}
+        <form class="pager-jump" method="GET" action="{{ target }}" data-current-page="{{ pagination.page }}" data-total-pages="{{ pagination.total_pages }}">
+            {% for key, value in query %}
+            <input type="hidden" name="{{ key }}" value="{{ value }}">
+            {% endfor %}
+            <label class="visually-hidden" for="{{ pager_id }}-page">跳转页码，当前第 {{ pagination.page }} 页，共 {{ pagination.total_pages }} 页</label>
+            <input class="pager-page" id="{{ pager_id }}-page" type="number" name="page" value="{{ pagination.page }}" min="1" max="{{ pagination.total_pages }}" step="1" required inputmode="numeric" enterkeyhint="go" autocomplete="off" aria-describedby="{{ pager_id }}-feedback">
+            <span class="pager-total" aria-hidden="true">/ {{ pagination.total_pages }}</span>
+            <button class="pager-submit" type="submit">跳转</button>
+        </form>
+        {% if pagination.has_next %}
+        <a class="pager-step" href="{{ target }}?{{ (query + [('page', pagination.page + 1)]) | urlencode }}" aria-label="下一页" rel="next"><span aria-hidden="true">›</span></a>
+        {% else %}
+        <span class="pager-step is-disabled" role="link" aria-label="下一页" aria-disabled="true"><span aria-hidden="true">›</span></span>
+        {% endif %}
+    </nav>
+    <p class="pager-feedback" id="{{ pager_id }}-feedback" role="status" aria-live="polite" hidden></p>
+</div>
+{% endif %}
