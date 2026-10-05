@@ -32,6 +32,7 @@
     </div>
 
     {% if categories %}
+    {% with pagination_position = 'top' %}{% include "_pagination.html" %}{% endwith %}
     <div class="layout-list-view">
       <div class="modern-table-responsive my-3">
         <table class="modern-table">
@@ -93,9 +94,7 @@
       </div>
     </div>
 
-    <div class="d-flex justify-content-center my-4">
-      {{ pagination.links }}
-    </div>
+    {% include "_pagination.html" %}
     {% else %}
     <div class="empty-state">
       <div class="empty-state-icon">

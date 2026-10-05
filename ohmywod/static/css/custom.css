@@ -2080,3 +2080,152 @@ a.support-method:focus {
         grid-template-columns: 1fr;
     }
 }
+
+/* Responsive pager: the original desktop links remain untouched. */
+.pagination-shell {
+    width: 100%;
+    min-width: 0;
+    container-type: inline-size;
+    container-name: pager;
+}
+
+.pagination-desktop {
+    display: flex;
+    justify-content: center;
+}
+
+.pagination-compact {
+    align-items: center;
+    justify-content: center;
+    flex-wrap: nowrap;
+    gap: 0.375rem;
+    margin: 1rem 0;
+}
+
+.pager-jump {
+    display: flex;
+    align-items: center;
+    flex-wrap: nowrap;
+    gap: 0.375rem;
+    margin: 0;
+    min-width: 0;
+}
+
+.pager-step,
+.pager-submit,
+.pager-page {
+    box-sizing: border-box;
+    flex: 0 0 auto;
+    height: 44px;
+    border: 1px solid var(--app-border);
+    border-radius: 8px;
+    background: var(--app-surface);
+    color: var(--app-text-bright, #fff);
+}
+
+.pager-step {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    font-size: 1.75rem;
+    line-height: 1;
+    text-decoration: none;
+}
+
+.pager-submit {
+    min-width: 44px;
+    padding: 0 0.375rem;
+    font-size: 0.875rem;
+    white-space: nowrap;
+}
+
+.pager-page {
+    width: 3.5rem;
+    padding: 0 0.25rem;
+    font-size: 1rem; /* Avoid input-focus zoom on iOS. */
+    text-align: center;
+    appearance: textfield;
+    -moz-appearance: textfield;
+}
+
+.pager-page::-webkit-inner-spin-button,
+.pager-page::-webkit-outer-spin-button {
+    margin: 0;
+    -webkit-appearance: none;
+}
+
+.pager-total {
+    flex: 0 0 auto;
+    color: var(--app-muted);
+    font-size: 0.875rem;
+    white-space: nowrap;
+}
+
+.pager-step:hover,
+.pager-submit:not(:disabled):hover {
+    background: var(--app-surface-hover);
+    color: var(--app-text-bright, #fff);
+}
+
+.pager-step:focus-visible,
+.pager-submit:focus-visible,
+.pager-page:focus-visible {
+    outline: 2px solid #8ab4f8;
+    outline-offset: 2px;
+}
+
+.pager-step.is-disabled,
+.pager-submit:disabled {
+    opacity: 0.45;
+    cursor: default;
+}
+
+.pager-page[aria-invalid="true"] {
+    border-color: #ff9c9c;
+}
+
+.pager-feedback {
+    display: none;
+    margin: 0 0 1rem;
+    color: #ffb4b4;
+    font-size: 0.875rem;
+    text-align: center;
+    overflow-wrap: anywhere;
+}
+
+/* Viewport fallback for browsers without container queries. */
+@media (max-width: 767.98px) {
+    .pagination-shell .pagination-desktop {
+        display: none !important;
+    }
+    .pagination-shell .pagination-compact {
+        display: flex !important;
+    }
+    .pagination-shell .pager-feedback:not([hidden]) {
+        display: block;
+    }
+}
+
+@supports (container-type: inline-size) {
+    .pagination-shell .pagination-desktop {
+        display: flex !important;
+    }
+    .pagination-shell .pagination-compact {
+        display: none !important;
+    }
+    .pagination-shell .pager-feedback {
+        display: none;
+    }
+    @container pager (max-width: 559.98px) {
+        .pagination-shell .pagination-desktop {
+            display: none !important;
+        }
+        .pagination-shell .pagination-compact {
+            display: flex !important;
+        }
+        .pagination-shell .pager-feedback:not([hidden]) {
+            display: block;
+        }
+    }
+}
